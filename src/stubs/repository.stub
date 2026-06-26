@@ -1,0 +1,13 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use {{ rootNamespace }}Domain\Aggregates\{{ name }};
+use ZeroBoiler\Domain\Contracts\Repository;
+
+interface {{ class }} extends Repository
+{
+    public function findById(string $id): ?{{ name }};
+}

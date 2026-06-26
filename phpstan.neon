@@ -1,0 +1,10 @@
+parameters:
+    level: 6
+    paths:
+        - src/
+    excludePaths:
+        - tests/*
+    treatPhpDocTypesAsCertain: false
+    checkMissingTypedOverride: true
+    checkGenericClassInMethodReturnType: false
+    reportUnmatchedIgnoredErrors: false

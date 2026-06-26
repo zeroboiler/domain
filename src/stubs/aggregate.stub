@@ -1,0 +1,23 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use ZeroBoiler\Domain\AggregateRoot;
+use ZeroBoiler\Domain\AggregateRootId;
+use ZeroBoiler\Domain\DomainEvent;
+
+final class {{ class }} extends AggregateRoot
+{
+    public static function create(AggregateRootId $id): self
+    {
+        $aggregate = new self($id);
+
+        $aggregate->apply(DomainEvent::occur('{{ class }}Created', [
+            'id' => $id->toString(),
+        ]));
+
+        return $aggregate;
+    }
+}
