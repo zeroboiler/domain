@@ -13,7 +13,6 @@ use ZeroBoiler\Domain\Commands\DomainAggregateCommand;
 use ZeroBoiler\Domain\Commands\DomainEventCommand;
 use ZeroBoiler\Domain\Commands\DomainListCommand;
 use ZeroBoiler\Domain\Commands\DomainRepositoryCommand;
-use ZeroBoiler\Domain\Commands\DomainValueObjectCommand;
 
 final class DomainServiceProvider extends ServiceProvider
 {
@@ -29,7 +28,6 @@ final class DomainServiceProvider extends ServiceProvider
                 DomainAggregateCommand::class,
                 DomainEventCommand::class,
                 DomainRepositoryCommand::class,
-                DomainValueObjectCommand::class,
                 DomainListCommand::class,
             ]);
         }
