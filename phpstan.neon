@@ -5,6 +5,4 @@ parameters:
     excludePaths:
         - tests/*
     treatPhpDocTypesAsCertain: false
-    checkMissingTypedOverride: true
-    checkGenericClassInMethodReturnType: false
     reportUnmatchedIgnoredErrors: false

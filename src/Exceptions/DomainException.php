@@ -2,24 +2,15 @@
 
 declare(strict_types=1);
 
-/**
- * This file is part of ZeroBoiler, licensed under the proprietary license.
- */
-
 namespace ZeroBoiler\Domain\Exceptions;
 
-use Exception;
+use RuntimeException;
 use Throwable;
 
-final class DomainException extends Exception
+abstract class DomainException extends RuntimeException
 {
-    public static function because(string $reason, ?Throwable $previous = null): self
+    public function __construct(string $message = '', ?Throwable $previous = null)
     {
-        return new self($reason, 0, $previous);
-    }
-
-    public static function invalidState(string $reason): InvalidStateException
-    {
-        return new InvalidStateException($reason);
+        parent::__construct($message, 0, $previous);
     }
 }

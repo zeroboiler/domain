@@ -40,9 +40,13 @@ final class DomainRepositoryCommand extends GeneratorCommand
         return $name;
     }
 
-    public function handle(): bool|void
+    public function handle(): bool
     {
-        parent::handle();
+        $result = parent::handle();
+
+        if (! $result) {
+            return false;
+        }
 
         $name = $this->getNameInput();
         $rootNamespace = $this->laravel->getNamespace();
@@ -54,5 +58,7 @@ final class DomainRepositoryCommand extends GeneratorCommand
             'name' => $implementationName,
             '--interface' => $name,
         ]);
+
+        return true;
     }
 }

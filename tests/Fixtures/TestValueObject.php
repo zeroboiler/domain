@@ -10,8 +10,7 @@ final readonly class TestValueObject extends ValueObject
 {
     public function __construct(
         public string $value,
-    ) {
-    }
+    ) {}
 
     public static function from(string $value): self
     {

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 use ZeroBoiler\Domain\Identifiers\Identifier;
 use ZeroBoiler\Domain\Identifiers\IntegerIdentifier;
 use ZeroBoiler\Domain\Identifiers\StringIdentifier;
@@ -9,11 +11,11 @@ use ZeroBoiler\Domain\Identifiers\StringIdentifier;
 it('can create identifier with default UUID', function (): void {
     $id = new class extends Identifier {};
 
-    expect($id->value)->toBeInstanceOf(\Ramsey\Uuid\UuidInterface::class);
+    expect($id->value)->toBeInstanceOf(UuidInterface::class);
 });
 
 it('can create identifier from string', function (): void {
-    $uuid = \Ramsey\Uuid\Uuid::uuid4();
+    $uuid = Uuid::uuid4();
     $id = new class extends Identifier {};
 
     $id2 = $id::fromString($uuid->toString());
@@ -22,7 +24,7 @@ it('can create identifier from string', function (): void {
 });
 
 it('has equality based on UUID', function (): void {
-    $uuid = \Ramsey\Uuid\Uuid::uuid4();
+    $uuid = Uuid::uuid4();
 
     $id1 = new class($uuid) extends Identifier {};
     $id2 = new class($uuid) extends Identifier {};
@@ -31,7 +33,7 @@ it('has equality based on UUID', function (): void {
 });
 
 it('converts to string', function (): void {
-    $uuid = \Ramsey\Uuid\Uuid::uuid4();
+    $uuid = Uuid::uuid4();
     $id = new class($uuid) extends Identifier {};
 
     expect((string) $id)->toBe($uuid->toString());

@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Domain;
 
+use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
 final readonly class AggregateRootId
@@ -21,12 +22,12 @@ final readonly class AggregateRootId
 
     public static function generate(): self
     {
-        return new self(\Ramsey\Uuid\Uuid::uuid4());
+        return new self(Uuid::uuid4());
     }
 
     public static function fromString(string $id): self
     {
-        return new self(\Ramsey\Uuid\Uuid::fromString($id));
+        return new self(Uuid::fromString($id));
     }
 
     public function toString(): string

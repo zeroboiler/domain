@@ -2,35 +2,44 @@
 
 declare(strict_types=1);
 
-/**
- * This file is part of ZeroBoiler, licensed under the proprietary license.
- */
-
 namespace ZeroBoiler\Domain\Contracts;
 
 use ZeroBoiler\Domain\AggregateRoot;
 
+/**
+ * Repository contract for aggregate persistence.
+ */
 interface Repository
 {
     /**
-     * @template T of AggregateRoot
+     * Find aggregate by identifier.
+     */
+    public function find(string|int $id): ?AggregateRoot;
+
+    /**
+     * Get all aggregates.
      *
-     * @param  T  $aggregate
+     * @return array<AggregateRoot>
+     */
+    public function all(): array;
+
+    /**
+     * Save aggregate.
      */
     public function save(AggregateRoot $aggregate): void;
 
     /**
-     * @template T of AggregateRoot
-     *
-     * @param  T  $aggregate
+     * Delete aggregate.
      */
     public function delete(AggregateRoot $aggregate): void;
 
     /**
-     * @template T of AggregateRoot
-     *
-     * @param  string  $id
-     * @return T|null
+     * Check if aggregate exists.
      */
-    public function find(string $id): ?object;
+    public function exists(string|int $id): bool;
+
+    /**
+     * Get next identity value.
+     */
+    public function nextIdentity(): string|int;
 }

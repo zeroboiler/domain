@@ -2,35 +2,47 @@
 
 declare(strict_types=1);
 
-/**
- * This file is part of ZeroBoiler, licensed under the proprietary license.
- */
-
 namespace ZeroBoiler\Domain\Contracts;
 
-use ZeroBoiler\Domain\AggregateRoot;
-
+/**
+ * Unit of Work contract for transactional boundaries.
+ *
+ * Tracks changes to aggregates and commits them atomically.
+ */
 interface UnitOfWork
 {
-    public function begin(): void;
+    /**
+     * Register a new aggregate for insertion.
+     */
+    public function registerNew(object $aggregate): void;
 
+    /**
+     * Register a modified aggregate for update.
+     */
+    public function registerDirty(object $aggregate): void;
+
+    /**
+     * Register an aggregate for deletion.
+     */
+    public function registerDeleted(object $aggregate): void;
+
+    /**
+     * Commit all changes atomically.
+     */
     public function commit(): void;
 
+    /**
+     * Rollback all changes.
+     */
     public function rollback(): void;
 
     /**
-     * @template T of AggregateRoot
-     *
-     * @param  T  $aggregate
+     * Clear all tracked aggregates.
      */
-    public function persist(AggregateRoot $aggregate): void;
+    public function clear(): void;
 
     /**
-     * @template T of AggregateRoot
-     *
-     * @param  T  $aggregate
+     * Check if there are any pending changes.
      */
-    public function remove(AggregateRoot $aggregate): void;
-
     public function hasChanges(): bool;
 }

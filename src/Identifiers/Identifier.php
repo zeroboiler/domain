@@ -12,18 +12,29 @@ use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Stringable;
 
-abstract readonly class Identifier implements Stringable
+abstract class Identifier implements Stringable
 {
-    public UuidInterface $value;
+    public readonly UuidInterface $value;
 
+    /**
+     * @param UuidInterface|null $value
+     */
     public function __construct(?UuidInterface $value = null)
     {
         $this->value = $value ?? Uuid::uuid4();
     }
 
-    public static function fromString(string $value): static
+    /**
+     * @return Identifier
+     */
+    public static function fromString(string $value): Identifier
     {
-        return new static(Uuid::fromString($value));
+        return new class($value) extends Identifier {
+            public function __construct(string $value)
+            {
+                parent::__construct(Uuid::fromString($value));
+            }
+        };
     }
 
     public function toString(): string

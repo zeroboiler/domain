@@ -8,6 +8,4 @@ use ZeroBoiler\Domain\Entity;
 use ZeroBoiler\Domain\Identifiers\Identifier;
 
 final class TestEntity extends Entity
-{
-    public function __construct(public Identifier $id) {}
-}
+{}

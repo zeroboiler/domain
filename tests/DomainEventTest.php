@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use ZeroBoiler\Domain\DomainEvent;
-use Ramsey\Uuid\Uuid;
 
 it('can be created with type and payload', function (): void {
     $event = DomainEvent::occur('TestEvent', ['foo' => 'bar']);
@@ -21,9 +20,9 @@ it('generates unique event ID', function (): void {
 
 it('records occurrence time', function (): void {
     $event = DomainEvent::occur('TestEvent');
-    $now = new \DateTimeImmutable;
+    $now = new DateTimeImmutable;
 
-    expect($event->occurredAt)->toBeInstanceOf(\DateTimeImmutable::class);
+    expect($event->occurredAt)->toBeInstanceOf(DateTimeImmutable::class);
     expect($event->occurredAt->getTimestamp())->toBeLessThanOrEqual($now->getTimestamp());
 });
 

@@ -14,6 +14,10 @@ abstract class Entity
 {
     use HasDomainEvents;
 
+    public function __construct(
+        public readonly mixed $id,
+    ) {}
+
     public function equals(Entity $other): bool
     {
         return static::class === $other::class && $this->id === $other->id;

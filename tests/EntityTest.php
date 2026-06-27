@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-use ZeroBoiler\Domain\Tests\Fixtures\TestEntity;
+use ZeroBoiler\Domain\Entity;
 use ZeroBoiler\Domain\Identifiers\Identifier;
+use ZeroBoiler\Domain\Tests\Fixtures\TestEntity;
 
 beforeEach(function (): void {
     $this->id = new class extends Identifier {};
@@ -26,9 +27,7 @@ it('does not equal entities with different IDs', function (): void {
 it('does not equal entities of different types', function (): void {
     $entity = new TestEntity($this->id);
 
-    $otherEntity = new class($this->id) extends \ZeroBoiler\Domain\Entity {
-        public function __construct(public Identifier $id) {}
-    };
+    $otherEntity = new class($this->id) extends Entity {};
 
     expect($entity->equals($otherEntity))->toBeFalse();
 });

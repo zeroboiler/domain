@@ -12,7 +12,7 @@ use Exception;
 
 use function sprintf;
 
-final readonly class AggregateNotFoundException extends Exception
+final class AggregateNotFoundException extends Exception
 {
     public function __construct(string $aggregateType, string $aggregateId)
     {

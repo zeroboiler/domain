@@ -15,23 +15,36 @@ use Ramsey\Uuid\UuidInterface;
 final readonly class DomainEvent
 {
     public UuidInterface $eventId;
+
     public string $eventType;
+
+    /** @var array<string, mixed> */
     public array $payload;
+
     public DateTimeImmutable $occurredAt;
 
+    /**
+     * @param array<string, mixed> $payload
+     */
     public function __construct(string $eventType, array $payload = [])
     {
         $this->eventId = Uuid::uuid4();
         $this->eventType = $eventType;
         $this->payload = $payload;
-        $this->occurredAt = new DateTimeImmutable();
+        $this->occurredAt = new DateTimeImmutable;
     }
 
+    /**
+     * @param array<string, mixed> $payload
+     */
     public static function occur(string $eventType, array $payload = []): self
     {
         return new self($eventType, $payload);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(): array
     {
         return [
@@ -42,6 +55,9 @@ final readonly class DomainEvent
         ];
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public static function fromArray(array $data): self
     {
         $event = new self(

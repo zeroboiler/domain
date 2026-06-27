@@ -6,20 +6,20 @@ declare(strict_types=1);
  * This file is part of ZeroBoiler, licensed under the proprietary license.
  */
 
-namespace ZeroBoiler\Domain;
+namespace ZeroBoiler\Domain\Support;
 
 trait HasDomainEvents
 {
-    /** @var array<int, DomainEvent> */
+    /** @var array<int, \ZeroBoiler\Domain\DomainEvent> */
     private array $domainEvents = [];
 
-    protected function recordThat(DomainEvent $event): void
+    protected function recordThat(\ZeroBoiler\Domain\DomainEvent $event): void
     {
         $this->domainEvents[] = $event;
     }
 
     /**
-     * @return array<int, DomainEvent>
+     * @return array<int, \ZeroBoiler\Domain\DomainEvent>
      */
     public function releaseEvents(): array
     {
