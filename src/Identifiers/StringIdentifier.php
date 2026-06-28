@@ -6,8 +6,10 @@ namespace ZeroBoiler\Domain\Identifiers;
 
 use JsonSerializable;
 use ValueError;
+use ZeroBoiler\Domain\Contracts\Identifier;
+use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
 
-readonly class StringIdentifier implements \Stringable, JsonSerializable
+readonly class StringIdentifier implements IdentifierContract, JsonSerializable
 {
     public function __construct(
         public string $value,
@@ -27,9 +29,9 @@ readonly class StringIdentifier implements \Stringable, JsonSerializable
         return static::from($value);
     }
 
-    public function equals(self $other): bool
+    public function equals(Identifier $other): bool
     {
-        return $this->value === $other->value;
+        return $other instanceof StringIdentifier && $this->value === $other->value;
     }
 
     public function toString(): string

@@ -10,9 +10,9 @@ namespace ZeroBoiler\Domain\Identifiers;
 
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
-use Stringable;
+use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
 
-abstract class Identifier implements Stringable
+abstract class Identifier implements IdentifierContract
 {
     public readonly UuidInterface $value;
 
@@ -31,9 +31,9 @@ abstract class Identifier implements Stringable
         return $this->value->toString();
     }
 
-    public function equals(Identifier $other): bool
+    public function equals(IdentifierContract $other): bool
     {
-        return $this->value->equals($other->value);
+        return $other instanceof Identifier && $this->value->equals($other->value);
     }
 
     public function __toString(): string

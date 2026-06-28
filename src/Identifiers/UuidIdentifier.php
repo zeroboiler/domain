@@ -7,8 +7,10 @@ namespace ZeroBoiler\Domain\Identifiers;
 use JsonSerializable;
 use Ramsey\Uuid\Uuid as RamseyUuid;
 use Ramsey\Uuid\UuidInterface;
+use ZeroBoiler\Domain\Contracts\Identifier;
+use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
 
-abstract readonly class UuidIdentifier implements \Stringable, JsonSerializable
+abstract readonly class UuidIdentifier implements IdentifierContract, JsonSerializable
 {
     public function __construct(
         public string $value,
@@ -26,9 +28,14 @@ abstract readonly class UuidIdentifier implements \Stringable, JsonSerializable
         return new static($value);
     }
 
-    public function equals(self $other): bool
+    public function toString(): string
     {
-        return $this->value === $other->value;
+        return $this->value;
+    }
+
+    public function equals(Identifier $other): bool
+    {
+        return $other instanceof UuidIdentifier && $this->value === $other->value;
     }
 
     public function toUuid(): UuidInterface
@@ -43,6 +50,6 @@ abstract readonly class UuidIdentifier implements \Stringable, JsonSerializable
 
     public function __toString(): string
     {
-        return $this->value;
+        return $this->toString();
     }
 }

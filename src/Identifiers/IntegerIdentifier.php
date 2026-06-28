@@ -8,7 +8,10 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Domain\Identifiers;
 
-final readonly class IntegerIdentifier implements \Stringable
+use ZeroBoiler\Domain\Contracts\Identifier;
+use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
+
+final readonly class IntegerIdentifier implements IdentifierContract
 {
     public function __construct(public int $value) {}
 
@@ -17,18 +20,28 @@ final readonly class IntegerIdentifier implements \Stringable
         return new self($value);
     }
 
+    public static function fromString(string $value): static
+    {
+        return new self((int) $value);
+    }
+
     public function toInt(): int
     {
         return $this->value;
     }
 
-    public function equals(IntegerIdentifier $other): bool
+    public function toString(): string
     {
-        return $this->value === $other->value;
+        return (string) $this->value;
+    }
+
+    public function equals(Identifier $other): bool
+    {
+        return $other instanceof IntegerIdentifier && $this->value === $other->value;
     }
 
     public function __toString(): string
     {
-        return (string) $this->value;
+        return $this->toString();
     }
 }
