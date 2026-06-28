@@ -58,7 +58,7 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
             throw new RuntimeException('No active unit of work');
         }
 
-        $id = (string) $aggregate->id();
+        $id = $this->resolveId($aggregate);
 
         if ($this->isTracking($aggregate)) {
             return;
@@ -69,7 +69,7 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
 
     public function isTracking(AggregateRoot $aggregate): bool
     {
-        $id = (string) $aggregate->id();
+        $id = $this->resolveId($aggregate);
 
         return isset($this->tracked[$id]);
     }
@@ -80,8 +80,19 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
             throw new RuntimeException('No active unit of work');
         }
 
-        $id = (string) $aggregate->id();
+        $id = $this->resolveId($aggregate);
         $this->deleted[$id] = $aggregate;
+    }
+
+    /**
+     * Resolve a stable string identifier for an aggregate.
+     *
+     * Uses spl_object_id for uniqueness, ensuring compatibility with
+     * any ID type (UUID, string, int, etc.).
+     */
+    private function resolveId(AggregateRoot $aggregate): string
+    {
+        return spl_object_id($aggregate);
     }
 
     public function getCommitted(): array

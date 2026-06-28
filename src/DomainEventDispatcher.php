@@ -21,7 +21,7 @@ final class DomainEventDispatcher
     private Collection $deferredEvents;
 
     public function __construct(
-        private ?LaravelDispatcher $laravelDispatcher = null,
+        private readonly ?LaravelDispatcher $laravelDispatcher = null,
     ) {
         $this->deferredEvents = new Collection;
     }

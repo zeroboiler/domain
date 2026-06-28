@@ -29,6 +29,7 @@ abstract class ValueObject extends BaseValueObject
      *
      * @param  BaseValueObject<mixed>  $other
      */
+    #[\Override]
     public function equals(BaseValueObject $other): bool
     {
         if ($other::class !== static::class) {
