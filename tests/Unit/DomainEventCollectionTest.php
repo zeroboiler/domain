@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace ZeroBoiler\Domain\Tests\Unit;
 
 use ZeroBoiler\Domain\Collections\DomainEventCollection;
-use ZeroBoiler\Domain\Contracts\DomainEvent;
+use ZeroBoiler\Domain\DomainEvent;
 
 beforeEach(function (): void {
-    $this->event1 = new TestEvent('test-id-1');
-    $this->event2 = new TestEvent('test-id-2');
+    $this->event1 = DomainEvent::occur('TestEvent', ['id' => 'test-id-1']);
+    $this->event2 = DomainEvent::occur('TestEvent', ['id' => 'test-id-2']);
 });
 
 test('can create empty collection', function (): void {
@@ -79,19 +79,19 @@ test('returns null for last on empty', function (): void {
 });
 
 test('can filter events', function (): void {
-    $event3 = new TestEvent('test-id-3');
+    $event3 = DomainEvent::occur('TestEvent', ['id' => 'test-id-3']);
     $collection = DomainEventCollection::fromArray([$this->event1, $this->event2, $event3]);
 
-    $filtered = $collection->filter(fn ($event): bool => $event->id === 'test-id-1');
+    $filtered = $collection->filter(fn ($event): bool => $event->payload['id'] === 'test-id-1');
 
     expect($filtered->count())->toBe(1);
-    expect($filtered->first()->id)->toBe('test-id-1');
+    expect($filtered->first()->payload['id'])->toBe('test-id-1');
 });
 
 test('can map events', function (): void {
     $collection = DomainEventCollection::fromArray([$this->event1, $this->event2]);
 
-    $mapped = $collection->map(fn ($event) => $event->id);
+    $mapped = $collection->map(fn ($event) => $event->payload['id']);
 
     expect($mapped)->toBe(['test-id-1', 'test-id-2']);
 });
@@ -104,11 +104,3 @@ test('can merge collections', function (): void {
 
     expect($merged->count())->toBe(2);
 });
-
-readonly class TestEvent extends DomainEvent
-{
-    public function __construct(public string $id)
-    {
-        parent::__construct();
-    }
-}
