@@ -72,7 +72,7 @@ trait EventSourced
     /**
      * Increment the aggregate version.
      */
-    protected function incrementVersion(): void
+    public function incrementVersion(): void
     {
         $this->version++;
     }
