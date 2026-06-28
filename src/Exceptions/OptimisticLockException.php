@@ -24,7 +24,7 @@ class OptimisticLockException extends ConflictDomainException
     ): self {
         return new self(
             sprintf(
-                'Optimistic lock failed for aggregate "%s": expected version %d, but current version is %d. '
+                'Optimistic lock failed for aggregate "%s": expected version %d, but current version %d. '
                 .'The aggregate may have been modified by another process.',
                 $aggregateId,
                 $expectedVersion,
