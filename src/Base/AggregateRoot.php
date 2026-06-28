@@ -6,8 +6,8 @@ namespace ZeroBoiler\Domain\Base;
 
 use ZeroBoiler\Domain\Collections\DomainEventCollection;
 use ZeroBoiler\Domain\Contracts\AggregateRoot as AggregateRootContract;
-use ZeroBoiler\Domain\Contracts\DomainEvent;
-use ZeroBoiler\Domain\Contracts\ValueObject;
+use ZeroBoiler\Domain\Contracts\Entity as EntityContract;
+use ZeroBoiler\Domain\DomainEvent;
 
 abstract class AggregateRoot implements AggregateRootContract
 {
@@ -49,7 +49,7 @@ abstract class AggregateRoot implements AggregateRootContract
         $this->domainEvents->add($event);
     }
 
-    public function equals(ValueObject $other): bool
+    public function equals(EntityContract $other): bool
     {
         return $other::class === static::class
             && $other->id() === $this->id();

@@ -6,13 +6,13 @@ namespace ZeroBoiler\Domain\Concerns;
 
 use ReflectionClass;
 use RuntimeException;
-use ZeroBoiler\Domain\Contracts\DomainEvent;
+use ZeroBoiler\Domain\DomainEvent;
 
 trait EventSourced
 {
     public static function fromHistory(DomainEvent ...$events): static
     {
-        $instance = new ReflectionClass(static::class)->newInstanceWithoutConstructor();
+        $instance = (new ReflectionClass(static::class))->newInstanceWithoutConstructor();
 
         foreach ($events as $event) {
             $instance->applyEvent($event);
@@ -23,7 +23,7 @@ trait EventSourced
 
     protected function applyEvent(DomainEvent $event): void
     {
-        $method = 'apply' . $event::class;
+        $method = 'apply' . (new ReflectionClass($event))->getShortName();
 
         if (! method_exists($this, $method)) {
             throw new RuntimeException(

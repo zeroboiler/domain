@@ -7,7 +7,7 @@ namespace ZeroBoiler\Domain\Collections;
 use ArrayIterator;
 use Countable;
 use IteratorAggregate;
-use ZeroBoiler\Domain\Contracts\DomainEvent;
+use ZeroBoiler\Domain\DomainEvent;
 
 class DomainEventCollection implements Countable, IteratorAggregate
 {

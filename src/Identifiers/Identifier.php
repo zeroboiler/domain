@@ -21,15 +21,9 @@ abstract class Identifier implements Stringable
         $this->value = $value ?? Uuid::uuid4();
     }
 
-    public static function fromString(string $value): Identifier
+    public static function fromString(string $value): static
     {
-        return new class($value) extends Identifier
-        {
-            public function __construct(string $value)
-            {
-                parent::__construct(Uuid::fromString($value));
-            }
-        };
+        return new static(Uuid::fromString($value));
     }
 
     public function toString(): string

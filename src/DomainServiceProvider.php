@@ -1,13 +1,19 @@
 <?php
 
+/**
+ * This file is part of ZeroBoiler, licensed under the proprietary license.
+ */
+
 declare(strict_types=1);
 
 namespace ZeroBoiler\Domain;
 
+use Illuminate\Contracts\Events\Dispatcher as LaravelDispatcher;
 use Illuminate\Support\ServiceProvider;
-use ZeroBoiler\Domain\Console\Commands\MakeAggregateCommand;
-use ZeroBoiler\Domain\Console\Commands\MakeEventCommand;
-use ZeroBoiler\Domain\Console\Commands\MakeRepositoryCommand;
+use ZeroBoiler\Domain\Commands\DomainAggregateCommand;
+use ZeroBoiler\Domain\Commands\DomainEventCommand;
+use ZeroBoiler\Domain\Commands\DomainListCommand;
+use ZeroBoiler\Domain\Commands\DomainRepositoryCommand;
 use ZeroBoiler\Domain\Contracts\UnitOfWork as UnitOfWorkContract;
 
 class DomainServiceProvider extends ServiceProvider
@@ -21,8 +27,12 @@ class DomainServiceProvider extends ServiceProvider
         );
 
         $this->app->singleton(
-            EventDispatcher::class,
-            fn (): EventDispatcher => EventDispatcher::getInstance()
+            DomainEventDispatcher::class,
+            fn (): DomainEventDispatcher => new DomainEventDispatcher(
+                $this->app->bound(LaravelDispatcher::class)
+                    ? $this->app->make(LaravelDispatcher::class)
+                    : null
+            )
         );
     }
 
@@ -30,9 +40,10 @@ class DomainServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
-                MakeAggregateCommand::class,
-                MakeEventCommand::class,
-                MakeRepositoryCommand::class,
+                DomainAggregateCommand::class,
+                DomainEventCommand::class,
+                DomainRepositoryCommand::class,
+                DomainListCommand::class,
             ]);
         }
     }

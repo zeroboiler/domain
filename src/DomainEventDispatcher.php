@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace ZeroBoiler\Domain;
 
 use Closure;
+use Illuminate\Contracts\Events\Dispatcher as LaravelDispatcher;
 use Illuminate\Support\Collection;
 
 final class DomainEventDispatcher
@@ -19,8 +20,9 @@ final class DomainEventDispatcher
     /** @var Collection<int, DomainEvent> */
     private Collection $deferredEvents;
 
-    public function __construct()
-    {
+    public function __construct(
+        private ?LaravelDispatcher $laravelDispatcher = null,
+    ) {
         $this->deferredEvents = new Collection;
     }
 
@@ -31,6 +33,10 @@ final class DomainEventDispatcher
         foreach ($this->listeners[$eventType] ?? [] as $listener) {
             $listener($event);
         }
+
+        // Also dispatch through Laravel's event system so that
+        // any framework-level listeners or observers are notified.
+        $this->laravelDispatcher?->dispatch($event, $event->payload);
     }
 
     public function subscribe(string $eventType, Closure $listener): void

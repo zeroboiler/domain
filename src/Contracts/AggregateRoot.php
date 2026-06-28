@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Domain\Contracts;
 
+use ZeroBoiler\Domain\Collections\DomainEventCollection;
+
 interface AggregateRoot extends Entity
 {
     public function version(): int;

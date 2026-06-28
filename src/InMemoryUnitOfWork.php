@@ -60,7 +60,7 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
 
         $id = (string) $aggregate->id();
 
-        if ($this->isTracked($aggregate)) {
+        if ($this->isTracking($aggregate)) {
             return;
         }
 

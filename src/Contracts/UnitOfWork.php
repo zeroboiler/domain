@@ -15,4 +15,10 @@ interface UnitOfWork
     public function track(AggregateRoot $aggregate): void;
 
     public function isTracking(AggregateRoot $aggregate): bool;
+
+    public function markForDeletion(AggregateRoot $aggregate): void;
+
+    public function getCommitted(): array;
+
+    public function getDeleted(): array;
 }
