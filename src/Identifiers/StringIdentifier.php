@@ -2,26 +2,34 @@
 
 declare(strict_types=1);
 
-/**
- * This file is part of ZeroBoiler, licensed under the proprietary license.
- */
-
 namespace ZeroBoiler\Domain\Identifiers;
 
-use Stringable;
+use JsonSerializable;
+use ValueError;
 
-final readonly class StringIdentifier implements Stringable
+readonly class StringIdentifier implements \Stringable, JsonSerializable
 {
-    public string $value;
-
-    public function __construct(string $value)
-    {
-        $this->value = $value;
+    public function __construct(
+        public string $value,
+    ) {
+        if ($value === '') {
+            throw new ValueError('String identifier cannot be empty');
+        }
     }
 
-    public static function from(string $value): self
+    public static function from(string $value): static
     {
-        return new self($value);
+        return new static($value);
+    }
+
+    public static function fromString(string $value): static
+    {
+        return static::from($value);
+    }
+
+    public function equals(self $other): bool
+    {
+        return $this->value === $other->value;
     }
 
     public function toString(): string
@@ -29,13 +37,13 @@ final readonly class StringIdentifier implements Stringable
         return $this->value;
     }
 
-    public function equals(StringIdentifier $other): bool
+    public function jsonSerialize(): string
     {
-        return $this->value === $other->value;
+        return $this->value;
     }
 
     public function __toString(): string
     {
-        return $this->toString();
+        return $this->value;
     }
 }

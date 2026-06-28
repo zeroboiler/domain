@@ -4,13 +4,27 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Domain\Exceptions;
 
-use RuntimeException;
-use Throwable;
+use Exception;
 
-abstract class DomainException extends RuntimeException
+abstract class DomainException extends Exception
 {
-    public function __construct(string $message = '', ?Throwable $previous = null)
+    public static function invalidArgument(string $message): self
     {
-        parent::__construct($message, 0, $previous);
+        return new static($message, 0);
+    }
+
+    public static function invalidState(string $message): self
+    {
+        return new static($message, 0);
+    }
+
+    public static function notFound(string $message): self
+    {
+        return new static($message, 0);
+    }
+
+    public static function conflict(string $message): self
+    {
+        return new static($message, 0);
     }
 }

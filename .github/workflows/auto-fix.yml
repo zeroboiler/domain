@@ -1,39 +1,45 @@
-name: Auto-fix & Commit
+name: Auto-fix
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  push:
+    branches: [main, develop]
 
 jobs:
-  fix:
-    name: Pint + Rector Auto-fix
+  auto-fix:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+
+    name: Auto-fix Code Style
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.5'
-          coverage: none
+          extensions: mbstring, ctype, json, bcmath
           tools: composer:v2
 
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist
-
-      - name: Run Rector
-        run: vendor/bin/rector --no-progress-bar
+        run: composer install --prefer-dist --no-progress --no-suggest
 
       - name: Run Pint
         run: vendor/bin/pint
 
+      - name: Run Rector
+        run: vendor/bin/rector process
+
       - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v5
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git diff --quiet && git diff --staged --quiet || git commit -am "Auto-fix: code style and improvements"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
         with:
-          commit_message: 'ci: auto-fix formatting and refactoring'
-          file_pattern: '*.php'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}

@@ -1,10 +1,10 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of ZeroBoiler, licensed under the proprietary license.
  */
+
+declare(strict_types=1);
 
 namespace ZeroBoiler\Domain;
 
@@ -16,26 +16,19 @@ final readonly class DomainEvent
 {
     public UuidInterface $eventId;
 
-    public string $eventType;
-
-    /** @var array<string, mixed> */
-    public array $payload;
-
     public DateTimeImmutable $occurredAt;
 
     /**
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      */
-    public function __construct(string $eventType, array $payload = [])
+    public function __construct(public string $eventType, public array $payload = [])
     {
         $this->eventId = Uuid::uuid4();
-        $this->eventType = $eventType;
-        $this->payload = $payload;
         $this->occurredAt = new DateTimeImmutable;
     }
 
     /**
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      */
     public static function occur(string $eventType, array $payload = []): self
     {
@@ -56,15 +49,13 @@ final readonly class DomainEvent
     }
 
     /**
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     public static function fromArray(array $data): self
     {
-        $event = new self(
+        return new self(
             $data['eventType'],
             $data['payload']
         );
-
-        return $event;
     }
 }

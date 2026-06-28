@@ -1,21 +1,22 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of ZeroBoiler, licensed under the proprietary license.
  */
 
+declare(strict_types=1);
+
 namespace ZeroBoiler\Domain\Commands;
 
+use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Command;
 use Symfony\Component\Finder\Finder;
 
+#[Description('List all Domain classes (Aggregates, Events, Repositories, ValueObjects)')]
 final class DomainListCommand extends Command
 {
+    #[\Override]
     protected $name = 'zeroboiler:domain:list';
-
-    protected $description = 'List all Domain classes (Aggregates, Events, Repositories, ValueObjects)';
 
     public function handle(): int
     {
@@ -30,10 +31,10 @@ final class DomainListCommand extends Command
         $this->info('Domain Classes:');
         $this->newLine();
 
-        $this->listDirectory($domainPath.'/Aggregates', 'Aggregates');
-        $this->listDirectory($domainPath.'/Events', 'Events');
-        $this->listDirectory($domainPath.'/Repositories', 'Repositories');
-        $this->listDirectory($domainPath.'/ValueObjects', 'ValueObjects');
+        $this->listDirectory($domainPath . '/Aggregates', 'Aggregates');
+        $this->listDirectory($domainPath . '/Events', 'Events');
+        $this->listDirectory($domainPath . '/Repositories', 'Repositories');
+        $this->listDirectory($domainPath . '/ValueObjects', 'ValueObjects');
 
         return Command::SUCCESS;
     }
@@ -57,7 +58,7 @@ final class DomainListCommand extends Command
             return;
         }
 
-        $this->comment("  {$label}:");
+        $this->comment(sprintf('  %s:', $label));
 
         foreach ($files as $file) {
             $class = str_replace(
@@ -65,7 +66,7 @@ final class DomainListCommand extends Command
                 ['', '\\', ''],
                 $file->getRealPath()
             );
-            $this->line("    - {$class}");
+            $this->line('    - ' . $class);
         }
 
         $this->newLine();

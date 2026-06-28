@@ -1,17 +1,6 @@
 # ZeroBoiler Domain
 
-Zero-boilerplate DDD building blocks for Laravel 13 / PHP 8.5 — aggregates, entities, value objects, events, repositories, and more.
-
-## Features
-
-- **AggregateRoot** — Base class with UUID identifier, domain event recording, and versioning for optimistic locking
-- **Entity** — Identity-based equality with `HasDomainEvents` trait compatibility
-- **ValueObject** — Immutable equality with serialization support
-- **DomainEvent** — Event system with UUID, timestamps, and payload
-- **DomainEventDispatcher** — Synchronous and deferred event dispatching with subscription support
-- **Repository & UnitOfWork contracts** — Transactional boundaries
-- **Identifier types** — UUID, Integer, and String identifiers
-- **CLI generators** — Generate aggregates, events, repositories, and value objects
+DDD building blocks for rich domain models with aggregate roots, entities, value objects, and domain events.
 
 ## Installation
 
@@ -19,573 +8,354 @@ Zero-boilerplate DDD building blocks for Laravel 13 / PHP 8.5 — aggregates, en
 composer require zeroboiler/domain
 ```
 
-Register the service provider in `config/app.php`:
+## Features
+
+- **AggregateRoot** — ID, domain events, versioning
+- **Entity** — identity equality, lifecycle
+- **ValueObject** — immutable, equality
+- **DomainEvent** — base class + dispatcher
+- **Repository** interface — contract for persistence
+- **UnitOfWork** interface — transactional boundary
+- **DomainException** hierarchy
+- UUID/ULID identifier types
+- Event sourcing support (optional trait)
+
+## Usage
+
+### Aggregate Root
 
 ```php
-'providers' => [
-    // ...
-    ZeroBoiler\Domain\DomainServiceProvider::class,
-],
-```
+use ZeroBoiler\Domain\Concerns\HasDomainEvents;
+use ZeroBoiler\Domain\Contracts\AggregateRoot as AggregateRootContract;
 
-Or if using Laravel 13+ auto-discovery, it's already registered.
-
-## DDD Building Blocks
-
-### AggregateRoot
-
-Base class for your domain aggregates:
-
-```php
-use ZeroBoiler\Domain\AggregateRoot;
-use ZeroBoiler\Domain\AggregateRootId;
-use ZeroBoiler\Domain\DomainEvent;
-
-final class OrderAggregate extends AggregateRoot
+class Order extends AggregateRootContract
 {
-    public static function create(AggregateRootId $id): self
+    use HasDomainEvents;
+
+    public function __construct(
+        public readonly OrderId $id,
+        public Customer $customer,
+        public OrderStatus $status,
+        public float $total,
+    ) {}
+
+    public static function create(OrderId $id, Customer $customer): static
     {
-        $order = new self($id);
-
-        $order->apply(DomainEvent::occur('OrderCreated', [
-            'id' => $id->toString(),
-        ]));
-
+        $order = new self($id, $customer, OrderStatus::PENDING, 0.0);
+        $order->raise(new OrderPlaced($id));
         return $order;
     }
 
-    public function addItem(string $productId, int $quantity): void
+    public function pay(PaymentDetails $payment): void
     {
-        $this->apply(DomainEvent::occur('OrderItemAdded', [
-            'productId' => $productId,
-            'quantity' => $quantity,
-        ]));
+        if ($this->status !== OrderStatus::PENDING) {
+            throw DomainException::invalidState('Order must be pending to pay');
+        }
+
+        $this->status = OrderStatus::PAID;
+        $this->raise(new OrderPaid($this->id, $payment));
+    }
+
+    public function ship(TrackingNumber $tracking): void
+    {
+        if ($this->status !== OrderStatus::PAID) {
+            throw DomainException::invalidState('Order must be paid to ship');
+        }
+
+        $this->status = OrderStatus::SHIPPED;
+        $this->raise(new OrderShipped($this->id, $tracking));
     }
 }
 ```
 
-Using the aggregate:
+### Domain Event
 
 ```php
-$id = AggregateRootId::generate();
-$order = OrderAggregate::create($id);
+use ZeroBoiler\Domain\Contracts\DomainEvent as DomainEventContract;
 
-$order->addItem('product-123', 2);
+readonly class OrderPlaced extends DomainEventContract
+{
+    public function __construct(
+        public OrderId $orderId,
+    ) {
+        parent::__construct();
+    }
+}
 
-// Get uncommitted events
-$events = $order->releaseEvents();
-
-// Get version for optimistic locking
-$version = $order->getVersion();
+readonly class OrderPaid extends DomainEventContract
+{
+    public function __construct(
+        public OrderId $orderId,
+        public PaymentDetails $payment,
+    ) {
+        parent::__construct();
+    }
+}
 ```
 
 ### Entity
 
-Base class for domain entities:
-
 ```php
-use ZeroBoiler\Domain\Entity;
-use ZeroBoiler\Domain\Identifiers\Identifier;
+use ZeroBoiler\Domain\Contracts\Entity as EntityContract;
 
-final class OrderItem extends Entity
+class OrderItem extends EntityContract
 {
     public function __construct(
-        public readonly Identifier $id,
-        public readonly string $productId,
-        public readonly int $quantity,
+        public OrderItemId $id,
+        public Product $product,
+        public int $quantity,
+        public float $unitPrice,
     ) {}
+
+    public function updateQuantity(int $quantity): void
+    {
+        if ($quantity <= 0) {
+            throw DomainException::invalidArgument('Quantity must be positive');
+        }
+
+        $this->quantity = $quantity;
+    }
+
+    public function subtotal(): float
+    {
+        return $this->quantity * $this->unitPrice;
+    }
 }
-
-// Equality based on ID
-$item1 = new OrderItem($id, 'product-123', 2);
-$item2 = new OrderItem($id, 'product-123', 2);
-
-$item1->equals($item2); // true
 ```
 
-### ValueObject
-
-Immutable value objects:
+### Value Object
 
 ```php
-use ZeroBoiler\Domain\ValueObject;
+use ZeroBoiler\Domain\Contracts\ValueObject as ValueObjectContract;
 
-final readonly class Money extends ValueObject
+readonly class Money extends ValueObjectContract
 {
     public function __construct(
-        public readonly int $amount,
-        public readonly string $currency,
+        public float $amount,
+        public Currency $currency,
     ) {
+        if ($amount < 0) {
+            throw DomainException::invalidArgument('Amount cannot be negative');
+        }
     }
 
-    public static function from(int $amount, string $currency): self
+    public function add(Money $other): Money
     {
-        return new self($amount, $currency);
+        if ($this->currency !== $other->currency) {
+            throw DomainException::invalidArgument('Cannot add different currencies');
+        }
+
+        return new Money($this->amount + $other->amount, $this->currency);
     }
 
-    public function toArray(): array
+    public function subtract(Money $other): Money
     {
-        return [
-            'amount' => $this->amount,
-            'currency' => $this->currency,
-        ];
-    }
+        if ($this->currency !== $other->currency) {
+            throw DomainException::invalidArgument('Cannot subtract different currencies');
+        }
 
-    public function __toString(): string
-    {
-        return sprintf('%s %s', $this->amount, $this->currency);
+        $result = $this->amount - $other->amount;
+        if ($result < 0) {
+            throw DomainException::invalidArgument('Result cannot be negative');
+        }
+
+        return new Money($result, $this->currency);
     }
 }
-
-// Value equality
-$money1 = Money::from(100, 'USD');
-$money2 = Money::from(100, 'USD');
-
-$money1->equals($money2); // true
 ```
 
-### DomainEvent
-
-Domain events:
+### Repository
 
 ```php
-use ZeroBoiler\Domain\DomainEvent;
+use ZeroBoiler\Domain\Contracts\Repository as RepositoryContract;
 
-$event = DomainEvent::occur('OrderShipped', [
-    'orderId' => 'uuid-here',
-    'shippedAt' => '2026-06-26T21:36:00+00:00',
-]);
-
-echo $event->eventType; // 'OrderShipped'
-echo $event->eventId->toString(); // UUID
-echo $event->occurredAt->format('Y-m-d H:i:s'); // Timestamp
-
-// Serialization
-$event->toArray();
-// DomainEvent::fromArray($array);
-```
-
-### DomainEventDispatcher
-
-Event dispatcher with subscription and deferred dispatch:
-
-```php
-use ZeroBoiler\Domain\DomainEventDispatcher;
-
-$dispatcher = app(DomainEventDispatcher::class);
-
-// Subscribe to events
-$dispatcher->subscribe('OrderCreated', function (DomainEvent $event): void {
-    // Handle order creation
-    logger()->info('Order created', $event->payload);
-});
-
-// Dispatch immediately
-$dispatcher->dispatch($event);
-
-// Defer for later (e.g., after database commit)
-$dispatcher->defer($event);
-
-// Release all deferred events
-$dispatcher->releaseDeferred();
-
-// Check for deferred events
-$dispatcher->hasDeferredEvents(); // bool
-$dispatcher->getDeferredEventsCount(); // int
-
-// Clear deferred events without dispatching
-$dispatcher->clearDeferred();
-```
-
-### Identifier Types
-
-**UUID-based Identifier (default for aggregates):**
-
-```php
-use ZeroBoiler\Domain\AggregateRootId;
-
-$id = AggregateRootId::generate();
-$id->toString(); // UUID string
-```
-
-**Integer Identifier:**
-
-```php
-use ZeroBoiler\Domain\Identifiers\IntegerIdentifier;
-
-$id = IntegerIdentifier::from(42);
-$id->toInt(); // 42
-(string) $id; // "42"
-$id1->equals($id2); // bool
-```
-
-**String Identifier:**
-
-```php
-use ZeroBoiler\Domain\Identifiers\StringIdentifier;
-
-$id = StringIdentifier::from('order-123');
-$id->toString(); // "order-123"
-(string) $id; // "order-123"
-$id1->equals($id2); // bool
-```
-
-### Repository Contract
-
-Implement for persistence:
-
-```php
-use ZeroBoiler\Domain\Contracts\Repository;
-use ZeroBoiler\Domain\AggregateRoot;
-
-interface OrderRepository extends Repository
+interface OrderRepository extends RepositoryContract
 {
-    public function findById(string $id): ?OrderAggregate;
+    public function find(OrderId $id): ?Order;
+
+    public function findByCustomer(CustomerId $customerId): array;
+
+    public function save(Order $order): void;
+
+    public function delete(OrderId $id): void;
 }
+```
 
-class EloquentOrderRepository implements OrderRepository
+### Unit of Work
+
+```php
+use ZeroBoiler\Domain\Contracts\UnitOfWork as UnitOfWorkContract;
+
+class OrderService
 {
-    public function find(string $id): ?object
-    {
-        // Implementation
-    }
+    public function __construct(
+        private OrderRepository $orders,
+        private UnitOfWorkContract $uow,
+    ) {}
 
-    public function save(AggregateRoot $aggregate): void
+    public function placeOrder(CreateOrderDto $dto): Order
     {
-        // Save with version check for optimistic locking
-    }
+        $order = Order::create(
+            OrderId::generate(),
+            $this->getCustomer($dto->customerId),
+        );
 
-    public function delete(AggregateRoot $aggregate): void
-    {
-        // Implementation
-    }
+        $this->orders->save($order);
+        $this->uow->commit();
 
-    public function findById(string $id): ?OrderAggregate
-    {
-        // Implementation
+        return $order;
     }
 }
 ```
 
-### UnitOfWork Contract
-
-Transaction boundary:
+### Identifiers
 
 ```php
-use ZeroBoiler\Domain\Contracts\UnitOfWork;
-use ZeroBoiler\Domain\AggregateRoot;
+use ZeroBoiler\Domain\Identifiers\UuidIdentifier;
+use ZeroBoiler\Domain\Identifiers\UlidIdentifier;
 
-class DatabaseUnitOfWork implements UnitOfWork
+// UUID v4
+$orderId = OrderId::generate(); // e.g., "550e8400-e29b-41d4-a716-446655440000"
+
+// ULID
+$productId = ProductId::generate(); // e.g., "01HZ5X5X5X5X5X5X5X5X5X5X5X"
+
+// Custom
+class OrderId extends UuidIdentifier {}
+class ProductId extends UlidIdentifier {}
+```
+
+### Event Sourcing (Optional)
+
+```php
+use ZeroBoiler\Domain\Concerns\EventSourced;
+
+class Order extends AggregateRootContract
 {
-    public function begin(): void
+    use EventSourced;
+
+    protected function applyOrderPlaced(OrderPlaced $event): void
     {
-        DB::beginTransaction();
+        $this->id = $event->orderId;
+        $this->status = OrderStatus::PENDING;
     }
 
-    public function commit(): void
+    protected function applyOrderPaid(OrderPaid $event): void
     {
-        DB::commit();
-    }
-
-    public function rollback(): void
-    {
-        DB::rollBack();
-    }
-
-    public function persist(AggregateRoot $aggregate): void
-    {
-        // Track changes
-    }
-
-    public function remove(AggregateRoot $aggregate): void
-    {
-        // Track removal
-    }
-
-    public function hasChanges(): bool
-    {
-        // Check if changes pending
+        $this->status = OrderStatus::PAID;
     }
 }
+```
+
+### Domain Events
+
+```php
+use ZeroBoiler\Domain\Facades\EventDispatcher;
+
+// Manual dispatch
+EventDispatcher::dispatch(new OrderPlaced($orderId));
+
+// Get pending events from aggregate
+$order = Order::create(...);
+$events = $order->pullDomainEvents();
+
+// Clear recorded events
+$order->clearDomainEvents();
 ```
 
 ## CLI Commands
 
-### Generate Aggregate
+### Generate Aggregate Root
 
 ```bash
-php artisan zeroboiler:domain:aggregate Order
+php artisan domain:aggregate Order
 ```
 
-Creates: `app/Domain/Aggregates/OrderAggregate.php`
-
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace App\Domain\Aggregates;
-
-use ZeroBoiler\Domain\AggregateRoot;
-use ZeroBoiler\Domain\AggregateRootId;
-use ZeroBoiler\Domain\DomainEvent;
-
-final class OrderAggregate extends AggregateRoot
-{
-    public static function create(AggregateRootId $id): self
-    {
-        $aggregate = new self($id);
-
-        $aggregate->apply(DomainEvent::occur('OrderAggregateCreated', [
-            'id' => $id->toString(),
-        ]));
-
-        return $aggregate;
-    }
-}
-```
+Generates: `Domain/Orders/Order.php`
 
 ### Generate Domain Event
 
 ```bash
-php artisan zeroboiler:domain:event OrderCreated
+php artisan domain:event OrderPlaced
 ```
 
-Creates: `app/Domain/Events/OrderCreatedEvent.php`
+Generates: `Domain/Events/OrderPlaced.php`
 
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace App\Domain\Events;
-
-use ZeroBoiler\Domain\DomainEvent;
-
-final class OrderCreatedEvent extends DomainEvent
-{
-    public static function occur(array $payload = []): self
-    {
-        return new self('OrderCreatedEvent', $payload);
-    }
-}
-```
-
-### Generate Repository
+### Generate Repository Interface
 
 ```bash
-php artisan zeroboiler:domain:repository Order
+php artisan domain:repository Order
 ```
 
-Creates: `app/Domain/Repositories/OrderRepository.php`
+Generates: `Domain/Repositories/OrderRepository.php`
 
-```php
-<?php
+## Architecture
 
-declare(strict_types=1);
+### Aggregate Root
+- Represents a cluster of domain objects that can be treated as a single unit
+- Maintains consistency boundary
+- Publishes domain events
+- Has versioning for optimistic locking
 
-namespace App\Domain\Repositories;
+### Entity
+- Has identity
+- Has lifecycle (created, updated, deleted)
+- Equality based on identity, not attributes
 
-use App\Domain\Aggregates\OrderAggregate;
-use ZeroBoiler\Domain\Contracts\Repository;
+### Value Object
+- Immutable by default
+- Equality based on attributes
+- No identity
+- Self-validating
 
-interface OrderRepository extends Repository
-{
-    public function findById(string $id): ?OrderAggregate;
-}
-```
+### Domain Event
+- Something that happened in the domain
+- Immutable and named in past tense
+- Contains all relevant data
+- Dispatched after business logic completes
 
-### Generate Value Object
+### Repository
+- Mediates between domain and data mapping
+- Collection-like interface
+- No business logic
 
-```bash
-php artisan zeroboiler:domain:value-object Money
-```
-
-Creates: `app/Domain/ValueObjects/MoneyValueObject.php`
-
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace App\Domain\ValueObjects;
-
-use ZeroBoiler\Domain\ValueObject;
-
-final readonly class MoneyValueObject extends ValueObject
-{
-    public function __construct(
-        public string $value,
-    ) {
-    }
-
-    public static function from(string $value): self
-    {
-        return new self($value);
-    }
-
-    public function toArray(): array
-    {
-        return [
-            'value' => $this->value,
-        ];
-    }
-
-    public function __toString(): string
-    {
-        return $this->value;
-    }
-}
-```
-
-### List Domain Classes
-
-```bash
-php artisan zeroboiler:domain:list
-```
-
-Lists all domain classes organized by type:
-- Aggregates
-- Events
-- Repositories
-- ValueObjects
+### Unit of Work
+- Maintains list of affected objects
+- Coordinates writing out changes
+- Transactional boundary
 
 ## Testing
 
-Run tests:
-
-```bash
-composer test
-```
-
-Run specific test:
-
-```bash
-vendor/bin/pest tests/AggregateRootTest.php
-```
-
-## Quality Tools
-
-Run all quality checks:
-
-```bash
-composer ci
-```
-
-Individual tools:
-
-```bash
-# Code formatting (Laravel Pint)
-composer lint
-
-# Static analysis (PHPStan level 6)
-composer analyse
-
-# Automated refactoring (Rector)
-composer rector
-```
-
-## Configuration
-
-### Pint (Code Formatting)
-
-Laravel preset with strict types and ordered imports. See `pint.json`.
-
-### PHPStan
-
-Level 6 static analysis. See `phpstan.neon`.
-
-### Rector
-
-PHP 8.5 + Laravel 13 automated refactoring. See `rector.php`.
-
-## Exceptions
-
 ```php
-use ZeroBoiler\Domain\Exceptions\DomainException;
-use ZeroBoiler\Domain\Exceptions\InvalidStateException;
-use ZeroBoiler\Domain\Exceptions\AggregateNotFoundException;
+use ZeroBoiler\Domain\Tests\TestCase;
 
-// General domain exception
-throw DomainException::because('Something went wrong');
-
-// Invalid state
-throw InvalidStateException::because('Cannot complete operation in current state');
-
-// Aggregate not found
-throw new AggregateNotFoundException('OrderAggregate', $id);
-```
-
-## Best Practices
-
-1. **Use AggregateRoot for aggregates** — Provides event recording and versioning
-2. **Use Entity for entities** — Identity-based equality
-3. **Use ValueObject for values** — Immutable, value-based equality
-4. **Record domain events** — Use `apply()` method to record events
-5. **Dispatch events after persistence** — Use UnitOfWork or release after commit
-6. **Version check** — Use `$aggregate->getVersion()` for optimistic locking
-7. **Strict types** — Always use `declare(strict_types=1);`
-
-## Example: Order Domain
-
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace App\Domain\Aggregates;
-
-use ZeroBoiler\Domain\AggregateRoot;
-use ZeroBoiler\Domain\AggregateRootId;
-use ZeroBoiler\Domain\DomainEvent;
-use App\Domain\ValueObjects\ShippingAddressValueObject;
-
-final class OrderAggregate extends AggregateRoot
+class OrderTest extends TestCase
 {
-    public static function create(
-        AggregateRootId $id,
-        string $customerId,
-        ShippingAddressValueObject $shippingAddress,
-    ): self {
-        $order = new self($id);
+    public function test_can_create_order(): void
+    {
+        $orderId = OrderId::generate();
+        $customer = Customer::create(...);
 
-        $order->apply(DomainEvent::occur('OrderCreated', [
-            'id' => $id->toString(),
-            'customerId' => $customerId,
-            'shippingAddress' => $shippingAddress->toArray(),
-        ]));
+        $order = Order::create($orderId, $customer);
 
-        return $order;
+        $this->assertEquals($orderId, $order->id);
+        $this->assertEquals(OrderStatus::PENDING, $order->status);
+        $this->assertCount(1, $order->pullDomainEvents());
+        $this->assertInstanceOf(OrderPlaced::class, $order->pullDomainEvents()[0]);
     }
 
-    public function addItem(string $productId, int $quantity, int $price): void
+    public function test_cannot_pay_non_pending_order(): void
     {
-        $this->apply(DomainEvent::occur('OrderItemAdded', [
-            'orderId' => $this->id->toString(),
-            'productId' => $productId,
-            'quantity' => $quantity,
-            'price' => $price,
-        ]));
-    }
+        $order = Order::create(...);
+        $order->pay(...);
 
-    public function markAsShipped(): void
-    {
-        $this->apply(DomainEvent::occur('OrderShipped', [
-            'orderId' => $this->id->toString(),
-            'shippedAt' => (new DateTimeImmutable)->format(DateTimeImmutable::ATOM),
-        ]));
+        $this->expectException(DomainException::class);
+
+        $order->pay(...);
     }
 }
 ```
 
 ## License
 
-Proprietary. All rights reserved.
-
-## Support
-
-For issues and questions, please use the [GitHub repository](https://github.com/zeroboiler/domain).
-
----
-
-Built with 🚫 boilerplate and ❤️ for Laravel DDD.
+MIT

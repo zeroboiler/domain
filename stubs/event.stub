@@ -1,0 +1,16 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use ZeroBoiler\Domain\Contracts\DomainEvent;
+
+readonly class {{ class }} extends DomainEvent
+{
+    public function __construct(
+        public {{ class }}Id ${{ variable }},
+    ) {
+        parent::__construct();
+    }
+}

@@ -2,51 +2,60 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
 
 jobs:
   quality:
-    name: Code Quality
     runs-on: ubuntu-latest
+
+    name: Code Quality
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.5'
-          coverage: none
+          extensions: mbstring, ctype, json, bcmath
           tools: composer:v2
 
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist
+        run: composer install --prefer-dist --no-progress --no-suggest
 
-      - name: Pint (Formatting)
+      - name: Run Pint
         run: vendor/bin/pint --test
 
-      - name: PHPStan (Static Analysis)
+      - name: Run PHPStan
         run: vendor/bin/phpstan analyse --no-progress
 
-      - name: Rector (Refactoring Check)
-        run: vendor/bin/rector --dry-run --no-progress-bar
+      - name: Run Rector (dry-run)
+        run: vendor/bin/rector process --dry-run
 
-  tests:
-    name: Tests
+  test:
     runs-on: ubuntu-latest
+
+    name: Tests
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.5'
-          coverage: xdebug
-          tools: composer:v2
+          extensions: mbstring, ctype, json, bcmath
+          tools: composer:v2, pint, phpstan, rector, pest
 
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist
+        run: composer install --prefer-dist --no-progress --no-suggest
 
-      - name: Pest (Tests)
-        run: vendor/bin/pest --coverage --min=80
+      - name: Run Tests
+        run: vendor/bin/pest --coverage
+
+      - name: Check coverage
+        run: vendor/bin/pest --min=80

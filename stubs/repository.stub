@@ -1,0 +1,16 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use ZeroBoiler\Domain\Contracts\Repository;
+use ZeroBoiler\Domain\Contracts\AggregateRoot;
+
+interface {{ class }} extends Repository
+{
+    /**
+     * @return {{ aggregate }}[]
+     */
+    public function findAll(): array;
+}

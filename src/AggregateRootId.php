@@ -1,24 +1,19 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of ZeroBoiler, licensed under the proprietary license.
  */
+
+declare(strict_types=1);
 
 namespace ZeroBoiler\Domain;
 
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
-final readonly class AggregateRootId
+final readonly class AggregateRootId implements \Stringable
 {
-    public UuidInterface $value;
-
-    public function __construct(UuidInterface $value)
-    {
-        $this->value = $value;
-    }
+    public function __construct(public UuidInterface $value) {}
 
     public static function generate(): self
     {

@@ -1,10 +1,10 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of ZeroBoiler, licensed under the proprietary license.
  */
+
+declare(strict_types=1);
 
 namespace ZeroBoiler\Domain;
 
@@ -14,14 +14,9 @@ abstract class AggregateRoot
 {
     use HasDomainEvents;
 
-    public AggregateRootId $id;
-
     public int $version = 0;
 
-    protected function __construct(AggregateRootId $id)
-    {
-        $this->id = $id;
-    }
+    protected function __construct(public AggregateRootId $id) {}
 
     protected function apply(DomainEvent $event): void
     {

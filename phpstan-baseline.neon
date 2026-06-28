@@ -1,0 +1,7 @@
+# Created by baseline-update; do not edit by hand
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Method ZeroBoiler\\\\Domain\\\\Base\\\\ValueObject\\:\\:toArray\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Base/ValueObject.php

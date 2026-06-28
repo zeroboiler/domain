@@ -1,21 +1,16 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * This file is part of ZeroBoiler, licensed under the proprietary license.
  */
 
+declare(strict_types=1);
+
 namespace ZeroBoiler\Domain\Identifiers;
 
-final readonly class IntegerIdentifier
+final readonly class IntegerIdentifier implements \Stringable
 {
-    public int $value;
-
-    public function __construct(int $value)
-    {
-        $this->value = $value;
-    }
+    public function __construct(public int $value) {}
 
     public static function from(int $value): self
     {
