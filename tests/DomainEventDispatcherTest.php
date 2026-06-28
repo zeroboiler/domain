@@ -104,3 +104,99 @@ it('reports deferred events count', function (): void {
 
     expect($this->dispatcher->getDeferredEventsCount())->toBe(2);
 });
+
+it('forwards events to an external forwarder when set', function (): void {
+    $forwarded = [];
+
+    $this->dispatcher->setEventForwarder(
+        function (string $eventType, array $payload) use (&$forwarded): void {
+            $forwarded[] = ['type' => $eventType, 'payload' => $payload];
+        }
+    );
+
+    $this->dispatcher->dispatch(DomainEvent::occur('OrderPlaced', ['id' => 42]));
+
+    expect($forwarded)->toHaveCount(1)
+        ->and($forwarded[0]['type'])->toBe('OrderPlaced')
+        ->and($forwarded[0]['payload'])->toBe(['id' => 42]);
+});
+
+it('forwards events with payload data', function (): void {
+    $forwardedPayload = null;
+
+    $this->dispatcher->setEventForwarder(
+        function (string $eventType, array $payload) use (&$forwardedPayload): void {
+            $forwardedPayload = $payload;
+        }
+    );
+
+    $payload = ['user_id' => 1, 'action' => 'login', 'meta' => ['ip' => '127.0.0.1']];
+    $this->dispatcher->dispatch(DomainEvent::occur('UserLogin', $payload));
+
+    expect($forwardedPayload)->toBe($payload);
+});
+
+it('does not forward when forwarder is not set', function (): void {
+    $forwarded = false;
+
+    // No forwarder set — dispatch should still work normally
+    $this->dispatcher->dispatch(DomainEvent::occur('TestEvent'));
+
+    expect($forwarded)->toBeFalse();
+});
+
+it('can remove the event forwarder', function (): void {
+    $forwarded = [];
+
+    $this->dispatcher->setEventForwarder(
+        function (string $eventType, array $payload) use (&$forwarded): void {
+            $forwarded[] = $eventType;
+        }
+    );
+
+    $this->dispatcher->dispatch(DomainEvent::occur('First'));
+
+    $this->dispatcher->setEventForwarder(null);
+
+    $this->dispatcher->dispatch(DomainEvent::occur('Second'));
+
+    expect($forwarded)->toBe(['First']);
+});
+
+it('forwards deferred events when released', function (): void {
+    $forwarded = [];
+
+    $this->dispatcher->setEventForwarder(
+        function (string $eventType, array $payload) use (&$forwarded): void {
+            $forwarded[] = $eventType;
+        }
+    );
+
+    $this->dispatcher->defer(DomainEvent::occur('DeferredEvent'));
+
+    expect($forwarded)->toBeEmpty();
+
+    $this->dispatcher->releaseDeferred();
+
+    expect($forwarded)->toBe(['DeferredEvent']);
+});
+
+it('calls both listeners and forwarder on dispatch', function (): void {
+    $listenerCalled = false;
+    $forwarderCalled = false;
+
+    $this->dispatcher->subscribe('TestEvent', function () use (&$listenerCalled): void {
+        $listenerCalled = true;
+    });
+
+    $this->dispatcher->setEventForwarder(
+        function (string $eventType, array $payload) use (&$forwarderCalled): void {
+            $forwarderCalled = true;
+        }
+    );
+
+    $this->dispatcher->dispatch(DomainEvent::occur('TestEvent'));
+
+    expect($listenerCalled)->toBeTrue()
+        ->and($forwarderCalled)->toBeTrue();
+});

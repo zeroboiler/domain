@@ -20,10 +20,34 @@ final class DomainEventDispatcher
     /** @var Collection<int, DomainEvent> */
     private Collection $deferredEvents;
 
+    /**
+     * Optional forwarder callback for external event systems.
+     *
+     * When set, every dispatched domain event is forwarded to this
+     * callback. This enables cross-package integration with the
+     * Events package's EventManager without a hard dependency.
+     *
+     * @var (?Closure(string, array<string, mixed>): void)
+     */
+    private ?Closure $eventForwarder = null;
+
     public function __construct(
         private readonly ?LaravelDispatcher $laravelDispatcher = null,
     ) {
         $this->deferredEvents = new Collection;
+    }
+
+    /**
+     * Set an external event forwarder.
+     *
+     * Called once by the service provider when the Events package
+     * is available. The callback receives the event type and payload.
+     *
+     * @param  ?Closure(string, array<string, mixed>): void  $forwarder
+     */
+    public function setEventForwarder(?Closure $forwarder): void
+    {
+        $this->eventForwarder = $forwarder;
     }
 
     public function dispatch(DomainEvent $event): void
@@ -37,6 +61,12 @@ final class DomainEventDispatcher
         // Also dispatch through Laravel's event system so that
         // any framework-level listeners or observers are notified.
         $this->laravelDispatcher?->dispatch($event, $event->payload);
+
+        // Forward to external event systems (e.g. Events package EventManager)
+        // for DB-driven triggers, without a hard coupling.
+        if ($this->eventForwarder !== null) {
+            ($this->eventForwarder)($eventType, $event->payload);
+        }
     }
 
     public function subscribe(string $eventType, Closure $listener): void

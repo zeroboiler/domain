@@ -36,8 +36,17 @@ class DomainServiceProvider extends ServiceProvider
         );
     }
 
+    /**
+     * Boot domain services and wire cross-package integrations.
+     *
+     * When the Events package is installed, domain events are
+     * automatically forwarded to the EventManager so that
+     * DB-driven triggers fire on domain event dispatch.
+     */
     public function boot(): void
     {
+        $this->wireEventForwarder();
+
         if ($this->app->runningInConsole()) {
             $this->commands([
                 DomainAggregateCommand::class,
@@ -46,5 +55,34 @@ class DomainServiceProvider extends ServiceProvider
                 DomainListCommand::class,
             ]);
         }
+    }
+
+    /**
+     * Wire domain events to the Events package's EventManager
+     * when the package is available at runtime.
+     *
+     * This keeps `domain` (Layer 0) free of a hard dependency
+     * on `events` (Layer 1) while enabling seamless integration.
+     */
+    private function wireEventForwarder(): void
+    {
+        $eventManagerClass = '\\ZeroBoiler\\Events\\EventManager';
+
+        if (! class_exists($eventManagerClass)) {
+            return;
+        }
+
+        $dispatcher = $this->app->make(DomainEventDispatcher::class);
+
+        $dispatcher->setEventForwarder(
+            function (string $eventType, array $payload) use ($eventManagerClass): void {
+                try {
+                    $this->app->make($eventManagerClass)->fire($eventType, $payload);
+                } catch (\Throwable) {
+                    // Silently fail — domain events should not break
+                    // if the event system has issues.
+                }
+            }
+        );
     }
 }
