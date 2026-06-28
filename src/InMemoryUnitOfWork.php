@@ -87,12 +87,36 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
     /**
      * Resolve a stable string identifier for an aggregate.
      *
-     * Uses spl_object_id for uniqueness, ensuring compatibility with
-     * any ID type (UUID, string, int, etc.).
+     * Uses the aggregate's own domain identity when available, falling back
+     * to a WeakMap-based object identity to avoid spl_object_id reuse
+     * after garbage collection.
      */
     private function resolveId(AggregateRoot $aggregate): string
     {
-        return spl_object_id($aggregate);
+        // Prefer the aggregate's own domain identity
+        try {
+            $aggregateId = $aggregate->id();
+
+            if ($aggregateId !== '') {
+                return (string) $aggregateId;
+            }
+        } catch (\Throwable) {
+            // Aggregate may not have an ID yet (newly created, not persisted)
+        }
+
+        // Fall back to stable object identity via WeakMap (avoids spl_object_id reuse)
+        static $idMap = null;
+        static $nextId = 0;
+
+        if ($idMap === null) {
+            $idMap = new \WeakMap;
+        }
+
+        if (! isset($idMap[$aggregate])) {
+            $idMap[$aggregate] = 'obj_' . (++$nextId);
+        }
+
+        return $idMap[$aggregate];
     }
 
     public function getCommitted(): array

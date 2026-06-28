@@ -21,10 +21,14 @@ final readonly class DomainEvent
     /**
      * @param  array<string, mixed>  $payload
      */
-    public function __construct(public string $eventType, public array $payload = [])
-    {
-        $this->eventId = Uuid::uuid4();
-        $this->occurredAt = new DateTimeImmutable;
+    public function __construct(
+        public string $eventType,
+        public array $payload = [],
+        ?UuidInterface $eventId = null,
+        ?DateTimeImmutable $occurredAt = null,
+    ) {
+        $this->eventId = $eventId ?? Uuid::uuid4();
+        $this->occurredAt = $occurredAt ?? new DateTimeImmutable;
     }
 
     /**
@@ -49,13 +53,26 @@ final readonly class DomainEvent
     }
 
     /**
+     * Reconstruct an event from persisted data, preserving the original
+     * eventId and occurredAt to prevent information loss during event replay.
+     *
      * @param  array<string, mixed>  $data
      */
     public static function fromArray(array $data): self
     {
+        $eventId = isset($data['eventId'])
+            ? Uuid::fromString((string) $data['eventId'])
+            : null;
+
+        $occurredAt = isset($data['occurredAt'])
+            ? new DateTimeImmutable($data['occurredAt'])
+            : null;
+
         return new self(
             $data['eventType'],
-            $data['payload']
+            $data['payload'],
+            $eventId,
+            $occurredAt,
         );
     }
 }

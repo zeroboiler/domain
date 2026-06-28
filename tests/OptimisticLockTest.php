@@ -7,6 +7,8 @@
 declare(strict_types=1);
 
 use ZeroBoiler\Domain\AggregateRootId;
+use ZeroBoiler\Domain\Exceptions\ConflictDomainException;
+use ZeroBoiler\Domain\Exceptions\DomainException;
 use ZeroBoiler\Domain\Exceptions\OptimisticLockException;
 use ZeroBoiler\Domain\Tests\Fixtures\TestAggregate;
 
@@ -45,7 +47,7 @@ it('optimistic lock exception extends conflict domain exception', function (): v
     $exception = OptimisticLockException::for('agg-1', 1, 2);
 
     expect($exception)
-        ->toBeInstanceOf(\ZeroBoiler\Domain\Exceptions\ConflictDomainException::class)
-        ->toBeInstanceOf(\ZeroBoiler\Domain\Exceptions\DomainException::class)
-        ->toBeInstanceOf(\Exception::class);
+        ->toBeInstanceOf(ConflictDomainException::class)
+        ->toBeInstanceOf(DomainException::class)
+        ->toBeInstanceOf(Exception::class);
 });

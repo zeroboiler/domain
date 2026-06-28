@@ -14,10 +14,8 @@ use Illuminate\Console\GeneratorCommand;
 #[Description('Generate a new Domain Event class')]
 final class DomainEventCommand extends GeneratorCommand
 {
-    #[\Override]
     protected $name = 'zeroboiler:domain:event';
 
-    #[\Override]
     protected $type = 'Event';
 
     protected function getStub(): string
@@ -25,13 +23,11 @@ final class DomainEventCommand extends GeneratorCommand
         return __DIR__ . '/../stubs/event.stub';
     }
 
-    #[\Override]
     protected function getDefaultNamespace($rootNamespace): string
     {
         return $rootNamespace . '\\Domain\\Events';
     }
 
-    #[\Override]
     protected function getNameInput(): string
     {
         $name = parent::getNameInput();

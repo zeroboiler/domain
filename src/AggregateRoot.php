@@ -10,6 +10,7 @@ namespace ZeroBoiler\Domain;
 
 use ZeroBoiler\Domain\Collections\DomainEventCollection;
 use ZeroBoiler\Domain\Contracts\AggregateRoot as AggregateRootContract;
+use ZeroBoiler\Domain\Contracts\Entity;
 use ZeroBoiler\Domain\Support\HasDomainEvents;
 
 abstract class AggregateRoot implements AggregateRootContract
@@ -77,9 +78,6 @@ abstract class AggregateRoot implements AggregateRootContract
         $this->domainEvents = [];
     }
 
-    /**
-     * @return string|int
-     */
     public function id(): string|int
     {
         return $this->id->toString();
@@ -89,12 +87,13 @@ abstract class AggregateRoot implements AggregateRootContract
      * Check identity equality with another entity.
      */
     #[\Override]
-    public function equals(\ZeroBoiler\Domain\Contracts\Entity $other): bool
+    public function equals(Entity $other): bool
     {
         if ($other::class !== static::class) {
             return false;
         }
 
+        // Compare using string casting to handle both string and int IDs consistently
         return $this->id->toString() === (string) $other->id();
     }
 }

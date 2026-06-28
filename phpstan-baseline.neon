@@ -1,7 +1,271 @@
-# Created by baseline-update; do not edit by hand
 parameters:
 	ignoreErrors:
 		-
-			message: "#^Method ZeroBoiler\\\\Domain\\\\Base\\\\ValueObject\\:\\:toArray\\(\\) return type has no value type specified in iterable type array\\.$#"
+			message: '#^Class ZeroBoiler\\Domain\\Collections\\DomainEventCollection implements generic interface IteratorAggregate but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
 			count: 1
-			path: src/Base/ValueObject.php
+			path: src/Collections/DomainEventCollection.php
+
+		-
+			message: '#^Method ZeroBoiler\\Domain\\Collections\\DomainEventCollection\:\:__construct\(\) has parameter \$events with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Collections/DomainEventCollection.php
+
+		-
+			message: '#^Method ZeroBoiler\\Domain\\Collections\\DomainEventCollection\:\:fromArray\(\) has parameter \$events with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Collections/DomainEventCollection.php
+
+		-
+			message: '#^Method ZeroBoiler\\Domain\\Collections\\DomainEventCollection\:\:getIterator\(\) return type with generic class ArrayIterator does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Collections/DomainEventCollection.php
+
+		-
+			message: '#^Method ZeroBoiler\\Domain\\Collections\\DomainEventCollection\:\:map\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Collections/DomainEventCollection.php
+
+		-
+			message: '#^Method ZeroBoiler\\Domain\\Collections\\DomainEventCollection\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Collections/DomainEventCollection.php
+
+		-
+			message: '#^Attribute class Illuminate\\Console\\Attributes\\Description does not exist\.$#'
+			identifier: attribute.notFound
+			count: 1
+			path: src/Commands/DomainAggregateCommand.php
+
+		-
+			message: '#^Method ZeroBoiler\\Domain\\Commands\\DomainAggregateCommand\:\:getDefaultNamespace\(\) has parameter \$rootNamespace with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Commands/DomainAggregateCommand.php
+
+		-
+			message: '#^Property ZeroBoiler\\Domain\\Commands\\DomainAggregateCommand\:\:\$name has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: src/Commands/DomainAggregateCommand.php
+
+		-
+			message: '#^Property ZeroBoiler\\Domain\\Commands\\DomainAggregateCommand\:\:\$type has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: src/Commands/DomainAggregateCommand.php
+
+		-
+			message: '#^ZeroBoiler\\Domain\\Commands\\DomainAggregateCommand\:\:getNameInput\(\) calls parent\:\:getNameInput\(\) but ZeroBoiler\\Domain\\Commands\\DomainAggregateCommand does not extend any class\.$#'
+			identifier: class.noParent
+			count: 1
+			path: src/Commands/DomainAggregateCommand.php
+
+		-
+			message: '#^Attribute class Illuminate\\Console\\Attributes\\Description does not exist\.$#'
+			identifier: attribute.notFound
+			count: 1
+			path: src/Commands/DomainEventCommand.php
+
+		-
+			message: '#^Method ZeroBoiler\\Domain\\Commands\\DomainEventCommand\:\:getDefaultNamespace\(\) has parameter \$rootNamespace with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Commands/DomainEventCommand.php
+
+		-
+			message: '#^Property ZeroBoiler\\Domain\\Commands\\DomainEventCommand\:\:\$name has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: src/Commands/DomainEventCommand.php
+
+		-
+			message: '#^Property ZeroBoiler\\Domain\\Commands\\DomainEventCommand\:\:\$type has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: src/Commands/DomainEventCommand.php
+
+		-
+			message: '#^ZeroBoiler\\Domain\\Commands\\DomainEventCommand\:\:getNameInput\(\) calls parent\:\:getNameInput\(\) but ZeroBoiler\\Domain\\Commands\\DomainEventCommand does not extend any class\.$#'
+			identifier: class.noParent
+			count: 1
+			path: src/Commands/DomainEventCommand.php
+
+		-
+			message: '#^Access to constant SUCCESS on an unknown class Illuminate\\Console\\Command\.$#'
+			identifier: class.notFound
+			count: 2
+			path: src/Commands/DomainListCommand.php
+
+		-
+			message: '#^Attribute class Illuminate\\Console\\Attributes\\Description does not exist\.$#'
+			identifier: attribute.notFound
+			count: 1
+			path: src/Commands/DomainListCommand.php
+
+		-
+			message: '#^Call to an undefined method ZeroBoiler\\Domain\\Commands\\DomainListCommand\:\:comment\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Commands/DomainListCommand.php
+
+		-
+			message: '#^Call to an undefined method ZeroBoiler\\Domain\\Commands\\DomainListCommand\:\:info\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: src/Commands/DomainListCommand.php
+
+		-
+			message: '#^Call to an undefined method ZeroBoiler\\Domain\\Commands\\DomainListCommand\:\:line\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Commands/DomainListCommand.php
+
+		-
+			message: '#^Call to an undefined method ZeroBoiler\\Domain\\Commands\\DomainListCommand\:\:newLine\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: src/Commands/DomainListCommand.php
+
+		-
+			message: '#^Function app_path not found\.$#'
+			identifier: function.notFound
+			count: 2
+			path: src/Commands/DomainListCommand.php
+
+		-
+			message: '#^Property ZeroBoiler\\Domain\\Commands\\DomainListCommand\:\:\$name has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: src/Commands/DomainListCommand.php
+
+		-
+			message: '#^Access to an undefined property ZeroBoiler\\Domain\\Commands\\DomainRepositoryCommand\:\:\$components\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Commands/DomainRepositoryCommand.php
+
+		-
+			message: '#^Access to an undefined property ZeroBoiler\\Domain\\Commands\\DomainRepositoryCommand\:\:\$laravel\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Commands/DomainRepositoryCommand.php
+
+		-
+			message: '#^Attribute class Illuminate\\Console\\Attributes\\Description does not exist\.$#'
+			identifier: attribute.notFound
+			count: 1
+			path: src/Commands/DomainRepositoryCommand.php
+
+		-
+			message: '#^Call to an undefined method ZeroBoiler\\Domain\\Commands\\DomainRepositoryCommand\:\:option\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Commands/DomainRepositoryCommand.php
+
+		-
+			message: '#^Method ZeroBoiler\\Domain\\Commands\\DomainRepositoryCommand\:\:getDefaultNamespace\(\) has parameter \$rootNamespace with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Commands/DomainRepositoryCommand.php
+
+		-
+			message: '#^Property ZeroBoiler\\Domain\\Commands\\DomainRepositoryCommand\:\:\$name has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: src/Commands/DomainRepositoryCommand.php
+
+		-
+			message: '#^Property ZeroBoiler\\Domain\\Commands\\DomainRepositoryCommand\:\:\$type has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: src/Commands/DomainRepositoryCommand.php
+
+		-
+			message: '#^ZeroBoiler\\Domain\\Commands\\DomainRepositoryCommand\:\:getNameInput\(\) calls parent\:\:getNameInput\(\) but ZeroBoiler\\Domain\\Commands\\DomainRepositoryCommand does not extend any class\.$#'
+			identifier: class.noParent
+			count: 1
+			path: src/Commands/DomainRepositoryCommand.php
+
+		-
+			message: '#^ZeroBoiler\\Domain\\Commands\\DomainRepositoryCommand\:\:handle\(\) calls parent\:\:handle\(\) but ZeroBoiler\\Domain\\Commands\\DomainRepositoryCommand does not extend any class\.$#'
+			identifier: class.noParent
+			count: 1
+			path: src/Commands/DomainRepositoryCommand.php
+
+		-
+			message: '#^Trait ZeroBoiler\\Domain\\Concerns\\EventSourced is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Concerns/EventSourced.php
+
+		-
+			message: '#^Method ZeroBoiler\\Domain\\Contracts\\UnitOfWork\:\:getCommitted\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Contracts/UnitOfWork.php
+
+		-
+			message: '#^Method ZeroBoiler\\Domain\\Contracts\\UnitOfWork\:\:getDeleted\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Contracts/UnitOfWork.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Identifiers/Identifier.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Identifiers/StringIdentifier.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 2
+			path: src/Identifiers/UlidIdentifier.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 2
+			path: src/Identifiers/UuidIdentifier.php
+
+		-
+			message: '#^Method ZeroBoiler\\Domain\\InMemoryUnitOfWork\:\:getCommitted\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/InMemoryUnitOfWork.php
+
+		-
+			message: '#^Method ZeroBoiler\\Domain\\InMemoryUnitOfWork\:\:getDeleted\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/InMemoryUnitOfWork.php
+
+		-
+			message: '#^Property ZeroBoiler\\Domain\\InMemoryUnitOfWork\:\:\$committed type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/InMemoryUnitOfWork.php
+
+		-
+			message: '#^Property ZeroBoiler\\Domain\\InMemoryUnitOfWork\:\:\$deleted type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/InMemoryUnitOfWork.php
+
+		-
+			message: '#^Property ZeroBoiler\\Domain\\InMemoryUnitOfWork\:\:\$tracked type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/InMemoryUnitOfWork.php

@@ -79,7 +79,7 @@ trait EventSourced
 
     protected function applyEvent(DomainEvent $event): void
     {
-        $method = 'apply' . (new ReflectionClass($event))->getShortName();
+        $method = 'apply' . new ReflectionClass($event)->getShortName();
 
         if (! method_exists($this, $method)) {
             throw new RuntimeException(

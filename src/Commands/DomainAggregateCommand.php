@@ -14,10 +14,8 @@ use Illuminate\Console\GeneratorCommand;
 #[Description('Generate a new Domain AggregateRoot class')]
 final class DomainAggregateCommand extends GeneratorCommand
 {
-    #[\Override]
     protected $name = 'zeroboiler:domain:aggregate';
 
-    #[\Override]
     protected $type = 'Aggregate';
 
     protected function getStub(): string
@@ -25,13 +23,11 @@ final class DomainAggregateCommand extends GeneratorCommand
         return __DIR__ . '/../stubs/aggregate.stub';
     }
 
-    #[\Override]
     protected function getDefaultNamespace($rootNamespace): string
     {
         return $rootNamespace . '\\Domain\\Aggregates';
     }
 
-    #[\Override]
     protected function getNameInput(): string
     {
         $name = parent::getNameInput();

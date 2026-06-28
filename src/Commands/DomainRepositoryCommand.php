@@ -15,10 +15,8 @@ use Illuminate\Support\Str;
 #[Description('Generate a new Domain Repository interface and Eloquent implementation')]
 final class DomainRepositoryCommand extends GeneratorCommand
 {
-    #[\Override]
     protected $name = 'zeroboiler:domain:repository';
 
-    #[\Override]
     protected $type = 'Repository';
 
     protected function getStub(): string
@@ -26,13 +24,11 @@ final class DomainRepositoryCommand extends GeneratorCommand
         return __DIR__ . '/../stubs/repository.stub';
     }
 
-    #[\Override]
     protected function getDefaultNamespace($rootNamespace): string
     {
         return $rootNamespace . '\\Domain\\Repositories';
     }
 
-    #[\Override]
     protected function getNameInput(): string
     {
         $name = parent::getNameInput();
@@ -44,7 +40,6 @@ final class DomainRepositoryCommand extends GeneratorCommand
         return $name;
     }
 
-    #[\Override]
     public function handle(): bool
     {
         $result = parent::handle();
@@ -53,17 +48,120 @@ final class DomainRepositoryCommand extends GeneratorCommand
             return false;
         }
 
+        // Generate the Eloquent implementation alongside the interface
+        $this->generateImplementation();
+
+        return true;
+    }
+
+    /**
+     * Generate an Eloquent implementation of the repository interface.
+     */
+    private function generateImplementation(): void
+    {
         $name = $this->getNameInput();
         $rootNamespace = $this->laravel->getNamespace();
 
-        $this->getPath(sprintf('%sDomain\Repositories\%s', $rootNamespace, $name));
         $implementationName = Str::replace('Repository', 'EloquentRepository', $name);
+        $implementationClass = $implementationName;
+        $implementationNamespace = $rootNamespace . 'Domain\\Repositories\\Eloquent';
+        $interfaceFqcn = $rootNamespace . 'Domain\\Repositories\\' . $name;
 
-        $this->call('zeroboiler:domain:repository-impl', [
-            'name' => $implementationName,
-            '--interface' => $name,
-        ]);
+        // Derive the aggregate name from the repository name
+        $aggregateName = Str::replaceLast('Repository', '', $name);
+        $aggregateFqcn = $rootNamespace . 'Domain\\Aggregates\\' . $aggregateName;
 
-        return true;
+        $path = $this->laravel['path'] . '/Domain/Repositories/Eloquent/' . $implementationClass . '.php';
+
+        // Don't overwrite if the file already exists
+        if (! $this->option('force') && file_exists($path)) {
+            $this->components->info(sprintf('Eloquent implementation %s already exists.', $implementationClass));
+
+            return;
+        }
+
+        // Ensure directory exists
+        if (! is_dir(dirname($path))) {
+            @mkdir(dirname($path), 0755, true);
+        }
+
+        $stub = $this->buildImplementationStub(
+            $implementationNamespace,
+            $implementationClass,
+            $interfaceFqcn,
+            $aggregateFqcn,
+            $aggregateName,
+        );
+
+        file_put_contents($path, $stub);
+
+        $this->components->info(sprintf('Eloquent implementation %s created successfully.', $implementationClass));
+    }
+
+    /**
+     * Build the Eloquent repository implementation from a stub.
+     */
+    private function buildImplementationStub(
+        string $namespace,
+        string $className,
+        string $interfaceFqcn,
+        string $aggregateFqcn,
+        string $aggregateName,
+    ): string {
+        $aggregateVar = lcfirst($aggregateName);
+
+        return <<<PHP
+<?php
+
+declare(strict_types=1);
+
+namespace {$namespace};
+
+use {$interfaceFqcn};
+use {$aggregateFqcn};
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Collection;
+
+class {$className} implements {$aggregateName}Repository
+{
+    public function __construct(
+        private readonly Model \${$aggregateVar}Model,
+    ) {}
+
+    public function findById(string \$id): ?{$aggregateName}
+    {
+        \$model = \$this->{$aggregateVar}Model->newQuery()->find(\$id);
+
+        if (\$model === null) {
+            return null;
+        }
+
+        // Map model to domain aggregate — adjust mapping as needed
+        return {$aggregateName}::fromArray(\$model->toArray());
+    }
+
+    public function save({$aggregateName} \${$aggregateVar}): void
+    {
+        \$this->{$aggregateVar}Model->newQuery()->updateOrCreate(
+            ['id' => \${$aggregateVar}->id()],
+            \${$aggregateVar}->toArray(),
+        );
+    }
+
+    public function delete(string \$id): void
+    {
+        \$this->{$aggregateVar}Model->newQuery()->where('id', \$id)->delete();
+    }
+
+    /**
+     * @return Collection<int, {$aggregateName}>
+     */
+    public function all(): Collection
+    {
+        return \$this->{$aggregateVar}Model->newQuery()->get()
+            ->map(fn (Model \$model) => {$aggregateName}::fromArray(\$model->toArray()));
+    }
+}
+PHP;
     }
 }
