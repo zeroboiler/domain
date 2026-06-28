@@ -8,30 +8,33 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Domain;
 
-use JsonSerializable;
+use ZeroBoiler\ValueObjects\ValueObject as BaseValueObject;
 
-abstract readonly class ValueObject implements JsonSerializable
+/**
+ * Domain value object base class.
+ *
+ * Extends the zeroboiler/value-objects package to provide
+ * immutability, equality, validation, and Eloquent auto-casting
+ * for domain-level value objects.
+ *
+ * Domain VOs (OrderId, CustomerId, Address, etc.) should extend
+ * this class to get full integration with the value-objects ecosystem.
+ *
+ * @extends BaseValueObject<array<string, mixed>>
+ */
+abstract class ValueObject extends BaseValueObject
 {
-    public function equals(ValueObject $other): bool
+    /**
+     * Check equality with another value object.
+     *
+     * @param  BaseValueObject<mixed>  $other
+     */
+    public function equals(BaseValueObject $other): bool
     {
+        if ($other::class !== static::class) {
+            return false;
+        }
+
         return $this->toArray() === $other->toArray();
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    abstract public function toArray(): array;
-
-    public function toJson(): string
-    {
-        return json_encode($this, JSON_THROW_ON_ERROR);
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function jsonSerialize(): array
-    {
-        return $this->toArray();
     }
 }

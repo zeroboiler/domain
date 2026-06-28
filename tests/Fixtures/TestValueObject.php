@@ -6,7 +6,7 @@ namespace ZeroBoiler\Domain\Tests\Fixtures;
 
 use ZeroBoiler\Domain\ValueObject;
 
-final readonly class TestValueObject extends ValueObject implements \Stringable
+final class TestValueObject extends ValueObject implements \Stringable
 {
     public function __construct(
         public string $value,

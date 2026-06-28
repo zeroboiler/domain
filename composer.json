@@ -10,11 +10,18 @@
             "email": "hello@zeroboiler.dev"
         }
     ],
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../value-objects"
+        }
+    ],
     "require": {
         "php": "^8.5",
         "illuminate/support": "^13.0",
         "ramsey/uuid": "^4.7",
-        "symfony/uid": "^7.0"
+        "symfony/uid": "^7.0",
+        "zeroboiler/value-objects": "^0.1"
     },
     "require-dev": {
         "laravel/pint": "^1.18",
