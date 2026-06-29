@@ -7,7 +7,6 @@ namespace ZeroBoiler\Domain\Identifiers;
 use JsonSerializable;
 use Symfony\Component\Uid\Ulid as SymfonyUlid;
 use Symfony\Component\Uid\Ulid as UlidInterface;
-use ZeroBoiler\Domain\Contracts\Identifier;
 use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
 
 abstract readonly class UlidIdentifier implements IdentifierContract, JsonSerializable
@@ -33,7 +32,7 @@ abstract readonly class UlidIdentifier implements IdentifierContract, JsonSerial
         return $this->value;
     }
 
-    public function equals(Identifier $other): bool
+    public function equals(IdentifierContract $other): bool
     {
         return $other instanceof UlidIdentifier && $this->value === $other->value;
     }

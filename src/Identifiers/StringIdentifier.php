@@ -6,7 +6,6 @@ namespace ZeroBoiler\Domain\Identifiers;
 
 use JsonSerializable;
 use ValueError;
-use ZeroBoiler\Domain\Contracts\Identifier;
 use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
 
 readonly class StringIdentifier implements IdentifierContract, JsonSerializable
@@ -29,7 +28,7 @@ readonly class StringIdentifier implements IdentifierContract, JsonSerializable
         return static::from($value);
     }
 
-    public function equals(Identifier $other): bool
+    public function equals(IdentifierContract $other): bool
     {
         return $other instanceof StringIdentifier && $this->value === $other->value;
     }

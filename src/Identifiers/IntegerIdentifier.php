@@ -8,7 +8,6 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Domain\Identifiers;
 
-use ZeroBoiler\Domain\Contracts\Identifier;
 use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
 
 final readonly class IntegerIdentifier implements IdentifierContract
@@ -35,7 +34,7 @@ final readonly class IntegerIdentifier implements IdentifierContract
         return (string) $this->value;
     }
 
-    public function equals(Identifier $other): bool
+    public function equals(IdentifierContract $other): bool
     {
         return $other instanceof IntegerIdentifier && $this->value === $other->value;
     }
