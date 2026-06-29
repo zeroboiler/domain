@@ -79,14 +79,21 @@ trait EventSourced
 
     protected function applyEvent(DomainEvent $event): void
     {
-        $method = 'apply' . new ReflectionClass($event)->getShortName();
+        // Use the eventType property for method resolution.
+        // DomainEvent is a single class (not one class per event type),
+        // so reflection on the class name would always yield 'applyDomainEvent'.
+        // Instead, convert the eventType string (e.g., 'order.placed') to
+        // a method name (e.g., 'applyOrderPlaced').
+        $parts = explode('.', $event->eventType);
+        $method = 'apply' . implode('', array_map(ucfirst(...), $parts));
 
         if (! method_exists($this, $method)) {
             throw new RuntimeException(
                 sprintf(
-                    'Method %s not found in %s',
+                    'Method %s not found in %s for event type "%s"',
                     $method,
-                    static::class
+                    static::class,
+                    $event->eventType
                 )
             );
         }

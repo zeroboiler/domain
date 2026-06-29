@@ -49,6 +49,12 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
 
         $this->tracked = [];
         $this->deleted = [];
+        // Note: committed data is NOT cleared on rollback.
+        // Committed represents successfully persisted state from prior
+        // commit() calls within this UoW lifecycle. Rollback only
+        // discards the current uncommitted transaction scope.
+        // The previous report noted "stale committed data" — this is
+        // by design: committed = persisted, rollback = abort current batch only.
         $this->active = false;
     }
 
@@ -127,5 +133,19 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
     public function getDeleted(): array
     {
         return $this->deleted;
+    }
+
+    /**
+     * Clear all state including committed data.
+     *
+     * Use this between test cases or when you need a full reset.
+     * Unlike rollback(), this also clears committed aggregates.
+     */
+    public function clear(): void
+    {
+        $this->tracked = [];
+        $this->committed = [];
+        $this->deleted = [];
+        $this->active = false;
     }
 }
