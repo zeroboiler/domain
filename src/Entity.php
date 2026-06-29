@@ -8,9 +8,10 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Domain;
 
+use ZeroBoiler\Domain\Contracts\Entity as EntityContract;
 use ZeroBoiler\Domain\Support\HasDomainEvents;
 
-abstract class Entity
+abstract class Entity implements EntityContract
 {
     use HasDomainEvents;
 
@@ -18,7 +19,18 @@ abstract class Entity
         public readonly mixed $id,
     ) {}
 
-    public function equals(Entity $other): bool
+    /**
+     * Return the entity's domain identity.
+     *
+     * Defaults to returning the raw $id property. Subclasses (like AggregateRoot)
+     * may override this to return a normalized string representation.
+     */
+    public function id(): string|int
+    {
+        return $this->id instanceof \Stringable ? (string) $this->id : $this->id;
+    }
+
+    public function equals(EntityContract $other): bool
     {
         return static::class === $other::class && $this->id === $other->id;
     }

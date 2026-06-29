@@ -10,16 +10,26 @@ namespace ZeroBoiler\Domain;
 
 use ZeroBoiler\Domain\Collections\DomainEventCollection;
 use ZeroBoiler\Domain\Contracts\AggregateRoot as AggregateRootContract;
-use ZeroBoiler\Domain\Contracts\Entity;
-use ZeroBoiler\Domain\Support\HasDomainEvents;
+use ZeroBoiler\Domain\Contracts\Entity as EntityContract;
 
-abstract class AggregateRoot implements AggregateRootContract
+/**
+ * Base class for aggregate roots in a DDD architecture.
+ *
+ * Extends Entity to ensure consistent initialization and inheritance.
+ * The AggregateRootId is stored as a typed internal property while
+ * also being passed to the parent Entity constructor for the generic $id.
+ */
+abstract class AggregateRoot extends Entity implements AggregateRootContract
 {
-    use HasDomainEvents;
-
     protected int $version = 0;
 
-    protected function __construct(public AggregateRootId $id) {}
+    protected function __construct(
+        private readonly AggregateRootId $aggregateId,
+    ) {
+        // Pass the AggregateRootId to parent Entity constructor.
+        // Entity stores it as mixed $id; we keep a typed alias for internal use.
+        parent::__construct($aggregateId);
+    }
 
     protected function apply(DomainEvent $event): void
     {
@@ -78,22 +88,37 @@ abstract class AggregateRoot implements AggregateRootContract
         $this->domainEvents = [];
     }
 
-    public function id(): string|int
+    /**
+     * Return the aggregate's domain identity as a string.
+     *
+     * Overrides Entity::id() which returns mixed. AggregateRoot narrows
+     * the return type to string for consistent identity representation.
+     */
+    public function id(): string
     {
-        return $this->id->toString();
+        return $this->aggregateId->toString();
+    }
+
+    /**
+     * Get the typed AggregateRootId instance.
+     *
+     * Use this when you need the actual AggregateRootId object rather
+     * than its string representation.
+     */
+    public function aggregateId(): AggregateRootId
+    {
+        return $this->aggregateId;
     }
 
     /**
      * Check identity equality with another entity.
+     *
+     * Uses string comparison consistently across the hierarchy, matching
+     * AggregateRootId's toString() output for reliable identity checks.
      */
-    #[\Override]
-    public function equals(Entity $other): bool
+    public function equals(EntityContract $other): bool
     {
-        if ($other::class !== static::class) {
-            return false;
-        }
-
-        // Compare using string casting to handle both string and int IDs consistently
-        return $this->id->toString() === (string) $other->id();
+        return static::class === $other::class
+            && $this->aggregateId->toString() === (string) $other->id();
     }
 }
