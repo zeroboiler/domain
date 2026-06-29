@@ -64,7 +64,7 @@ final class DomainEventDispatcher
 
         // Forward to external event systems (e.g. Events package EventManager)
         // for DB-driven triggers, without a hard coupling.
-        if ($this->eventForwarder instanceof \Closure) {
+        if ($this->eventForwarder instanceof Closure) {
             ($this->eventForwarder)($eventType, $event->payload);
         }
     }
