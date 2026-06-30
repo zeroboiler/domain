@@ -60,7 +60,10 @@ final class DomainEventDispatcher
 
         // Also dispatch through Laravel's event system so that
         // any framework-level listeners or observers are notified.
-        $this->laravelDispatcher?->dispatch($event, $event->payload);
+        // Note: Laravel's dispatcher ignores the payload argument when the
+        // first argument is an event object (not a string), so we pass only
+        // the event object to avoid confusion and ensure correct behavior.
+        $this->laravelDispatcher?->dispatch($event);
 
         // Forward to external event systems (e.g. Events package EventManager)
         // for DB-driven triggers, without a hard coupling.
