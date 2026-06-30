@@ -13,7 +13,7 @@ use ZeroBoiler\Domain\DomainEvent;
 trait HasDomainEvents
 {
     /** @var array<int, DomainEvent> */
-    private array $domainEvents = [];
+    protected array $domainEvents = [];
 
     protected function recordThat(DomainEvent $event): void
     {

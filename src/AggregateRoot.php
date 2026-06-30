@@ -94,6 +94,7 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
      * Overrides Entity::id() which returns mixed. AggregateRoot narrows
      * the return type to string for consistent identity representation.
      */
+    #[\Override]
     public function id(): string
     {
         return $this->aggregateId->toString();
@@ -116,6 +117,7 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
      * Uses string comparison consistently across the hierarchy, matching
      * AggregateRootId's toString() output for reliable identity checks.
      */
+    #[\Override]
     public function equals(EntityContract $other): bool
     {
         return static::class === $other::class

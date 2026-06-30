@@ -32,6 +32,6 @@ abstract class Entity implements EntityContract
 
     public function equals(EntityContract $other): bool
     {
-        return static::class === $other::class && $this->id === $other->id;
+        return static::class === $other::class && $this->id() === $other->id();
     }
 }
