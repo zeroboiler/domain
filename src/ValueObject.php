@@ -8,8 +8,8 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Domain;
 
+use ZeroBoiler\ValueObjects\Contracts\ValueObject as ValueObjectContract;
 use ZeroBoiler\ValueObjects\ValueObject as BaseValueObject;
-use ZeroBoiler\ValueObjects\ValueObjectInterface;
 
 /**
  * Domain value object base class.
@@ -21,19 +21,17 @@ use ZeroBoiler\ValueObjects\ValueObjectInterface;
  * Domain VOs (OrderId, CustomerId, Address, etc.) should extend
  * this class to get full integration with the value-objects ecosystem.
  *
- * @extends BaseValueObject<array<string, mixed>>
+ * @extends BaseValueObject<string, mixed>
  */
 abstract class ValueObject extends BaseValueObject
 {
     /**
      * Check equality with another value object.
-     *
-     * @param  ValueObjectInterface<mixed>  $other
      */
     #[\Override]
-    public function equals(ValueObjectInterface $other): bool
+    public function equals(?ValueObjectContract $other): bool
     {
-        if ($other::class !== static::class) {
+        if (! $other instanceof ValueObjectContract || $other::class !== static::class) {
             return false;
         }
 

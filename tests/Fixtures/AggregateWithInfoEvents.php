@@ -29,7 +29,7 @@ final class AggregateWithInfoEvents extends AggregateRoot
 
     protected function applyAggregateCreated(DomainEvent $event): void
     {
-        $this->name = $event->payload['name'];
+        $this->name = $event->payload['name'] ?? '';
     }
 
     // Note: no applyAggregateNoted() handler — simulating a purely informational event
