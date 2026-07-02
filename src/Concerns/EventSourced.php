@@ -24,6 +24,7 @@ trait EventSourced
      * (using the 'id' or 'aggregate_id' key) and passed to the constructor.
      *
      * @param  DomainEvent  ...$events  The events to replay.
+     * @param  bool  $lenient  When true, events without an apply* handler are silently skipped.
      * @return static The reconstituted aggregate.
      *
      * @throws RuntimeException If no events are provided or the ID cannot be extracted.
@@ -60,7 +61,7 @@ trait EventSourced
         $versionProperty->setValue($instance, 0);
 
         foreach ($events as $event) {
-            $instance->applyEvent($event);
+            $instance->applyEvent($event, lenient: true);
         }
 
         // Clear any recorded events — reconstituted aggregates have no uncommitted events
@@ -77,7 +78,7 @@ trait EventSourced
         $this->version++;
     }
 
-    protected function applyEvent(DomainEvent $event): void
+    protected function applyEvent(DomainEvent $event, bool $lenient = false): void
     {
         // Use the eventType property for method resolution.
         // DomainEvent is a single class (not one class per event type),
@@ -88,6 +89,14 @@ trait EventSourced
         $method = 'apply' . implode('', array_map(ucfirst(...), $parts));
 
         if (! method_exists($this, $method)) {
+            if ($lenient) {
+                // In lenient mode, silently skip events that have no handler.
+                // This is useful for purely informational events that don't
+                // change aggregate state, or for forward-compatible replaying
+                // when new event types are introduced.
+                return;
+            }
+
             throw new RuntimeException(
                 sprintf(
                     'Method %s not found in %s for event type "%s"',

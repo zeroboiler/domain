@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace ZeroBoiler\Domain;
 
 use ZeroBoiler\ValueObjects\ValueObject as BaseValueObject;
+use ZeroBoiler\ValueObjects\ValueObjectInterface;
 
 /**
  * Domain value object base class.
@@ -27,10 +28,10 @@ abstract class ValueObject extends BaseValueObject
     /**
      * Check equality with another value object.
      *
-     * @param  BaseValueObject<mixed>  $other
+     * @param  ValueObjectInterface<mixed>  $other
      */
     #[\Override]
-    public function equals(BaseValueObject $other): bool
+    public function equals(ValueObjectInterface $other): bool
     {
         if ($other::class !== static::class) {
             return false;
