@@ -27,11 +27,15 @@ final class AggregateWithInfoEvents extends AggregateRoot
         return $aggregate;
     }
 
-    protected function applyAggregateCreated(DomainEvent $event): void
+    // Note: no applyAggregateNoted() handler — simulating a purely informational event
+    // that doesn't change aggregate state.
+
+    /**
+     * Event handler — called by EventSourced trait via convention.
+     * This method is NOT unused; it's invoked dynamically.
+     */
+    public function applyAggregateCreated(DomainEvent $event): void
     {
         $this->name = $event->payload['name'] ?? '';
     }
-
-    // Note: no applyAggregateNoted() handler — simulating a purely informational event
-    // that doesn't change aggregate state.
 }
