@@ -18,6 +18,12 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
 
     private array $deleted = [];
 
+    /** @var \WeakMap<object, string>|null Instance-local identity map for aggregates without domain ID */
+    private ?\WeakMap $idMap = null;
+
+    /** @var int Instance-local counter for fallback object IDs */
+    private int $nextId = 0;
+
     public function begin(): void
     {
         if ($this->active) {
@@ -110,19 +116,18 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
             // Aggregate may not have an ID yet (newly created, not persisted)
         }
 
-        // Fall back to stable object identity via WeakMap (avoids spl_object_id reuse)
-        static $idMap = null;
-        static $nextId = 0;
-
-        if ($idMap === null) {
-            $idMap = new \WeakMap;
+        // Fall back to stable object identity via instance-local WeakMap.
+        // Instance properties (not static) so each UoW has its own ID space
+        // and GC'd properly when the UoW is destroyed (no process-global counter).
+        if ($this->idMap === null) {
+            $this->idMap = new \WeakMap;
         }
 
-        if (! isset($idMap[$aggregate])) {
-            $idMap[$aggregate] = 'obj_' . (++$nextId);
+        if (! isset($this->idMap[$aggregate])) {
+            $this->idMap[$aggregate] = 'obj_' . (++$this->nextId);
         }
 
-        return $idMap[$aggregate];
+        return $this->idMap[$aggregate];
     }
 
     public function getCommitted(): array
