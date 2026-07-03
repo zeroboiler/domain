@@ -119,7 +119,7 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
         // Fall back to stable object identity via instance-local WeakMap.
         // Instance properties (not static) so each UoW has its own ID space
         // and GC'd properly when the UoW is destroyed (no process-global counter).
-        if ($this->idMap === null) {
+        if (! $this->idMap instanceof \WeakMap) {
             $this->idMap = new \WeakMap;
         }
 
