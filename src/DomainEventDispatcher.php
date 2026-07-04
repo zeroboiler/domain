@@ -84,11 +84,15 @@ final class DomainEventDispatcher
 
     public function releaseDeferred(): void
     {
-        foreach ($this->deferredEvents as $event) {
-            $this->dispatch($event);
+        try {
+            foreach ($this->deferredEvents as $event) {
+                $this->dispatch($event);
+            }
+        } finally {
+            // Always clear the deferred collection, even if a listener threw.
+            // This prevents memory leaks and re-dispatching stale events.
+            $this->deferredEvents = new Collection;
         }
-
-        $this->deferredEvents = new Collection;
     }
 
     public function clearDeferred(): void

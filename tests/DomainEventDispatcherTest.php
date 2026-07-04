@@ -200,3 +200,28 @@ it('calls both listeners and forwarder on dispatch', function (): void {
     expect($listenerCalled)->toBeTrue()
         ->and($forwarderCalled)->toBeTrue();
 });
+
+it('clears deferred events even when a listener throws during release', function (): void {
+    // IMP-3 R33: releaseDeferred() should clear the collection in a finally block
+    // so that a throwing listener doesn't leave events stuck in memory.
+    $this->dispatcher->subscribe('Boom', function (): never {
+        throw new RuntimeException('listener failed');
+    });
+
+    $this->dispatcher->subscribe('AfterBoom', function () {
+        // This listener should never be called because the first dispatch throws
+    });
+
+    $this->dispatcher->defer(DomainEvent::occur('Boom'));
+    $this->dispatcher->defer(DomainEvent::occur('AfterBoom'));
+
+    try {
+        $this->dispatcher->releaseDeferred();
+    } catch (RuntimeException) {
+        // Expected
+    }
+
+    // The deferred collection must be cleared despite the exception
+    expect($this->dispatcher->hasDeferredEvents())->toBeFalse()
+        ->and($this->dispatcher->getDeferredEventsCount())->toBe(0);
+});
