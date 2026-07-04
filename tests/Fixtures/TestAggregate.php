@@ -10,6 +10,10 @@ use ZeroBoiler\Domain\DomainEvent;
 
 final class TestAggregate extends AggregateRoot
 {
+    public bool $nameChanged = false;
+
+    public ?string $name = null;
+
     public static function create(AggregateRootId $id): self
     {
         $aggregate = new self($id);
@@ -19,5 +23,21 @@ final class TestAggregate extends AggregateRoot
         ]));
 
         return $aggregate;
+    }
+
+    public function rename(string $name): self
+    {
+        $this->apply(DomainEvent::occur('TestAggregateRenamed', [
+            'id' => $this->aggregateId()->toString(),
+            'name' => $name,
+        ]));
+
+        return $this;
+    }
+
+    protected function applyTestAggregateRenamed(DomainEvent $event): void
+    {
+        $this->name = $event->payload['name'] ?? null;
+        $this->nameChanged = true;
     }
 }

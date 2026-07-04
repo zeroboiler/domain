@@ -34,6 +34,17 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
     protected function apply(DomainEvent $event): void
     {
         $this->recordThat($event);
+
+        // Dispatch to the specific apply* handler if present.
+        // This ensures state mutation handlers (e.g., applyOrderPlaced) are invoked
+        // when applying new events, not just when replaying from history (#664).
+        $parts = explode('.', $event->eventType);
+        $method = 'apply' . implode('', array_map(ucfirst(...), $parts));
+
+        if (method_exists($this, $method)) {
+            $this->$method($event);
+        }
+
         $this->version++;
     }
 

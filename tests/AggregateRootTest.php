@@ -59,3 +59,35 @@ it('clears events manually', function (): void {
 
     expect($aggregate->hasUncommittedEvents())->toBeFalse();
 });
+
+it('dispatches to apply handler on new events (#664)', function (): void {
+    $aggregate = TestAggregate::create($this->aggregateId);
+    $aggregate->releaseEvents();
+
+    $aggregate->rename('New Name');
+
+    expect($aggregate->name)->toBe('New Name')
+        ->and($aggregate->nameChanged)->toBeTrue();
+});
+
+it('increments version for each applied event', function (): void {
+    $aggregate = TestAggregate::create($this->aggregateId);
+
+    expect($aggregate->getVersion())->toBe(1);
+
+    $aggregate->rename('First');
+    $aggregate->rename('Second');
+
+    expect($aggregate->getVersion())->toBe(3);
+});
+
+it('records events from apply handler dispatch', function (): void {
+    $aggregate = TestAggregate::create($this->aggregateId);
+    $aggregate->releaseEvents();
+
+    $aggregate->rename('New Name');
+
+    $events = $aggregate->releaseEvents();
+    expect($events)->toHaveCount(1)
+        ->and($events[0]->eventType)->toBe('TestAggregateRenamed');
+});
