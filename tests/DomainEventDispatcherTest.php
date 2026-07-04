@@ -208,7 +208,7 @@ it('clears deferred events even when a listener throws during release', function
         throw new RuntimeException('listener failed');
     });
 
-    $this->dispatcher->subscribe('AfterBoom', function () {
+    $this->dispatcher->subscribe('AfterBoom', function (): void {
         // This listener should never be called because the first dispatch throws
     });
 
