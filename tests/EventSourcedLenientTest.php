@@ -61,3 +61,31 @@ it('fromHistory still throws on missing aggregate ID in first event', function (
 
     AggregateWithInfoEvents::fromHistory($event);
 })->throws(RuntimeException::class);
+
+it('fromHistory resets version to 0 before replaying via setVersion (BUG-3 R33)', function (): void {
+    $id = $this->aggregateId->toString();
+
+    $createdEvent = DomainEvent::occur('aggregate.created', [
+        'id' => $id,
+        'name' => 'Test',
+    ]);
+
+    // fromHistory should reset version to 0 then replay events.
+    // With 1 event that has a handler, version should be 1 (not 2).
+    // If reflection was used incorrectly and the constructor incremented version,
+    // the final version could be wrong. This test verifies setVersion is used.
+    $aggregate = AggregateWithInfoEvents::fromHistory($createdEvent);
+
+    // 1 event replayed → version should be exactly 1
+    expect($aggregate->getVersion())->toBe(1);
+});
+
+it('fromHistory does not use ReflectionClass (BUG-3 R33)', function (): void {
+    // Verify the EventSourced trait no longer imports or uses ReflectionClass.
+    // The trait should use the public setVersion() method instead.
+    $source = file_get_contents(__DIR__ . '/../src/Concerns/EventSourced.php');
+
+    expect($source)->not->toContain('ReflectionClass')
+        ->and($source)->not->toContain('use ReflectionClass')
+        ->and($source)->toContain('setVersion(0)');
+});

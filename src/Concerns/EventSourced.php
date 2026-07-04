@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Domain\Concerns;
 
-use ReflectionClass;
 use RuntimeException;
 use ZeroBoiler\Domain\AggregateRootId;
 use ZeroBoiler\Domain\DomainEvent;
@@ -55,10 +54,11 @@ trait EventSourced
 
         $instance = new static($aggregateId);
 
-        // Reset version to 0 before replaying — the constructor may have incremented it
-        $reflection = new ReflectionClass($instance);
-        $versionProperty = $reflection->getProperty('version');
-        $versionProperty->setValue($instance, 0);
+        // Reset version to 0 before replaying — the constructor may have incremented it.
+        // Use the public setVersion() method instead of reflection to avoid issues
+        // with deeper class hierarchies where getProperty('version') might resolve
+        // to the wrong declaration (BUG-3 R33).
+        $instance->setVersion(0);
 
         foreach ($events as $event) {
             $instance->applyEvent($event, lenient: true);
