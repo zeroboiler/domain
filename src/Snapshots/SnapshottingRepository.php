@@ -30,7 +30,7 @@ final readonly class SnapshottingRepository implements Repository
 {
     /**
      * @param  string  $aggregateType  The FQCN of the aggregate root class.
-     *                                  Required to avoid snapshot collisions between different aggregate types.
+     *                                 Required to avoid snapshot collisions between different aggregate types.
      */
     public function __construct(
         private Repository $inner,

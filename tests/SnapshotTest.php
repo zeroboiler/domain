@@ -10,10 +10,13 @@ use ZeroBoiler\Domain\AggregateRoot;
 use ZeroBoiler\Domain\AggregateRootId;
 use ZeroBoiler\Domain\Concerns\EventSourced;
 use ZeroBoiler\Domain\Concerns\HasSnapshots;
+use ZeroBoiler\Domain\Contracts\Repository;
 use ZeroBoiler\Domain\DomainEvent;
 use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
 use ZeroBoiler\Domain\Snapshots\Snapshot;
 use ZeroBoiler\Domain\Snapshots\SnapshotPolicy;
+use ZeroBoiler\Domain\Snapshots\SnapshottingRepository;
+use ZeroBoiler\Domain\TestStatus;
 
 describe('Snapshot', function (): void {
     it('creates a snapshot with create()', function (): void {
@@ -477,26 +480,26 @@ describe('SnapshottingRepository (BUG-1/BUG-2 R37)', function (): void {
         $store = new InMemorySnapshotStore;
 
         // Create a simple inner repository stub
-        $innerRepo = new class implements \ZeroBoiler\Domain\Contracts\Repository
+        $innerRepo = new class implements Repository
         {
-            public function find(string|int $id): ?\ZeroBoiler\Domain\AggregateRoot
+            public function find(string|int $id): ?AggregateRoot
             {
                 return null;
             }
 
-            public function save(\ZeroBoiler\Domain\AggregateRoot $aggregate): void {}
+            public function save(AggregateRoot $aggregate): void {}
 
             public function delete(string|int $id): void {}
         };
 
-        $repo = new \ZeroBoiler\Domain\Snapshots\SnapshottingRepository(
+        $repo = new SnapshottingRepository(
             inner: $innerRepo,
             snapshotStore: $store,
             aggregateType: 'App\\Models\\Order',
         );
 
         // Verify the aggregateType is stored correctly by checking snapshot isolation
-        expect($repo)->toBeInstanceOf(\ZeroBoiler\Domain\Snapshots\SnapshottingRepository::class);
+        expect($repo)->toBeInstanceOf(SnapshottingRepository::class);
     });
 
     it('uses snapshot in find() instead of skipping it', function (): void {
@@ -517,6 +520,7 @@ describe('SnapshottingRepository (BUG-1/BUG-2 R37)', function (): void {
 
         // Save a snapshot
         $aggregateClass->setVersion(10);
+
         $snapshot = Snapshot::create(
             aggregateType: $aggregateClass::class,
             aggregateId: $aggregateClass->id(),
@@ -526,19 +530,19 @@ describe('SnapshottingRepository (BUG-1/BUG-2 R37)', function (): void {
         $store->save($snapshot);
 
         // Inner repo returns null (no event store)
-        $innerRepo = new class implements \ZeroBoiler\Domain\Contracts\Repository
+        $innerRepo = new class implements Repository
         {
-            public function find(string|int $id): ?\ZeroBoiler\Domain\AggregateRoot
+            public function find(string|int $id): ?AggregateRoot
             {
                 return null;
             }
 
-            public function save(\ZeroBoiler\Domain\AggregateRoot $aggregate): void {}
+            public function save(AggregateRoot $aggregate): void {}
 
             public function delete(string|int $id): void {}
         };
 
-        $repo = new \ZeroBoiler\Domain\Snapshots\SnapshottingRepository(
+        $repo = new SnapshottingRepository(
             inner: $innerRepo,
             snapshotStore: $store,
             aggregateType: $aggregateClass::class,
@@ -564,7 +568,7 @@ describe('SnapshottingRepository (BUG-1/BUG-2 R37)', function (): void {
 
 describe('HasSnapshots serialization safety (BUG-3 R37)', function (): void {
     it('filters out non-serializable objects from snapshot state', function (): void {
-        $pdo = new \PDO('sqlite::memory:');
+        $pdo = new PDO('sqlite::memory:');
 
         $aggregate = new class extends AggregateRoot
         {
@@ -572,12 +576,12 @@ describe('HasSnapshots serialization safety (BUG-3 R37)', function (): void {
 
             public string $name = 'test';
 
-            public \Closure $callback;
+            public Closure $callback;
 
             public function __construct()
             {
                 parent::__construct(AggregateRootId::generate());
-                $this->callback = fn () => 'hello';
+                $this->callback = fn (): string => 'hello';
             }
         };
 
@@ -591,19 +595,16 @@ describe('HasSnapshots serialization safety (BUG-3 R37)', function (): void {
     });
 
     it('converts DateTimeInterface to ISO string for safe serialization', function (): void {
-        $date = new \DateTimeImmutable('2026-01-15T10:30:00+00:00');
+        $date = new DateTimeImmutable('2026-01-15T10:30:00+00:00');
 
-        $aggregate = new class ($date) extends AggregateRoot
+        $aggregate = new class($date) extends AggregateRoot
         {
             use HasSnapshots;
 
             public string $name = 'test';
 
-            public \DateTimeImmutable $createdAt;
-
-            public function __construct(\DateTimeImmutable $date)
+            public function __construct(public DateTimeImmutable $createdAt)
             {
-                $this->createdAt = $date;
                 parent::__construct(AggregateRootId::generate());
             }
         };
@@ -621,7 +622,7 @@ describe('HasSnapshots serialization safety (BUG-3 R37)', function (): void {
 
             public string $name = 'test';
 
-            public \ZeroBoiler\Domain\TestStatus $status;
+            public TestStatus $status;
 
             public function __construct()
             {
@@ -629,7 +630,7 @@ describe('HasSnapshots serialization safety (BUG-3 R37)', function (): void {
             }
         };
 
-        $aggregate->status = \ZeroBoiler\Domain\TestStatus::ACTIVE;
+        $aggregate->status = TestStatus::ACTIVE;
 
         $state = $aggregate->toSnapshotState();
 

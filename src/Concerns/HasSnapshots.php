@@ -98,10 +98,8 @@ trait HasSnapshots
             }
 
             // Skip arrays containing non-serializable objects
-            if (is_array($value)) {
-                if (json_encode($value) === false) {
-                    continue;
-                }
+            if (is_array($value) && json_encode($value) === false) {
+                continue;
             }
 
             $state[$property->getName()] = $value;

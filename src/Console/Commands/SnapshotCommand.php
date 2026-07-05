@@ -72,6 +72,7 @@ final class SnapshotCommand extends Command
                     $display = (string) $value;
                 } elseif (is_array($value) || is_object($value)) {
                     $display = json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
                     if ($display === false) {
                         $display = '<non-serializable>';
                     }
@@ -80,6 +81,7 @@ final class SnapshotCommand extends Command
                 } else {
                     $display = '<' . gettype($value) . '>';
                 }
+
                 $this->line(sprintf('    %s: %s', $key, $display));
             }
 

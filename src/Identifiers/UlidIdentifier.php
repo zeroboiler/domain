@@ -31,7 +31,7 @@ abstract readonly class UlidIdentifier implements IdentifierContract, JsonSerial
             SymfonyUlid::fromString($value);
 
             return true;
-        } catch (\ValueError) {
+        } catch (\InvalidArgumentException) {
             return false;
         }
     }
