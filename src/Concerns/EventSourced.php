@@ -85,7 +85,8 @@ trait EventSourced
         // so reflection on the class name would always yield 'applyDomainEvent'.
         // Instead, convert the eventType string (e.g., 'order.placed') to
         // a method name (e.g., 'applyOrderPlaced').
-        $parts = explode('.', $event->eventType);
+        // Split on dots, underscores, and hyphens to support various naming conventions
+        $parts = preg_split('/[._-]/', $event->eventType) ?: [];
         $method = 'apply' . implode('', array_map(ucfirst(...), $parts));
 
         if (! method_exists($this, $method)) {
