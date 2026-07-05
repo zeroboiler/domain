@@ -3,7 +3,13 @@
     "description": "DDD building blocks for rich domain models with aggregate roots, entities, value objects, and domain events",
     "type": "library",
     "license": "MIT",
-    "keywords": ["ddd", "domain-driven-design", "aggregate-root", "value-object", "domain-event"],
+    "keywords": [
+        "ddd",
+        "domain-driven-design",
+        "aggregate-root",
+        "value-object",
+        "domain-event"
+    ],
     "authors": [
         {
             "name": "ZeroBoiler",
@@ -17,8 +23,9 @@
         }
     ],
     "require": {
-        "php": "^8.5",
+        "illuminate/console": "^13.0",
         "illuminate/support": "^13.0",
+        "php": "^8.5",
         "ramsey/uuid": "^4.7",
         "symfony/uid": "^7.0",
         "zeroboiler/value-objects": "^0.1"

@@ -55,11 +55,14 @@ trait HasSnapshots
                 continue;
             }
 
-            $property->setAccessible(true);
             $value = $property->getValue($this);
 
             // Skip closures and resources
-            if ($value instanceof \Closure || is_resource($value)) {
+            if ($value instanceof \Closure) {
+                continue;
+            }
+
+            if (is_resource($value)) {
                 continue;
             }
 
@@ -84,7 +87,6 @@ trait HasSnapshots
         foreach ($state as $name => $value) {
             if ($reflection->hasProperty($name)) {
                 $property = $reflection->getProperty($name);
-                $property->setAccessible(true);
                 $property->setValue($this, $value);
             }
         }

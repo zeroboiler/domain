@@ -22,7 +22,7 @@ interface SnapshotStore
      *
      * @param  string  $aggregateType  The FQCN of the aggregate class.
      * @param  string  $aggregateId  The aggregate's unique identifier.
-     * @return Snapshot|null  The latest snapshot, or null if none exists.
+     * @return Snapshot|null The latest snapshot, or null if none exists.
      */
     public function load(string $aggregateType, string $aggregateId): ?Snapshot;
 

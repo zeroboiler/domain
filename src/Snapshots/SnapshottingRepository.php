@@ -9,10 +9,10 @@ declare(strict_types=1);
 namespace ZeroBoiler\Domain\Snapshots;
 
 use ZeroBoiler\Domain\AggregateRoot;
-use ZeroBoiler\Domain\Contracts\Repository;
-use ZeroBoiler\Domain\DomainEvent;
 use ZeroBoiler\Domain\Concerns\EventSourced;
 use ZeroBoiler\Domain\Concerns\HasSnapshots;
+use ZeroBoiler\Domain\Contracts\Repository;
+use ZeroBoiler\Domain\DomainEvent;
 
 /**
  * Repository decorator that adds snapshot support to event-sourced aggregates.
@@ -26,11 +26,11 @@ use ZeroBoiler\Domain\Concerns\HasSnapshots;
  * 1. Delegates to the base repository
  * 2. Checks if snapshot is due (#[SnapshotPolicy]) and creates one
  */
-final class SnapshottingRepository implements Repository
+final readonly class SnapshottingRepository implements Repository
 {
     public function __construct(
-        private readonly Repository $inner,
-        private readonly SnapshotStore $snapshotStore,
+        private Repository $inner,
+        private SnapshotStore $snapshotStore,
     ) {}
 
     #[\Override]
@@ -41,7 +41,7 @@ final class SnapshottingRepository implements Repository
         // Try loading from snapshot
         $snapshot = $this->snapshotStore->load($aggregateType, (string) $id);
 
-        if ($snapshot !== null) {
+        if ($snapshot instanceof Snapshot) {
             // Check if the aggregate uses HasSnapshots trait
             // We need to create an instance first, then restore
             // For now, delegate to inner repository but provide snapshot hint
@@ -61,8 +61,11 @@ final class SnapshottingRepository implements Repository
         $this->inner->save($aggregate);
 
         // Check if snapshot should be created
-        if ($this->usesSnapshots($aggregate) && $aggregate->shouldSnapshot()) {
-            $aggregate->createSnapshot($this->snapshotStore);
+        if ($this->usesSnapshots($aggregate)) {
+            /** @var AggregateRoot&HasSnapshots $aggregate */
+            if ($aggregate->shouldSnapshot()) {
+                $aggregate->createSnapshot($this->snapshotStore);
+            }
         }
     }
 
@@ -100,11 +103,11 @@ final class SnapshottingRepository implements Repository
         $aggregateType = $this->detectAggregateType();
         $snapshot = $this->snapshotStore->load($aggregateType, $id);
 
-        if ($snapshot !== null && $replayCallback !== null) {
+        if ($snapshot instanceof Snapshot && $replayCallback !== null) {
             // Create a new instance and restore from snapshot
             $aggregate = $this->instantiateFromSnapshot($snapshot);
 
-            if ($aggregate !== null) {
+            if ($aggregate instanceof AggregateRoot) {
                 // Get events after the snapshot version
                 /** @var list<DomainEvent> $postSnapshotEvents */
                 $postSnapshotEvents = $replayCallback($snapshot->version);
@@ -112,16 +115,13 @@ final class SnapshottingRepository implements Repository
                 // Replay remaining events
                 foreach ($postSnapshotEvents as $event) {
                     if (method_exists($aggregate, 'applyEvent')) {
-                        /** @var EventSourced $aggregate */
+                        /** @var AggregateRoot&EventSourced $aggregate */
                         $reflection = new \ReflectionMethod($aggregate, 'applyEvent');
-                        $reflection->setAccessible(true);
                         $reflection->invoke($aggregate, $event, true);
                     }
                 }
 
-                if (method_exists($aggregate, 'clearEvents')) {
-                    $aggregate->clearEvents();
-                }
+                $aggregate->clearEvents();
 
                 return $aggregate;
             }
@@ -149,7 +149,6 @@ final class SnapshottingRepository implements Repository
         foreach (['model', 'aggregateType', 'aggregateClass'] as $property) {
             if ($reflection->hasProperty($property)) {
                 $prop = $reflection->getProperty($property);
-                $prop->setAccessible(true);
 
                 $value = $prop->getValue($this->inner);
 
@@ -179,20 +178,13 @@ final class SnapshottingRepository implements Repository
             return null;
         }
 
-        // Create a new instance via fromHistory with no events (just the snapshot)
-        // We need to construct it without events
-        // Use the snapshot state to build the aggregate
-
-        // Try to extract aggregate ID from state
-        $aggregateId = $snapshot->aggregateId;
-
         // Use reflection to create instance without constructor
         $reflection = new \ReflectionClass($class);
-        /** @var AggregateRoot $instance */
+
+        /** @var AggregateRoot&HasSnapshots $instance */
         $instance = $reflection->newInstanceWithoutConstructor();
 
         // Restore from snapshot state
-        /** @var HasSnapshots $instance */
         $instance->restoreFromSnapshot($snapshot);
 
         return $instance;

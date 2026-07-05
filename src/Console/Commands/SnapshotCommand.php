@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace ZeroBoiler\Domain\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\App;
 use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
 use ZeroBoiler\Domain\Snapshots\SnapshotStore;
 
@@ -29,14 +30,13 @@ final class SnapshotCommand extends Command
     #[\Override]
     protected $description = 'Inspect domain aggregate snapshot store';
 
-    #[\Override]
     public function handle(): int
     {
         $class = $this->option('class');
         $id = $this->option('id');
 
         /** @var SnapshotStore|null $store */
-        $store = app(SnapshotStore::class);
+        $store = App::make(SnapshotStore::class);
 
         if ($store === null) {
             $this->error('No SnapshotStore is registered. Enable snapshot support in your domain config.');
@@ -58,18 +58,18 @@ final class SnapshotCommand extends Command
             $snapshot = $store->load($class, $id);
 
             if ($snapshot === null) {
-                $this->warn("No snapshot found for {$class} #{$id}");
+                $this->warn(sprintf('No snapshot found for %s #%s', $class, $id));
 
                 return self::SUCCESS;
             }
 
-            $this->info("Snapshot for {$class} #{$id}:");
-            $this->line("  Version: {$snapshot->version}");
-            $this->line("  Created: {$snapshot->createdAt->format('Y-m-d H:i:s')}");
+            $this->info(sprintf('Snapshot for %s #%s:', $class, $id));
+            $this->line('  Version: ' . $snapshot->version);
+            $this->line('  Created: ' . $snapshot->createdAt->format('Y-m-d H:i:s'));
             $this->line('  State:');
             foreach ($snapshot->state as $key => $value) {
                 $display = is_scalar($value) ? (string) $value : json_encode($value);
-                $this->line("    {$key}: {$display}");
+                $this->line(sprintf('    %s: %s', $key, $display));
             }
 
             return self::SUCCESS;

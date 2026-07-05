@@ -37,172 +37,16 @@ parameters:
 			path: src/Collections/DomainEventCollection.php
 
 		-
-			message: '#^Attribute class Illuminate\\Console\\Attributes\\Description does not exist\.$#'
-			identifier: attribute.notFound
-			count: 1
-			path: src/Commands/DomainAggregateCommand.php
-
-		-
-			message: '#^Method ZeroBoiler\\Domain\\Commands\\DomainAggregateCommand\:\:getDefaultNamespace\(\) has parameter \$rootNamespace with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: src/Commands/DomainAggregateCommand.php
-
-		-
-			message: '#^Property ZeroBoiler\\Domain\\Commands\\DomainAggregateCommand\:\:\$name has no type specified\.$#'
-			identifier: missingType.property
-			count: 1
-			path: src/Commands/DomainAggregateCommand.php
-
-		-
-			message: '#^Property ZeroBoiler\\Domain\\Commands\\DomainAggregateCommand\:\:\$type has no type specified\.$#'
-			identifier: missingType.property
-			count: 1
-			path: src/Commands/DomainAggregateCommand.php
-
-		-
-			message: '#^ZeroBoiler\\Domain\\Commands\\DomainAggregateCommand\:\:getNameInput\(\) calls parent\:\:getNameInput\(\) but ZeroBoiler\\Domain\\Commands\\DomainAggregateCommand does not extend any class\.$#'
-			identifier: class.noParent
-			count: 1
-			path: src/Commands/DomainAggregateCommand.php
-
-		-
-			message: '#^Attribute class Illuminate\\Console\\Attributes\\Description does not exist\.$#'
-			identifier: attribute.notFound
-			count: 1
-			path: src/Commands/DomainEventCommand.php
-
-		-
-			message: '#^Method ZeroBoiler\\Domain\\Commands\\DomainEventCommand\:\:getDefaultNamespace\(\) has parameter \$rootNamespace with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: src/Commands/DomainEventCommand.php
-
-		-
-			message: '#^Property ZeroBoiler\\Domain\\Commands\\DomainEventCommand\:\:\$name has no type specified\.$#'
-			identifier: missingType.property
-			count: 1
-			path: src/Commands/DomainEventCommand.php
-
-		-
-			message: '#^Property ZeroBoiler\\Domain\\Commands\\DomainEventCommand\:\:\$type has no type specified\.$#'
-			identifier: missingType.property
-			count: 1
-			path: src/Commands/DomainEventCommand.php
-
-		-
-			message: '#^ZeroBoiler\\Domain\\Commands\\DomainEventCommand\:\:getNameInput\(\) calls parent\:\:getNameInput\(\) but ZeroBoiler\\Domain\\Commands\\DomainEventCommand does not extend any class\.$#'
-			identifier: class.noParent
-			count: 1
-			path: src/Commands/DomainEventCommand.php
-
-		-
-			message: '#^Access to constant SUCCESS on an unknown class Illuminate\\Console\\Command\.$#'
-			identifier: class.notFound
-			count: 2
-			path: src/Commands/DomainListCommand.php
-
-		-
-			message: '#^Attribute class Illuminate\\Console\\Attributes\\Description does not exist\.$#'
-			identifier: attribute.notFound
-			count: 1
-			path: src/Commands/DomainListCommand.php
-
-		-
-			message: '#^Call to an undefined method ZeroBoiler\\Domain\\Commands\\DomainListCommand\:\:comment\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Commands/DomainListCommand.php
-
-		-
-			message: '#^Call to an undefined method ZeroBoiler\\Domain\\Commands\\DomainListCommand\:\:info\(\)\.$#'
-			identifier: method.notFound
-			count: 2
-			path: src/Commands/DomainListCommand.php
-
-		-
-			message: '#^Call to an undefined method ZeroBoiler\\Domain\\Commands\\DomainListCommand\:\:line\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Commands/DomainListCommand.php
-
-		-
-			message: '#^Call to an undefined method ZeroBoiler\\Domain\\Commands\\DomainListCommand\:\:newLine\(\)\.$#'
-			identifier: method.notFound
-			count: 2
-			path: src/Commands/DomainListCommand.php
-
-		-
-			message: '#^Function app_path not found\.$#'
-			identifier: function.notFound
-			count: 2
-			path: src/Commands/DomainListCommand.php
-
-		-
-			message: '#^Property ZeroBoiler\\Domain\\Commands\\DomainListCommand\:\:\$name has no type specified\.$#'
-			identifier: missingType.property
-			count: 1
-			path: src/Commands/DomainListCommand.php
-
-		-
-			message: '#^Access to an undefined property ZeroBoiler\\Domain\\Commands\\DomainRepositoryCommand\:\:\$components\.$#'
-			identifier: property.notFound
-			count: 2
-			path: src/Commands/DomainRepositoryCommand.php
-
-		-
-			message: '#^Access to an undefined property ZeroBoiler\\Domain\\Commands\\DomainRepositoryCommand\:\:\$laravel\.$#'
-			identifier: property.notFound
-			count: 2
-			path: src/Commands/DomainRepositoryCommand.php
-
-		-
-			message: '#^Attribute class Illuminate\\Console\\Attributes\\Description does not exist\.$#'
-			identifier: attribute.notFound
-			count: 1
-			path: src/Commands/DomainRepositoryCommand.php
-
-		-
-			message: '#^Call to an undefined method ZeroBoiler\\Domain\\Commands\\DomainRepositoryCommand\:\:option\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Commands/DomainRepositoryCommand.php
-
-		-
-			message: '#^Method ZeroBoiler\\Domain\\Commands\\DomainRepositoryCommand\:\:getDefaultNamespace\(\) has parameter \$rootNamespace with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: src/Commands/DomainRepositoryCommand.php
-
-		-
-			message: '#^Property ZeroBoiler\\Domain\\Commands\\DomainRepositoryCommand\:\:\$name has no type specified\.$#'
-			identifier: missingType.property
-			count: 1
-			path: src/Commands/DomainRepositoryCommand.php
-
-		-
-			message: '#^Property ZeroBoiler\\Domain\\Commands\\DomainRepositoryCommand\:\:\$type has no type specified\.$#'
-			identifier: missingType.property
-			count: 1
-			path: src/Commands/DomainRepositoryCommand.php
-
-		-
-			message: '#^ZeroBoiler\\Domain\\Commands\\DomainRepositoryCommand\:\:getNameInput\(\) calls parent\:\:getNameInput\(\) but ZeroBoiler\\Domain\\Commands\\DomainRepositoryCommand does not extend any class\.$#'
-			identifier: class.noParent
-			count: 1
-			path: src/Commands/DomainRepositoryCommand.php
-
-		-
-			message: '#^ZeroBoiler\\Domain\\Commands\\DomainRepositoryCommand\:\:handle\(\) calls parent\:\:handle\(\) but ZeroBoiler\\Domain\\Commands\\DomainRepositoryCommand does not extend any class\.$#'
-			identifier: class.noParent
-			count: 1
-			path: src/Commands/DomainRepositoryCommand.php
-
-		-
 			message: '#^Trait ZeroBoiler\\Domain\\Concerns\\EventSourced is used zero times and is not analysed\.$#'
 			identifier: trait.unused
 			count: 1
 			path: src/Concerns/EventSourced.php
+
+		-
+			message: '#^Trait ZeroBoiler\\Domain\\Concerns\\HasSnapshots is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Concerns/HasSnapshots.php
 
 		-
 			message: '#^Method ZeroBoiler\\Domain\\Contracts\\UnitOfWork\:\:getCommitted\(\) return type has no value type specified in iterable type array\.$#'
@@ -269,3 +113,21 @@ parameters:
 			identifier: missingType.iterableValue
 			count: 1
 			path: src/InMemoryUnitOfWork.php
+
+		-
+			message: '#^Method ZeroBoiler\\Domain\\Snapshots\\SnapshottingRepository\:\:instantiateFromSnapshot\(\) never returns ZeroBoiler\\Domain\\AggregateRoot so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: src/Snapshots/SnapshottingRepository.php
+
+		-
+			message: '#^PHPDoc tag @var for variable \$aggregate contains unresolvable type\.$#'
+			identifier: varTag.unresolvableType
+			count: 2
+			path: src/Snapshots/SnapshottingRepository.php
+
+		-
+			message: '#^PHPDoc tag @var for variable \$instance contains unresolvable type\.$#'
+			identifier: varTag.unresolvableType
+			count: 1
+			path: src/Snapshots/SnapshottingRepository.php

@@ -43,8 +43,8 @@ class DomainServiceProvider extends ServiceProvider
             $config = $this->app['config']['domain'] ?? [];
 
             return match ($config['snapshot_driver'] ?? 'memory') {
-                'memory' => new InMemorySnapshotStore(),
-                default => new InMemorySnapshotStore(),
+                'memory' => new InMemorySnapshotStore,
+                default => new InMemorySnapshotStore,
             };
         });
     }

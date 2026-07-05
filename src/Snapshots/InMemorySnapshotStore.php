@@ -70,6 +70,6 @@ final class InMemorySnapshotStore implements SnapshotStore
 
     private function key(string $aggregateType, string $aggregateId): string
     {
-        return "{$aggregateType}:{$aggregateId}";
+        return sprintf('%s:%s', $aggregateType, $aggregateId);
     }
 }

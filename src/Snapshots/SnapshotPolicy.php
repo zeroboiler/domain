@@ -21,7 +21,7 @@ final readonly class SnapshotPolicy
 {
     /**
      * @param  int  $every  Take a snapshot after every N events.
-     *                       Default: 50. Set to 0 to disable automatic snapshots.
+     *                      Default: 50. Set to 0 to disable automatic snapshots.
      */
     public function __construct(
         public int $every = 50,

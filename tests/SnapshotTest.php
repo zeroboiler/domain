@@ -14,7 +14,6 @@ use ZeroBoiler\Domain\DomainEvent;
 use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
 use ZeroBoiler\Domain\Snapshots\Snapshot;
 use ZeroBoiler\Domain\Snapshots\SnapshotPolicy;
-use ZeroBoiler\Domain\Snapshots\SnapshotStore;
 
 describe('Snapshot', function (): void {
     it('creates a snapshot with create()', function (): void {
@@ -214,12 +213,15 @@ describe('SnapshotPolicy attribute', function (): void {
 
 describe('HasSnapshots trait', function (): void {
     // Create a test aggregate that uses the trait
-    $testAggregateClass = new class extends AggregateRoot {
+    $testAggregateClass = new class extends AggregateRoot
+    {
         use EventSourced;
         use HasSnapshots;
 
         public string $status = 'pending';
+
         public int $total = 0;
+
         private array $metadata = [];
 
         public function __construct()
@@ -303,7 +305,8 @@ describe('HasSnapshots trait', function (): void {
     });
 
     it('checks if snapshot is due', function (): void {
-        $aggregateClass = new #[SnapshotPolicy(every: 5)] class extends AggregateRoot {
+        $aggregateClass = new #[SnapshotPolicy(every: 5)] class extends AggregateRoot
+        {
             use HasSnapshots;
 
             public function __construct()
@@ -329,7 +332,8 @@ describe('HasSnapshots trait', function (): void {
     });
 
     it('returns false for shouldSnapshot without policy', function (): void {
-        $aggregate = new class extends AggregateRoot {
+        $aggregate = new class extends AggregateRoot
+        {
             use HasSnapshots;
 
             public function __construct()
@@ -344,7 +348,8 @@ describe('HasSnapshots trait', function (): void {
     });
 
     it('returns false for shouldSnapshot with every=0', function (): void {
-        $aggregate = new #[SnapshotPolicy(every: 0)] class extends AggregateRoot {
+        $aggregate = new #[SnapshotPolicy(every: 0)] class extends AggregateRoot
+        {
             use HasSnapshots;
 
             public function __construct()
@@ -375,7 +380,8 @@ describe('HasSnapshots trait', function (): void {
     });
 
     it('gets snapshot policy from attribute', function (): void {
-        $aggregateClass = new #[SnapshotPolicy(every: 25)] class extends AggregateRoot {
+        $aggregateClass = new #[SnapshotPolicy(every: 25)] class extends AggregateRoot
+        {
             use HasSnapshots;
 
             public function __construct()
@@ -391,7 +397,8 @@ describe('HasSnapshots trait', function (): void {
     });
 
     it('returns null policy when not set', function (): void {
-        $aggregate = new class extends AggregateRoot {
+        $aggregate = new class extends AggregateRoot
+        {
             use HasSnapshots;
 
             public function __construct()
@@ -406,11 +413,13 @@ describe('HasSnapshots trait', function (): void {
 
 describe('HasSnapshots with EventSourced', function (): void {
     it('creates snapshot from event-sourced aggregate', function (): void {
-        $aggregateClass = new #[SnapshotPolicy(every: 3)] class extends AggregateRoot {
+        $aggregateClass = new #[SnapshotPolicy(every: 3)] class extends AggregateRoot
+        {
             use EventSourced;
             use HasSnapshots;
 
             public string $status = 'pending';
+
             public int $orderCount = 0;
 
             public function __construct()
