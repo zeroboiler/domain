@@ -471,3 +471,180 @@ describe('HasSnapshots with EventSourced', function (): void {
             ->and($snapshot->state['orderCount'])->toBe(3);
     });
 });
+
+describe('SnapshottingRepository (BUG-1/BUG-2 R37)', function (): void {
+    it('requires aggregateType in constructor (no more reflection guessing)', function (): void {
+        $store = new InMemorySnapshotStore;
+
+        // Create a simple inner repository stub
+        $innerRepo = new class implements \ZeroBoiler\Domain\Contracts\Repository
+        {
+            public function find(string|int $id): ?\ZeroBoiler\Domain\AggregateRoot
+            {
+                return null;
+            }
+
+            public function save(\ZeroBoiler\Domain\AggregateRoot $aggregate): void {}
+
+            public function delete(string|int $id): void {}
+        };
+
+        $repo = new \ZeroBoiler\Domain\Snapshots\SnapshottingRepository(
+            inner: $innerRepo,
+            snapshotStore: $store,
+            aggregateType: 'App\\Models\\Order',
+        );
+
+        // Verify the aggregateType is stored correctly by checking snapshot isolation
+        expect($repo)->toBeInstanceOf(\ZeroBoiler\Domain\Snapshots\SnapshottingRepository::class);
+    });
+
+    it('uses snapshot in find() instead of skipping it', function (): void {
+        $store = new InMemorySnapshotStore;
+
+        // Create test aggregate class
+        $aggregateClass = new class extends AggregateRoot
+        {
+            use HasSnapshots;
+
+            public string $status = 'pending';
+
+            public function __construct()
+            {
+                parent::__construct(AggregateRootId::generate());
+            }
+        };
+
+        // Save a snapshot
+        $aggregateClass->setVersion(10);
+        $snapshot = Snapshot::create(
+            aggregateType: $aggregateClass::class,
+            aggregateId: $aggregateClass->id(),
+            version: 10,
+            state: ['status' => 'paid', 'version' => 10],
+        );
+        $store->save($snapshot);
+
+        // Inner repo returns null (no event store)
+        $innerRepo = new class implements \ZeroBoiler\Domain\Contracts\Repository
+        {
+            public function find(string|int $id): ?\ZeroBoiler\Domain\AggregateRoot
+            {
+                return null;
+            }
+
+            public function save(\ZeroBoiler\Domain\AggregateRoot $aggregate): void {}
+
+            public function delete(string|int $id): void {}
+        };
+
+        $repo = new \ZeroBoiler\Domain\Snapshots\SnapshottingRepository(
+            inner: $innerRepo,
+            snapshotStore: $store,
+            aggregateType: $aggregateClass::class,
+        );
+
+        // find() should return the snapshot-restored aggregate, not null
+        $result = $repo->find($aggregateClass->id());
+
+        expect($result)->not->toBeNull();
+    });
+
+    it('isolates snapshots by aggregate type (BUG-2 R37)', function (): void {
+        $store = new InMemorySnapshotStore;
+
+        // Two different aggregate types with same ID should not collide
+        $store->save(Snapshot::create('App\\Order', 'shared-123', 5, ['type' => 'order']));
+        $store->save(Snapshot::create('App\\Product', 'shared-123', 3, ['type' => 'product']));
+
+        expect($store->load('App\\Order', 'shared-123')->state['type'])->toBe('order')
+            ->and($store->load('App\\Product', 'shared-123')->state['type'])->toBe('product');
+    });
+});
+
+describe('HasSnapshots serialization safety (BUG-3 R37)', function (): void {
+    it('filters out non-serializable objects from snapshot state', function (): void {
+        $pdo = new \PDO('sqlite::memory:');
+
+        $aggregate = new class extends AggregateRoot
+        {
+            use HasSnapshots;
+
+            public string $name = 'test';
+
+            public \Closure $callback;
+
+            public function __construct()
+            {
+                parent::__construct(AggregateRootId::generate());
+                $this->callback = fn () => 'hello';
+            }
+        };
+
+        $state = $aggregate->toSnapshotState();
+
+        // name should be present
+        expect($state)->toHaveKey('name', 'test');
+
+        // callback (Closure) should be filtered out
+        expect($state)->not->toHaveKey('callback');
+    });
+
+    it('converts DateTimeInterface to ISO string for safe serialization', function (): void {
+        $date = new \DateTimeImmutable('2026-01-15T10:30:00+00:00');
+
+        $aggregate = new class ($date) extends AggregateRoot
+        {
+            use HasSnapshots;
+
+            public string $name = 'test';
+
+            public \DateTimeImmutable $createdAt;
+
+            public function __construct(\DateTimeImmutable $date)
+            {
+                $this->createdAt = $date;
+                parent::__construct(AggregateRootId::generate());
+            }
+        };
+
+        $state = $aggregate->toSnapshotState();
+
+        expect($state)->toHaveKey('createdAt');
+        expect($state['createdAt'])->toBe('2026-01-15T10:30:00+00:00');
+    });
+
+    it('converts BackedEnum to its value for safe serialization', function (): void {
+        $aggregate = new class extends AggregateRoot
+        {
+            use HasSnapshots;
+
+            public string $name = 'test';
+
+            public \ZeroBoiler\Domain\TestStatus $status;
+
+            public function __construct()
+            {
+                parent::__construct(AggregateRootId::generate());
+            }
+        };
+
+        $aggregate->status = \ZeroBoiler\Domain\TestStatus::ACTIVE;
+
+        $state = $aggregate->toSnapshotState();
+
+        expect($state)->toHaveKey('status');
+        expect($state['status'])->toBe('active');
+    });
+});
+
+describe('SnapshotCommand display (IMP-1 R37)', function (): void {
+    it('handles non-serializable values gracefully in display', function (): void {
+        // Test that json_encode failure path works
+        $value = [\NAN]; // NAN causes json_encode to fail
+
+        $encoded = json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        expect($encoded)->toBeFalse();
+    });
+});

@@ -68,7 +68,18 @@ final class SnapshotCommand extends Command
             $this->line('  Created: ' . $snapshot->createdAt->format('Y-m-d H:i:s'));
             $this->line('  State:');
             foreach ($snapshot->state as $key => $value) {
-                $display = is_scalar($value) ? (string) $value : json_encode($value);
+                if (is_scalar($value)) {
+                    $display = (string) $value;
+                } elseif (is_array($value) || is_object($value)) {
+                    $display = json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                    if ($display === false) {
+                        $display = '<non-serializable>';
+                    }
+                } elseif (is_null($value)) {
+                    $display = 'null';
+                } else {
+                    $display = '<' . gettype($value) . '>';
+                }
                 $this->line(sprintf('    %s: %s', $key, $display));
             }
 

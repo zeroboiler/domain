@@ -28,29 +28,48 @@ use ZeroBoiler\Domain\DomainEvent;
  */
 final readonly class SnapshottingRepository implements Repository
 {
+    /**
+     * @param  string  $aggregateType  The FQCN of the aggregate root class.
+     *                                  Required to avoid snapshot collisions between different aggregate types.
+     */
     public function __construct(
         private Repository $inner,
         private SnapshotStore $snapshotStore,
+        private string $aggregateType,
     ) {}
 
     #[\Override]
     public function find(string|int $id): ?AggregateRoot
     {
-        $aggregateType = $this->detectAggregateType();
-
         // Try loading from snapshot
-        $snapshot = $this->snapshotStore->load($aggregateType, (string) $id);
+        $snapshot = $this->snapshotStore->load($this->aggregateType, (string) $id);
 
         if ($snapshot instanceof Snapshot) {
-            // Check if the aggregate uses HasSnapshots trait
-            // We need to create an instance first, then restore
-            // For now, delegate to inner repository but provide snapshot hint
-            // The inner repository would need to support this pattern.
-            // Since the base repository does full replay, we optimize
-            // by checking if the inner repo supports snapshot-aware loading.
+            $aggregate = $this->instantiateFromSnapshot($snapshot);
+
+            if ($aggregate instanceof AggregateRoot) {
+                // Snapshot restored successfully — replay only post-snapshot events
+                // by delegating to inner repository which does full event replay.
+                // The snapshot gives us the base state; the inner repository
+                // replays all events but the aggregate already has snapshot state.
+                //
+                // If the inner repository supports snapshot-aware loading
+                // (e.g., via a method like findAfterVersion), we use it.
+                // Otherwise, we fall back to full replay from inner repository.
+                if (method_exists($this->inner, 'findAfterVersion')) {
+                    /** @var AggregateRoot&EventSourced $aggregate */
+                    return $this->inner->findAfterVersion($id, $snapshot->version, $aggregate)
+                        ?? $aggregate;
+                }
+
+                // No snapshot-aware inner repository — use full replay but
+                // the snapshot state is already set. This is still correct,
+                // just not as fast.
+                return $this->inner->find($id) ?? $aggregate;
+            }
         }
 
-        // Fall back to normal loading
+        // No snapshot — fall back to normal loading
         return $this->inner->find($id);
     }
 
@@ -74,8 +93,7 @@ final readonly class SnapshottingRepository implements Repository
     {
         $this->inner->delete($id);
 
-        $aggregateType = $this->detectAggregateType();
-        $this->snapshotStore->delete($aggregateType, (string) $id);
+        $this->snapshotStore->delete($this->aggregateType, (string) $id);
     }
 
     /**
@@ -100,8 +118,7 @@ final readonly class SnapshottingRepository implements Repository
         string $id,
         ?callable $replayCallback = null,
     ): ?AggregateRoot {
-        $aggregateType = $this->detectAggregateType();
-        $snapshot = $this->snapshotStore->load($aggregateType, $id);
+        $snapshot = $this->snapshotStore->load($this->aggregateType, $id);
 
         if ($snapshot instanceof Snapshot && $replayCallback !== null) {
             // Create a new instance and restore from snapshot
@@ -136,30 +153,6 @@ final readonly class SnapshottingRepository implements Repository
     private function usesSnapshots(AggregateRoot $aggregate): bool
     {
         return in_array(HasSnapshots::class, class_uses_recursive($aggregate), true);
-    }
-
-    /**
-     * Try to detect the aggregate type from the inner repository.
-     */
-    private function detectAggregateType(): string
-    {
-        // Use reflection to check if the inner repository has a model property
-        $reflection = new \ReflectionClass($this->inner);
-
-        foreach (['model', 'aggregateType', 'aggregateClass'] as $property) {
-            if ($reflection->hasProperty($property)) {
-                $prop = $reflection->getProperty($property);
-
-                $value = $prop->getValue($this->inner);
-
-                if (is_string($value)) {
-                    return $value;
-                }
-            }
-        }
-
-        // Fall back to Repository class name as a generic key
-        return 'aggregate';
     }
 
     /**

@@ -66,6 +66,44 @@ trait HasSnapshots
                 continue;
             }
 
+            // Skip objects that are not safely serializable
+            if (is_object($value)) {
+                // Allow DateTimeInterface, stdClass, BackedEnum, UnitEnum
+                if ($value instanceof \DateTimeInterface) {
+                    // Convert to ISO string for safe serialization
+                    $state[$property->getName()] = $value->format(\DateTimeInterface::ATOM);
+                    continue;
+                }
+
+                if ($value instanceof \stdClass) {
+                    $state[$property->getName()] = $value;
+                    continue;
+                }
+
+                if ($value instanceof \BackedEnum) {
+                    $state[$property->getName()] = $value->value;
+                    continue;
+                }
+
+                if ($value instanceof \UnitEnum) {
+                    $state[$property->getName()] = $value->name;
+                    continue;
+                }
+
+                // Skip objects that don't have __serialize and aren't serializable
+                // This prevents PDO connections, service references, etc. from corrupting snapshots
+                if (! method_exists($value, '__serialize')) {
+                    continue;
+                }
+            }
+
+            // Skip arrays containing non-serializable objects
+            if (is_array($value)) {
+                if (json_encode($value) === false) {
+                    continue;
+                }
+            }
+
             $state[$property->getName()] = $value;
         }
 
