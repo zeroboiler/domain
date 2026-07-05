@@ -22,6 +22,20 @@ abstract readonly class UlidIdentifier implements IdentifierContract, JsonSerial
         return new static((new SymfonyUlid)->toBase32());
     }
 
+    /**
+     * Validate whether a string is a valid ULID.
+     */
+    public static function isValid(string $value): bool
+    {
+        try {
+            SymfonyUlid::fromString($value);
+
+            return true;
+        } catch (\ValueError) {
+            return false;
+        }
+    }
+
     public static function fromString(string $value): static
     {
         return new static($value);

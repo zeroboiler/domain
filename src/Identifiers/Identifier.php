@@ -21,6 +21,16 @@ abstract class Identifier implements IdentifierContract
         $this->value = $value ?? Uuid::uuid4();
     }
 
+    /**
+     * Validate whether a string is a valid UUID without throwing.
+     *
+     * Useful for pre-validation before calling fromString().
+     */
+    public static function isValid(string $value): bool
+    {
+        return Uuid::isValid($value);
+    }
+
     public static function fromString(string $value): static
     {
         return new static(Uuid::fromString($value));

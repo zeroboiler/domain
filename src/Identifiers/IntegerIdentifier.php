@@ -19,6 +19,14 @@ final readonly class IntegerIdentifier implements IdentifierContract
         return new self($value);
     }
 
+    /**
+     * Validate whether a string represents a valid integer.
+     */
+    public static function isValid(string $value): bool
+    {
+        return ctype_digit($value) || (str_starts_with($value, '-') && ctype_digit(substr($value, 1)));
+    }
+
     public static function fromString(string $value): static
     {
         return new self((int) $value);

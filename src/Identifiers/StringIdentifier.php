@@ -23,6 +23,14 @@ readonly class StringIdentifier implements IdentifierContract, JsonSerializable
         return new static($value);
     }
 
+    /**
+     * Validate whether a string is a valid non-empty identifier.
+     */
+    public static function isValid(string $value): bool
+    {
+        return $value !== '';
+    }
+
     public static function fromString(string $value): static
     {
         return static::from($value);
