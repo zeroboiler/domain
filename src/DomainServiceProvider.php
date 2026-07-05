@@ -14,7 +14,10 @@ use ZeroBoiler\Domain\Commands\DomainAggregateCommand;
 use ZeroBoiler\Domain\Commands\DomainEventCommand;
 use ZeroBoiler\Domain\Commands\DomainListCommand;
 use ZeroBoiler\Domain\Commands\DomainRepositoryCommand;
+use ZeroBoiler\Domain\Console\Commands\SnapshotCommand;
 use ZeroBoiler\Domain\Contracts\UnitOfWork as UnitOfWorkContract;
+use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
+use ZeroBoiler\Domain\Snapshots\SnapshotStore;
 
 class DomainServiceProvider extends ServiceProvider
 {
@@ -34,6 +37,16 @@ class DomainServiceProvider extends ServiceProvider
                     : null
             )
         );
+
+        // Register snapshot store (in-memory by default; override in config)
+        $this->app->singleton(SnapshotStore::class, function (): SnapshotStore {
+            $config = $this->app['config']['domain'] ?? [];
+
+            return match ($config['snapshot_driver'] ?? 'memory') {
+                'memory' => new InMemorySnapshotStore(),
+                default => new InMemorySnapshotStore(),
+            };
+        });
     }
 
     /**
@@ -53,6 +66,7 @@ class DomainServiceProvider extends ServiceProvider
                 DomainEventCommand::class,
                 DomainRepositoryCommand::class,
                 DomainListCommand::class,
+                SnapshotCommand::class,
             ]);
         }
     }

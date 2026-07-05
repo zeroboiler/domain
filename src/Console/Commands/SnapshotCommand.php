@@ -1,0 +1,80 @@
+<?php
+
+/**
+ * This file is part of ZeroBoiler, licensed under the proprietary license.
+ */
+
+declare(strict_types=1);
+
+namespace ZeroBoiler\Domain\Console\Commands;
+
+use Illuminate\Console\Command;
+use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
+use ZeroBoiler\Domain\Snapshots\SnapshotStore;
+
+/**
+ * Inspect snapshot store status.
+ *
+ * Usage:
+ *   php artisan domain:snapshot --class=App\\Models\\Order
+ *   php artisan domain:snapshot --class=App\\Models\\Order --id=order-123
+ */
+final class SnapshotCommand extends Command
+{
+    #[\Override]
+    protected $signature = 'domain:snapshot
+                            {--class= : Aggregate class FQCN to inspect}
+                            {--id= : Aggregate ID to inspect}';
+
+    #[\Override]
+    protected $description = 'Inspect domain aggregate snapshot store';
+
+    #[\Override]
+    public function handle(): int
+    {
+        $class = $this->option('class');
+        $id = $this->option('id');
+
+        /** @var SnapshotStore|null $store */
+        $store = app(SnapshotStore::class);
+
+        if ($store === null) {
+            $this->error('No SnapshotStore is registered. Enable snapshot support in your domain config.');
+
+            return self::FAILURE;
+        }
+
+        if ($class === null) {
+            $this->info('Snapshot store: ' . $store::class);
+
+            if ($store instanceof InMemorySnapshotStore) {
+                $this->info('Stored snapshots: ' . $store->count());
+            }
+
+            return self::SUCCESS;
+        }
+
+        if ($id !== null) {
+            $snapshot = $store->load($class, $id);
+
+            if ($snapshot === null) {
+                $this->warn("No snapshot found for {$class} #{$id}");
+
+                return self::SUCCESS;
+            }
+
+            $this->info("Snapshot for {$class} #{$id}:");
+            $this->line("  Version: {$snapshot->version}");
+            $this->line("  Created: {$snapshot->createdAt->format('Y-m-d H:i:s')}");
+            $this->line('  State:');
+            foreach ($snapshot->state as $key => $value) {
+                $display = is_scalar($value) ? (string) $value : json_encode($value);
+                $this->line("    {$key}: {$display}");
+            }
+
+            return self::SUCCESS;
+        }
+
+        return self::SUCCESS;
+    }
+}
