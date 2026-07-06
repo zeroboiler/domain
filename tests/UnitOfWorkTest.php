@@ -1,0 +1,531 @@
+<?php
+
+/**
+ * This file is part of ZeroBoiler, licensed under the proprietary license.
+ */
+
+declare(strict_types=1);
+
+use ZeroBoiler\Domain\AggregateRootId;
+use ZeroBoiler\Domain\DomainEvent;
+use ZeroBoiler\Domain\InMemoryUnitOfWork;
+use ZeroBoiler\Domain\Tests\Fixtures\TestAggregate;
+
+beforeEach(function (): void {
+    $this->uow = new InMemoryUnitOfWork;
+});
+
+// ─── Basic Lifecycle ───────────────────────────────────────────────
+
+it('starts inactive', function (): void {
+    expect($this->uow->isActive())->toBeFalse();
+});
+
+it('activates on begin', function (): void {
+    $this->uow->begin();
+
+    expect($this->uow->isActive())->toBeTrue();
+});
+
+it('deactivates on commit', function (): void {
+    $this->uow->begin();
+    $this->uow->commit();
+
+    expect($this->uow->isActive())->toBeFalse();
+});
+
+it('deactivates on rollback', function (): void {
+    $this->uow->begin();
+    $this->uow->rollback();
+
+    expect($this->uow->isActive())->toBeFalse();
+});
+
+it('throws when committing without active scope', function (): void {
+    $this->uow->commit();
+})->throws(RuntimeException::class, 'No active unit of work');
+
+it('throws when rolling back without active scope', function (): void {
+    $this->uow->rollback();
+})->throws(RuntimeException::class, 'No active unit of work');
+
+it('throws when tracking without active scope', function (): void {
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+    $aggregate->clearEvents();
+
+    $this->uow->track($aggregate);
+})->throws(RuntimeException::class, 'No active unit of work');
+
+// ─── Aggregate Tracking ────────────────────────────────────────────
+
+it('tracks aggregates', function (): void {
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+
+    $this->uow->begin();
+    $this->uow->track($aggregate);
+
+    expect($this->uow->isTracking($aggregate))->toBeTrue();
+});
+
+it('does not track aggregates outside uow', function (): void {
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+    $aggregate->clearEvents();
+
+    expect($this->uow->isTracking($aggregate))->toBeFalse();
+});
+
+it('tracks multiple aggregates', function (): void {
+    $a1 = TestAggregate::create(AggregateRootId::generate());
+    $a2 = TestAggregate::create(AggregateRootId::generate());
+
+    $this->uow->begin();
+    $this->uow->track($a1);
+    $this->uow->track($a2);
+
+    expect($this->uow->isTracking($a1))->toBeTrue();
+    expect($this->uow->isTracking($a2))->toBeTrue();
+});
+
+it('does not double-track same aggregate', function (): void {
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+
+    $this->uow->begin();
+    $this->uow->track($aggregate);
+    $this->uow->track($aggregate); // idempotent
+
+    expect($this->uow->isTracking($aggregate))->toBeTrue();
+});
+
+it('moves tracked to committed on commit', function (): void {
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+
+    $this->uow->begin();
+    $this->uow->track($aggregate);
+    $this->uow->commit();
+
+    $committed = $this->uow->getCommitted();
+
+    expect($committed)->toHaveCount(1);
+    expect(array_first($committed))->toBe($aggregate);
+});
+
+it('discards tracked on rollback', function (): void {
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+
+    $this->uow->begin();
+    $this->uow->track($aggregate);
+    $this->uow->rollback();
+
+    expect($this->uow->getCommitted())->toBeEmpty();
+});
+
+it('supports mark for deletion', function (): void {
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+
+    $this->uow->begin();
+    $this->uow->markForDeletion($aggregate);
+    $this->uow->commit();
+
+    expect($this->uow->getDeleted())->toHaveCount(1);
+});
+
+// ─── Domain Event Queueing ─────────────────────────────────────────
+
+it('collects domain events from tracked aggregates', function (): void {
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+
+    $this->uow->begin();
+    $this->uow->track($aggregate); // pulls events from aggregate
+
+    expect($this->uow->hasPendingEvents())->toBeTrue();
+    expect($this->uow->getPendingEventCount())->toBe(1); // TestAggregateCreated
+});
+
+it('clears aggregate events on track', function (): void {
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+
+    $this->uow->begin();
+    $this->uow->track($aggregate);
+
+    expect($aggregate->hasUncommittedEvents())->toBeFalse();
+});
+
+it('queues manual events via queueEvent', function (): void {
+    $event = DomainEvent::occur('test.event', ['key' => 'value']);
+
+    $this->uow->begin();
+    $this->uow->queueEvent($event);
+
+    expect($this->uow->hasPendingEvents())->toBeTrue();
+    expect($this->uow->getPendingEventCount())->toBe(1);
+});
+
+it('throws when queueing event without active scope', function (): void {
+    $this->uow->queueEvent(DomainEvent::occur('test'));
+})->throws(RuntimeException::class, 'No active unit of work');
+
+it('discards events on rollback', function (): void {
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+
+    $this->uow->begin();
+    $this->uow->track($aggregate);
+    $this->uow->queueEvent(DomainEvent::occur('manual.event'));
+
+    expect($this->uow->hasPendingEvents())->toBeTrue();
+
+    $this->uow->rollback();
+
+    expect($this->uow->hasPendingEvents())->toBeFalse();
+    expect($this->uow->getPendingEventCount())->toBe(0);
+});
+
+it('events are not dispatched until commit', function (): void {
+    $dispatched = [];
+    $this->uow->setEventDispatcher(function (DomainEvent $event) use (&$dispatched): void {
+        $dispatched[] = $event->eventType;
+    });
+
+    $this->uow->begin();
+    $this->uow->queueEvent(DomainEvent::occur('event.one'));
+    $this->uow->queueEvent(DomainEvent::occur('event.two'));
+
+    expect($dispatched)->toBeEmpty();
+
+    $this->uow->commit();
+
+    expect($dispatched)->toBe(['event.one', 'event.two']);
+});
+
+it('events dispatch in order they were raised', function (): void {
+    $dispatched = [];
+    $this->uow->setEventDispatcher(function (DomainEvent $event) use (&$dispatched): void {
+        $dispatched[] = $event->eventType;
+    });
+
+    $this->uow->begin();
+    $this->uow->queueEvent(DomainEvent::occur('first'));
+    $this->uow->queueEvent(DomainEvent::occur('second'));
+    $this->uow->queueEvent(DomainEvent::occur('third'));
+    $this->uow->commit();
+
+    expect($dispatched)->toBe(['first', 'second', 'third']);
+});
+
+it('rollback discards events without dispatch', function (): void {
+    $dispatched = [];
+    $this->uow->setEventDispatcher(function (DomainEvent $event) use (&$dispatched): void {
+        $dispatched[] = $event->eventType;
+    });
+
+    $this->uow->begin();
+    $this->uow->queueEvent(DomainEvent::occur('should.never.dispatch'));
+    $this->uow->rollback();
+
+    expect($dispatched)->toBeEmpty();
+});
+
+it('commit dispatches events from tracked aggregates', function (): void {
+    $dispatched = [];
+    $this->uow->setEventDispatcher(function (DomainEvent $event) use (&$dispatched): void {
+        $dispatched[] = $event->eventType;
+    });
+
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+
+    $this->uow->begin();
+    $this->uow->track($aggregate);
+    $this->uow->commit();
+
+    expect($dispatched)->toBe(['TestAggregateCreated']);
+});
+
+// ─── run() Helper ──────────────────────────────────────────────────
+
+it('run commits on success', function (): void {
+    $result = $this->uow->run(fn (): string => 'success');
+
+    expect($result)->toBe('success');
+    expect($this->uow->isActive())->toBeFalse();
+});
+
+it('run rollbacks on exception', function (): void {
+    $dispatched = [];
+    $this->uow->setEventDispatcher(function (DomainEvent $event) use (&$dispatched): void {
+        $dispatched[] = $event->eventType;
+    });
+
+    try {
+        $this->uow->run(function (): never {
+            $this->uow->queueEvent(DomainEvent::occur('doomed'));
+
+            throw new RuntimeException('boom');
+        });
+    } catch (RuntimeException $runtimeException) {
+        expect($runtimeException->getMessage())->toBe('boom');
+    }
+
+    expect($this->uow->isActive())->toBeFalse();
+    expect($dispatched)->toBeEmpty(); // events discarded
+});
+
+it('run tracks aggregates and dispatches events', function (): void {
+    $dispatched = [];
+    $this->uow->setEventDispatcher(function (DomainEvent $event) use (&$dispatched): void {
+        $dispatched[] = $event->eventType;
+    });
+
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+
+    $this->uow->run(function () use ($aggregate): void {
+        $this->uow->track($aggregate);
+    });
+
+    expect($dispatched)->toBe(['TestAggregateCreated']);
+    expect($this->uow->getCommitted())->toHaveCount(1);
+});
+
+it('run returns callback result', function (): void {
+    $result = $this->uow->run(fn (): int => 42);
+
+    expect($result)->toBe(42);
+});
+
+// ─── Nested Transactions (Savepoints) ──────────────────────────────
+
+it('supports nested run calls', function (): void {
+    $dispatched = [];
+    $this->uow->setEventDispatcher(function (DomainEvent $event) use (&$dispatched): void {
+        $dispatched[] = $event->eventType;
+    });
+
+    $this->uow->run(function (): void {
+        $this->uow->queueEvent(DomainEvent::occur('outer'));
+
+        $this->uow->run(function (): void {
+            $this->uow->queueEvent(DomainEvent::occur('inner'));
+        });
+    });
+
+    // Events only dispatch when outermost commits
+    expect($dispatched)->toBe(['outer', 'inner']);
+});
+
+it('inner rollback does not discard outer events', function (): void {
+    $dispatched = [];
+    $this->uow->setEventDispatcher(function (DomainEvent $event) use (&$dispatched): void {
+        $dispatched[] = $event->eventType;
+    });
+
+    $this->uow->run(function (): void {
+        $this->uow->queueEvent(DomainEvent::occur('outer'));
+
+        try {
+            $this->uow->run(function (): never {
+                $this->uow->queueEvent(DomainEvent::occur('inner'));
+
+                throw new RuntimeException('inner fail');
+            });
+        } catch (RuntimeException) {
+            // swallow inner failure
+        }
+
+        $this->uow->queueEvent(DomainEvent::occur('after-inner'));
+    });
+
+    expect($dispatched)->toBe(['outer', 'after-inner']);
+});
+
+it('outer rollback discards all events', function (): void {
+    $dispatched = [];
+    $this->uow->setEventDispatcher(function (DomainEvent $event) use (&$dispatched): void {
+        $dispatched[] = $event->eventType;
+    });
+
+    try {
+        $this->uow->run(function (): void {
+            $this->uow->queueEvent(DomainEvent::occur('outer'));
+
+            $this->uow->run(function (): void {
+                $this->uow->queueEvent(DomainEvent::occur('inner-committed'));
+            });
+            // inner committed, but outer will rollback
+
+            throw new RuntimeException('outer fail');
+        });
+    } catch (RuntimeException) {
+        // expected
+    }
+
+    expect($dispatched)->toBeEmpty();
+});
+
+it('nested begin/commit works without run', function (): void {
+    $dispatched = [];
+    $this->uow->setEventDispatcher(function (DomainEvent $event) use (&$dispatched): void {
+        $dispatched[] = $event->eventType;
+    });
+
+    $this->uow->begin();
+    $this->uow->queueEvent(DomainEvent::occur('outer'));
+
+    $this->uow->begin(); // savepoint
+    $this->uow->queueEvent(DomainEvent::occur('inner'));
+    $this->uow->commit(); // inner commit
+
+    $this->uow->commit(); // outer commit — dispatches all
+
+    expect($dispatched)->toBe(['outer', 'inner']);
+});
+
+it('nested rollback restores to savepoint', function (): void {
+    $dispatched = [];
+    $this->uow->setEventDispatcher(function (DomainEvent $event) use (&$dispatched): void {
+        $dispatched[] = $event->eventType;
+    });
+
+    $this->uow->begin();
+    $this->uow->queueEvent(DomainEvent::occur('outer'));
+
+    $this->uow->begin(); // savepoint
+    $this->uow->queueEvent(DomainEvent::occur('inner'));
+    $this->uow->rollback(); // rollback to savepoint — discard inner
+
+    $this->uow->queueEvent(DomainEvent::occur('after-rollback'));
+    $this->uow->commit();
+
+    expect($dispatched)->toBe(['outer', 'after-rollback']);
+});
+
+// ─── Multi-Aggregate Integration ───────────────────────────────────
+
+it('handles multi-aggregate transaction with event dispatch', function (): void {
+    $dispatched = [];
+    $this->uow->setEventDispatcher(function (DomainEvent $event) use (&$dispatched): void {
+        $dispatched[] = $event->eventType;
+    });
+
+    $order = TestAggregate::create(AggregateRootId::generate());
+    $customer = TestAggregate::create(AggregateRootId::generate());
+
+    $this->uow->run(function () use ($order, $customer): void {
+        $this->uow->track($order);
+        $this->uow->track($customer);
+
+        // Raise more events
+        $order->rename('Order #1');
+        $customer->rename('John Doe');
+
+        // Pull new events into UoW
+        foreach ($order->pullDomainEvents() as $event) {
+            $this->uow->queueEvent($event);
+        }
+
+        foreach ($customer->pullDomainEvents() as $event) {
+            $this->uow->queueEvent($event);
+        }
+    });
+
+    // 4 events: 2 created + 2 renamed
+    expect($dispatched)->toHaveCount(4);
+    expect($dispatched[0])->toBe('TestAggregateCreated');
+    expect($dispatched[1])->toBe('TestAggregateCreated');
+    expect($dispatched[2])->toBe('TestAggregateRenamed');
+    expect($dispatched[3])->toBe('TestAggregateRenamed');
+
+    expect($this->uow->getCommitted())->toHaveCount(2);
+});
+
+it('multi-aggregate rollback discards all events', function (): void {
+    $dispatched = [];
+    $this->uow->setEventDispatcher(function (DomainEvent $event) use (&$dispatched): void {
+        $dispatched[] = $event->eventType;
+    });
+
+    $order = TestAggregate::create(AggregateRootId::generate());
+    $customer = TestAggregate::create(AggregateRootId::generate());
+
+    try {
+        $this->uow->run(function () use ($order, $customer): void {
+            $this->uow->track($order);
+            $this->uow->track($customer);
+
+            throw new RuntimeException('simulated failure');
+        });
+    } catch (RuntimeException) {
+        // expected
+    }
+
+    expect($dispatched)->toBeEmpty();
+    expect($this->uow->getCommitted())->toBeEmpty();
+});
+
+// ─── Edge Cases ────────────────────────────────────────────────────
+
+it('clear resets all state', function (): void {
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+
+    $this->uow->begin();
+    $this->uow->track($aggregate);
+    $this->uow->commit();
+
+    expect($this->uow->getCommitted())->toHaveCount(1);
+
+    $this->uow->clear();
+
+    expect($this->uow->getCommitted())->toBeEmpty();
+    expect($this->uow->getDeleted())->toBeEmpty();
+    expect($this->uow->isActive())->toBeFalse();
+    expect($this->uow->hasPendingEvents())->toBeFalse();
+});
+
+it('multiple sequential transactions work independently', function (): void {
+    $dispatched = [];
+    $this->uow->setEventDispatcher(function (DomainEvent $event) use (&$dispatched): void {
+        $dispatched[] = $event->eventType;
+    });
+
+    // First transaction
+    $this->uow->begin();
+    $this->uow->queueEvent(DomainEvent::occur('tx1.event'));
+    $this->uow->commit();
+
+    // Second transaction
+    $this->uow->begin();
+    $this->uow->queueEvent(DomainEvent::occur('tx2.event'));
+    $this->uow->commit();
+
+    expect($dispatched)->toBe(['tx1.event', 'tx2.event']);
+});
+
+it('aggregate events pulled once on track', function (): void {
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+
+    $this->uow->begin();
+    $this->uow->track($aggregate);
+
+    // Events pulled during track
+    $initialCount = $this->uow->getPendingEventCount();
+    expect($initialCount)->toBe(1);
+
+    // Track again — should be idempotent, no duplicate events
+    $this->uow->track($aggregate);
+    expect($this->uow->getPendingEventCount())->toBe(1);
+});
+
+it('no dispatch when no event dispatcher set', function (): void {
+    // No dispatcher set — events should be silently discarded
+    $this->uow->begin();
+    $this->uow->queueEvent(DomainEvent::occur('orphan'));
+    $this->uow->commit();
+
+    // No exception, no errors
+    expect($this->uow->isActive())->toBeFalse();
+});
+
+it('getPendingEventCount returns 0 when inactive', function (): void {
+    expect($this->uow->getPendingEventCount())->toBe(0);
+});
+
+it('hasPendingEvents returns false when inactive', function (): void {
+    expect($this->uow->hasPendingEvents())->toBeFalse();
+});

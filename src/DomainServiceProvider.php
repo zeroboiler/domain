@@ -26,7 +26,22 @@ class DomainServiceProvider extends ServiceProvider
     {
         $this->app->singleton(
             UnitOfWorkContract::class,
-            InMemoryUnitOfWork::class
+            function (): InMemoryUnitOfWork {
+                $uow = new InMemoryUnitOfWork;
+
+                // Wire event dispatching: when the DomainEventDispatcher is
+                // available, events queued in the UoW are dispatched after commit.
+                $uow->setEventDispatcher(
+                    function (DomainEvent $event): void {
+                        if ($this->app->bound(DomainEventDispatcher::class)) {
+                            $this->app->make(DomainEventDispatcher::class)
+                                ->dispatch($event);
+                        }
+                    }
+                );
+
+                return $uow;
+            }
         );
 
         $this->app->singleton(
