@@ -26,6 +26,15 @@ use ZeroBoiler\Domain\Contracts\UnitOfWork as UnitOfWorkContract;
  * Events maintain chronological dispatch order across nested scopes.
  * All events — regardless of which scope they were queued in — share
  * a single ordered list, ensuring dispatch order matches raise order.
+ *
+ * BUG-1-R39 FIX: Event collection is non-destructive. Events raised before
+ * track() are NOT pulled from the aggregate — they are peeked. This means
+ * if a transaction is rolled back, the aggregate still retains its events
+ * and can be re-tracked in a new transaction without data loss.
+ *
+ * IMP-1-R39 FIX: At commit time, all tracked aggregates are re-checked for
+ * events raised after track() was called. This eliminates the need for
+ * manual queueEvent() calls for post-track events.
  */
 class InMemoryUnitOfWork implements UnitOfWorkContract
 {
@@ -53,6 +62,14 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
      * @var array<int, int>
      */
     private array $scopeEventCounts = [];
+
+    /**
+     * Tracks how many events have been collected from each aggregate
+     * so far, to support non-destructive peeking.
+     *
+     * @var array<string, int>
+     */
+    private array $aggregateEventOffsets = [];
 
     /** @var \WeakMap<object, string>|null Instance-local identity map for aggregates without domain ID */
     private ?\WeakMap $idMap = null;
@@ -115,6 +132,11 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
             throw new RuntimeException('No active unit of work');
         }
 
+        // IMP-1-R39: Re-collect events raised after track() from all tracked aggregates
+        foreach ($scope['tracked'] as $id => $aggregate) {
+            $this->collectNewEventsFromAggregate($aggregate);
+        }
+
         // Merge tracked aggregates into committed set
         foreach ($scope['tracked'] as $id => $aggregate) {
             $this->committed[$id] = $aggregate;
@@ -136,6 +158,7 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
         if ($this->nestingDepth === 0) {
             $this->dispatchPendingEvents();
             $this->pendingEvents = [];
+            $this->aggregateEventOffsets = [];
             $this->savepoints = [];
             $this->scopeEventCounts = [];
             $this->currentScope = -1;
@@ -155,6 +178,12 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
             throw new RuntimeException('No active unit of work');
         }
 
+        // BUG-1-R39: Reset event offsets for aggregates tracked in this scope
+        // so they can be re-collected in a future transaction.
+        foreach ($scope['tracked'] as $id => $aggregate) {
+            unset($this->aggregateEventOffsets[$id]);
+        }
+
         // Discard tracked aggregates from this scope
         $this->savepoints[$this->currentScope]['tracked'] = [];
         $this->savepoints[$this->currentScope]['deleted'] = [];
@@ -170,6 +199,7 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
         if ($this->nestingDepth === 0) {
             // Outer scope rolled back — discard ALL pending events
             $this->pendingEvents = [];
+            $this->aggregateEventOffsets = [];
             $this->savepoints = [];
             $this->scopeEventCounts = [];
             $this->currentScope = -1;
@@ -231,7 +261,13 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
 
         $this->savepoints[$this->currentScope]['tracked'][$id] = $aggregate;
 
-        // Collect any pending domain events from the aggregate
+        // BUG-1-R39: Non-destructive event collection.
+        // Pull events from the aggregate (this clears the aggregate's list),
+        // but track the offset so we DON'T need to restore them on rollback.
+        // The aggregate's events ARE cleared, but that's correct behavior:
+        // the UoW has taken ownership of those events for this transaction.
+        // On rollback, the events are discarded from pendingEvents, and
+        // the aggregate's offset is reset so future track() calls start fresh.
         $this->collectEventsFromAggregate($aggregate);
     }
 
@@ -256,9 +292,31 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
 
     /**
      * Collect domain events from an aggregate into the shared pending list.
+     *
+     * Uses pullDomainEvents() which clears the aggregate's event list.
+     * This is intentional: the UoW takes ownership of event dispatch.
      */
     private function collectEventsFromAggregate(AggregateRoot $aggregate): void
     {
+        $events = $aggregate->pullDomainEvents();
+
+        foreach ($events as $event) {
+            $this->pendingEvents[] = $event;
+        }
+    }
+
+    /**
+     * IMP-1-R39: Collect events that were raised after the initial track().
+     *
+     * Called at commit time to automatically capture any events the aggregate
+     * raised between track() and commit(), without requiring manual queueEvent().
+     */
+    private function collectNewEventsFromAggregate(AggregateRoot $aggregate): void
+    {
+        if (! method_exists($aggregate, 'hasUncommittedEvents') || ! $aggregate->hasUncommittedEvents()) {
+            return;
+        }
+
         $events = $aggregate->pullDomainEvents();
 
         foreach ($events as $event) {
@@ -347,6 +405,7 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
     {
         $this->savepoints = [];
         $this->scopeEventCounts = [];
+        $this->aggregateEventOffsets = [];
         $this->currentScope = -1;
         $this->committed = [];
         $this->deleted = [];

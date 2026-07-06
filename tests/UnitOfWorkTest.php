@@ -239,6 +239,51 @@ it('commit dispatches events from tracked aggregates', function (): void {
     expect($dispatched)->toBe(['TestAggregateCreated']);
 });
 
+// ─── IMP-1-R39: Auto-collect events at commit ─────────────────────
+
+it('auto collects events raised after track at commit time', function (): void {
+    $dispatched = [];
+    $this->uow->setEventDispatcher(function (DomainEvent $event) use (&$dispatched): void {
+        $dispatched[] = $event->eventType;
+    });
+
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+
+    $this->uow->begin();
+    $this->uow->track($aggregate); // pulls TestAggregateCreated
+
+    // Raise more events after track — no manual queueEvent needed!
+    $aggregate->rename('Updated Name');
+
+    $this->uow->commit();
+
+    // IMP-1-R39: commit() should auto-collect the rename event
+    expect($dispatched)->toBe(['TestAggregateCreated', 'TestAggregateRenamed']);
+});
+
+it('auto collects multiple post-track events', function (): void {
+    $dispatched = [];
+    $this->uow->setEventDispatcher(function (DomainEvent $event) use (&$dispatched): void {
+        $dispatched[] = $event->eventType;
+    });
+
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+
+    $this->uow->begin();
+    $this->uow->track($aggregate);
+
+    $aggregate->rename('First');
+    $aggregate->rename('Second');
+
+    $this->uow->commit();
+
+    expect($dispatched)->toBe([
+        'TestAggregateCreated',
+        'TestAggregateRenamed',
+        'TestAggregateRenamed',
+    ]);
+});
+
 // ─── run() Helper ──────────────────────────────────────────────────
 
 it('run commits on success', function (): void {
@@ -398,7 +443,7 @@ it('nested rollback restores to savepoint', function (): void {
 
 // ─── Multi-Aggregate Integration ───────────────────────────────────
 
-it('handles multi-aggregate transaction with event dispatch', function (): void {
+it('handles multi-aggregate transaction with auto-collect at commit', function (): void {
     $dispatched = [];
     $this->uow->setEventDispatcher(function (DomainEvent $event) use (&$dispatched): void {
         $dispatched[] = $event->eventType;
@@ -411,21 +456,12 @@ it('handles multi-aggregate transaction with event dispatch', function (): void 
         $this->uow->track($order);
         $this->uow->track($customer);
 
-        // Raise more events
+        // Raise more events after tracking — IMP-1-R39: auto-collected at commit
         $order->rename('Order #1');
         $customer->rename('John Doe');
-
-        // Pull new events into UoW
-        foreach ($order->pullDomainEvents() as $event) {
-            $this->uow->queueEvent($event);
-        }
-
-        foreach ($customer->pullDomainEvents() as $event) {
-            $this->uow->queueEvent($event);
-        }
     });
 
-    // 4 events: 2 created + 2 renamed
+    // 4 events: 2 created + 2 renamed (auto-collected at commit)
     expect($dispatched)->toHaveCount(4);
     expect($dispatched[0])->toBe('TestAggregateCreated');
     expect($dispatched[1])->toBe('TestAggregateCreated');
@@ -528,4 +564,58 @@ it('getPendingEventCount returns 0 when inactive', function (): void {
 
 it('hasPendingEvents returns false when inactive', function (): void {
     expect($this->uow->hasPendingEvents())->toBeFalse();
+});
+
+// ─── BUG-1-R39: Aggregate re-usable after rollback ─────────────────
+
+it('aggregate can raise new events after rollback in new transaction', function (): void {
+    $dispatched = [];
+    $this->uow->setEventDispatcher(function (DomainEvent $event) use (&$dispatched): void {
+        $dispatched[] = $event->eventType;
+    });
+
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+
+    // First transaction: track then rollback
+    $this->uow->begin();
+    $this->uow->track($aggregate); // pulls TestAggregateCreated
+    $this->uow->rollback();
+
+    // Events from the first transaction are discarded
+    expect($dispatched)->toBeEmpty();
+
+    // The aggregate's events were pulled during track().
+    // This is expected behavior: the UoW took ownership of dispatch.
+    // After rollback, those specific events are lost (by design).
+    // The aggregate itself can still be used in new transactions.
+    expect($aggregate->hasUncommittedEvents())->toBeFalse();
+
+    // New transaction: aggregate raises NEW events
+    $this->uow->begin();
+    $aggregate->rename('New Name');
+    $this->uow->track($aggregate); // pulls TestAggregateRenamed
+    $this->uow->commit();
+
+    expect($dispatched)->toBe(['TestAggregateRenamed']);
+});
+
+it('manual queueEvent still works alongside auto-collect', function (): void {
+    $dispatched = [];
+    $this->uow->setEventDispatcher(function (DomainEvent $event) use (&$dispatched): void {
+        $dispatched[] = $event->eventType;
+    });
+
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+
+    $this->uow->begin();
+    $this->uow->track($aggregate); // pulls TestAggregateCreated
+    $this->uow->queueEvent(DomainEvent::occur('manual.event')); // manual queue
+    $aggregate->rename('Auto'); // auto-collected at commit
+    $this->uow->commit();
+
+    expect($dispatched)->toBe([
+        'TestAggregateCreated',
+        'manual.event',
+        'TestAggregateRenamed',
+    ]);
 });

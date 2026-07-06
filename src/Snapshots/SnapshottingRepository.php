@@ -25,6 +25,10 @@ use ZeroBoiler\Domain\DomainEvent;
  * On save():
  * 1. Delegates to the base repository
  * 2. Checks if snapshot is due (#[SnapshotPolicy]) and creates one
+ *
+ * BUG-2-R39 FIX: When the inner repository doesn't support snapshot-aware
+ * loading (findAfterVersion), the fallback now correctly prefers the snapshot
+ * over a potentially incomplete full replay (e.g., pruned event store).
  */
 final readonly class SnapshottingRepository implements Repository
 {
@@ -50,22 +54,29 @@ final readonly class SnapshottingRepository implements Repository
             if ($aggregate instanceof AggregateRoot) {
                 // Snapshot restored successfully — replay only post-snapshot events
                 // by delegating to inner repository which does full event replay.
-                // The snapshot gives us the base state; the inner repository
-                // replays all events but the aggregate already has snapshot state.
                 //
                 // If the inner repository supports snapshot-aware loading
                 // (e.g., via a method like findAfterVersion), we use it.
-                // Otherwise, we fall back to full replay from inner repository.
                 if (method_exists($this->inner, 'findAfterVersion')) {
                     /** @var AggregateRoot&EventSourced $aggregate */
                     return $this->inner->findAfterVersion($id, $snapshot->version, $aggregate)
                         ?? $aggregate;
                 }
 
-                // No snapshot-aware inner repository — use full replay but
-                // the snapshot state is already set. This is still correct,
-                // just not as fast.
-                return $this->inner->find($id) ?? $aggregate;
+                // BUG-2-R39 FIX: No snapshot-aware inner repository.
+                // Use full replay via inner->find(), but prefer the snapshot
+                // if the replay returned less data than the snapshot has
+                // (e.g., event store was pruned and no longer has all events).
+                $replayed = $this->inner->find($id);
+
+                if ($replayed !== null && $replayed->version() >= $snapshot->version) {
+                    // Full replay is at least as current as the snapshot — use it
+                    return $replayed;
+                }
+
+                // Inner has less data than snapshot (pruned event store)
+                // or inner returned null — use the snapshot-restored aggregate
+                return $aggregate;
             }
         }
 
