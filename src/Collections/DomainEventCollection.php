@@ -8,13 +8,35 @@ use ArrayIterator;
 use Countable;
 use IteratorAggregate;
 use ZeroBoiler\Domain\DomainEvent;
+use ZeroBoiler\Domain\Exceptions\InvalidArgumentDomainException;
 
+/**
+ * @implements IteratorAggregate<int, DomainEvent>
+ */
 class DomainEventCollection implements Countable, IteratorAggregate
 {
+    /**
+     * @param  array<DomainEvent>  $events
+     *
+     * @throws InvalidArgumentDomainException If any element is not a DomainEvent.
+     */
     public function __construct(
         private array $events = [],
-    ) {}
+    ) {
+        foreach ($events as $event) {
+            if (! $event instanceof DomainEvent) {
+                throw InvalidArgumentDomainException::because(
+                    'All events must be instances of DomainEvent, got ' . get_debug_type($event)
+                );
+            }
+        }
+    }
 
+    /**
+     * @param  array<DomainEvent>  $events
+     *
+     * @throws InvalidArgumentDomainException If any element is not a DomainEvent.
+     */
     public static function fromArray(array $events): self
     {
         return new self($events);

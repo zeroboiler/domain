@@ -6,6 +6,7 @@ namespace ZeroBoiler\Domain\Tests\Unit;
 
 use ZeroBoiler\Domain\Collections\DomainEventCollection;
 use ZeroBoiler\Domain\DomainEvent;
+use ZeroBoiler\Domain\Exceptions\InvalidArgumentDomainException;
 
 beforeEach(function (): void {
     $this->event1 = DomainEvent::occur('TestEvent', ['id' => 'test-id-1']);
@@ -103,4 +104,36 @@ test('can merge collections', function (): void {
     $merged = $collection1->merge($collection2);
 
     expect($merged->count())->toBe(2);
+});
+
+test('constructor throws exception for non-DomainEvent elements', function (): void {
+    /** @phpstan-ignore argument.type */
+    new DomainEventCollection(['not-an-event', 42, null]);
+})->throws(InvalidArgumentDomainException::class);
+
+test('fromArray throws exception for invalid elements', function (): void {
+    DomainEventCollection::fromArray([$this->event1, 'invalid', $this->event2]);
+})->throws(InvalidArgumentDomainException::class);
+
+test('constructor accepts valid DomainEvent array', function (): void {
+    $collection = new DomainEventCollection([$this->event1, $this->event2]);
+
+    expect($collection->count())->toBe(2);
+    expect($collection->first())->toBe($this->event1);
+});
+
+test('constructor accepts empty array', function (): void {
+    $collection = new DomainEventCollection([]);
+
+    expect($collection->isEmpty())->toBeTrue();
+});
+
+test('exception message includes the invalid type', function (): void {
+    try {
+        /** @phpstan-ignore argument.type */
+        DomainEventCollection::fromArray([42]);
+        expect(false)->toBeTrue('Exception should have been thrown');
+    } catch (InvalidArgumentDomainException $e) {
+        expect($e->getMessage())->toContain('int');
+    }
 });
