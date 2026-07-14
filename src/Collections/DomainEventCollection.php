@@ -11,10 +11,26 @@ use ZeroBoiler\Domain\DomainEvent;
 
 class DomainEventCollection implements Countable, IteratorAggregate
 {
+    /** @param DomainEvent[] $events */
     public function __construct(
         private array $events = [],
-    ) {}
+    ) {
+        foreach ($events as $event) {
+            if (! $event instanceof DomainEvent) {
+                throw new \InvalidArgumentException(
+                    'All events must implement ' . DomainEvent::class
+                );
+            }
+        }
+    }
 
+    /**
+     * Create a collection from an array of DomainEvent instances.
+     *
+     * @param  DomainEvent[]  $events
+     *
+     * @throws \InvalidArgumentException if any element is not a DomainEvent
+     */
     public static function fromArray(array $events): self
     {
         return new self($events);

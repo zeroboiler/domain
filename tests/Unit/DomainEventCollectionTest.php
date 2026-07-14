@@ -104,3 +104,34 @@ test('can merge collections', function (): void {
 
     expect($merged->count())->toBe(2);
 });
+
+test('fromArray throws InvalidArgumentException for non-DomainEvent items', function (): void {
+    DomainEventCollection::fromArray(['not-an-event', 42, null]);
+})->throws(\InvalidArgumentException::class, 'All events must implement');
+
+test('constructor throws InvalidArgumentException for mixed array', function (): void {
+    new DomainEventCollection([$this->event1, 'invalid']);
+})->throws(\InvalidArgumentException::class, 'All events must implement');
+
+test('fromArray accepts empty array', function (): void {
+    $collection = DomainEventCollection::fromArray([]);
+
+    expect($collection->isEmpty())->toBeTrue();
+    expect($collection->count())->toBe(0);
+});
+
+test('fromArray with valid events preserves all items', function (): void {
+    $events = [$this->event1, $this->event2];
+    $collection = DomainEventCollection::fromArray($events);
+
+    expect($collection->toArray())->toBe($events);
+    expect($collection->first())->toBe($this->event1);
+    expect($collection->last())->toBe($this->event2);
+});
+
+test('fromArray throws on first invalid item only', function (): void {
+    $collection = DomainEventCollection::fromArray([$this->event1]);
+    expect($collection->count())->toBe(1);
+
+    DomainEventCollection::fromArray([$this->event1, $this->event2, 'bad']);
+})->throws(\InvalidArgumentException::class);
