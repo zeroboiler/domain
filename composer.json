@@ -77,5 +77,8 @@
         }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "suggest": {
+        "zeroboiler/observability": "Enables #[Trace] auto-instrumentation for aggregate root operations"
+    }
 }
