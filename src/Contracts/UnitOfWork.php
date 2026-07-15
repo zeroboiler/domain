@@ -100,4 +100,13 @@ interface UnitOfWork
      * Get the count of pending domain events.
      */
     public function getPendingEventCount(): int;
+
+    /**
+     * Set a callback invoked at commit time to persist aggregates.
+     *
+     * The callback receives each aggregate and a boolean (true = deleted).
+     *
+     * @param  ?Closure(AggregateRoot, bool): void  $callback
+     */
+    public function setPersistCallback(?Closure $callback): void;
 }

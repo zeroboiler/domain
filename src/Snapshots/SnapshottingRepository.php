@@ -69,7 +69,7 @@ final readonly class SnapshottingRepository implements Repository
                 // (e.g., event store was pruned and no longer has all events).
                 $replayed = $this->inner->find($id);
 
-                if ($replayed !== null && $replayed->version() >= $snapshot->version) {
+                if ($replayed instanceof AggregateRoot && $replayed->version() >= $snapshot->version) {
                     // Full replay is at least as current as the snapshot — use it
                     return $replayed;
                 }

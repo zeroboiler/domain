@@ -23,11 +23,13 @@ final class DomainEventCommand extends GeneratorCommand
         return __DIR__ . '/../stubs/event.stub';
     }
 
+    #[\Override]
     protected function getDefaultNamespace($rootNamespace): string
     {
         return $rootNamespace . '\\Domain\\Events';
     }
 
+    #[\Override]
     protected function getNameInput(): string
     {
         $name = parent::getNameInput();
