@@ -74,6 +74,7 @@ class DomainServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->wireEventForwarder();
+        $this->registerOctaneReset();
 
         if ($this->app->runningInConsole()) {
             $this->commands([
@@ -113,5 +114,25 @@ class DomainServiceProvider extends ServiceProvider
                 }
             }
         );
+    }
+
+    /**
+     * Register Octane request-reset hook to clear listeners between requests.
+     *
+     * In long-running processes (Octane, Swoole, RoadRunner), the singleton
+     * DomainEventDispatcher persists across requests. Without clearing,
+     * listeners accumulate and cause memory leaks and cross-request
+     * contamination.
+     */
+    private function registerOctaneReset(): void
+    {
+        if (! $this->app->bound('octane')) {
+            return;
+        }
+
+        $this->app['events']->listen('octane.request.terminate', function (): void {
+            $this->app->make(DomainEventDispatcher::class)
+                ->clearListeners();
+        });
     }
 }

@@ -31,6 +31,12 @@ final class DomainEventDispatcher
      */
     private ?Closure $eventForwarder = null;
 
+    /**
+     * Track whether listeners have been registered.
+     * Used for test assertions and Octane request isolation checks.
+     */
+    private int $totalListenerCount = 0;
+
     public function __construct(
         private readonly ?LaravelDispatcher $laravelDispatcher = null,
     ) {
@@ -75,6 +81,7 @@ final class DomainEventDispatcher
     public function subscribe(string $eventType, Closure $listener): void
     {
         $this->listeners[$eventType][] = $listener;
+        $this->totalListenerCount++;
     }
 
     public function defer(DomainEvent $event): void
@@ -108,5 +115,55 @@ final class DomainEventDispatcher
     public function getDeferredEventsCount(): int
     {
         return $this->deferredEvents->count();
+    }
+
+    /**
+     * Remove all registered listeners.
+     *
+     * Essential for long-running processes (Octane, Swoole) where
+     * listeners would otherwise accumulate across requests.
+     *
+     * @param  ?string  $eventType  Only clear listeners for this event type; null clears all.
+     */
+    public function clearListeners(?string $eventType = null): void
+    {
+        if ($eventType === null) {
+            $this->totalListenerCount = 0;
+            $this->listeners = [];
+
+            return;
+        }
+
+        $this->totalListenerCount -= count($this->listeners[$eventType] ?? []);
+        unset($this->listeners[$eventType]);
+    }
+
+    /**
+     * Full reset: clears listeners, deferred events, and forwarder.
+     *
+     * Intended for test teardown to ensure complete isolation
+     * between test cases.
+     */
+    public function flush(): void
+    {
+        $this->clearListeners();
+        $this->deferredEvents = new Collection;
+        $this->eventForwarder = null;
+    }
+
+    /**
+     * Check if any listeners are registered for an event type.
+     */
+    public function hasListeners(string $eventType): bool
+    {
+        return isset($this->listeners[$eventType]) && $this->listeners[$eventType] !== [];
+    }
+
+    /**
+     * Get the total number of registered listeners across all event types.
+     */
+    public function getListenerCount(): int
+    {
+        return $this->totalListenerCount;
     }
 }
