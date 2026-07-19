@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 use ZeroBoiler\Domain\DomainEvent;
 use ZeroBoiler\Domain\DomainEventDispatcher;
+use ZeroBoiler\Domain\Exceptions\ListenerException;
 
 beforeEach(function (): void {
     $this->dispatcher = new DomainEventDispatcher;
@@ -204,6 +205,98 @@ it('calls both listeners and forwarder on dispatch', function (): void {
 
     expect($listenerCalled)->toBeTrue()
         ->and($forwarderCalled)->toBeTrue();
+});
+
+it('continues calling remaining listeners when one throws', function (): void {
+    // BUG #6: A failing listener should not silently skip subsequent listeners.
+    $results = [];
+
+    $this->dispatcher->subscribe('TestEvent', function () use (&$results): void {
+        $results[] = 'first';
+    });
+
+    $this->dispatcher->subscribe('TestEvent', function () use (&$results): void {
+        $results[] = 'throwing';
+
+        throw new RuntimeException('listener failed');
+    });
+
+    $this->dispatcher->subscribe('TestEvent', function () use (&$results): void {
+        $results[] = 'third';
+    });
+
+    try {
+        $this->dispatcher->dispatch(DomainEvent::occur('TestEvent'));
+    } catch (ListenerException $e) {
+        // Expected
+    }
+
+    expect($results)->toBe(['first', 'throwing', 'third']);
+});
+
+it('throws ListenerException with all failures after all listeners run', function (): void {
+    $first = new RuntimeException('boom-1');
+    $second = new RuntimeException('boom-2');
+
+    $this->dispatcher->subscribe('TestEvent', function () use ($first): void {
+        throw $first;
+    });
+    $this->dispatcher->subscribe('TestEvent', function () use ($second): void {
+        throw $second;
+    });
+
+    try {
+        $this->dispatcher->dispatch(DomainEvent::occur('TestEvent'));
+        $thrown = null;
+    } catch (ListenerException $thrown) {
+        // Expected
+    }
+
+    expect($thrown)->not->toBeNull()
+        ->and($thrown->throwables())->toHaveCount(2)
+        ->and($thrown->throwables()[0])->toBe($first)
+        ->and($thrown->throwables()[1])->toBe($second)
+        ->and($thrown->getMessage())->toContain('2 listener(s) failed');
+});
+
+it('does not throw when no listeners fail', function (): void {
+    $called = false;
+
+    $this->dispatcher->subscribe('TestEvent', function () use (&$called): void {
+        $called = true;
+    });
+
+    $this->dispatcher->dispatch(DomainEvent::occur('TestEvent'));
+
+    expect($called)->toBeTrue();
+});
+
+it('dispatchQuietly swallows listener exceptions', function (): void {
+    $secondCalled = false;
+
+    $this->dispatcher->subscribe('TestEvent', function (): void {
+        throw new RuntimeException('fail');
+    });
+    $this->dispatcher->subscribe('TestEvent', function () use (&$secondCalled): void {
+        $secondCalled = true;
+    });
+
+    // Should not throw
+    $this->dispatcher->dispatchQuietly(DomainEvent::occur('TestEvent'));
+
+    expect($secondCalled)->toBeTrue();
+});
+
+it('dispatchQuietly works normally when no listeners fail', function (): void {
+    $called = false;
+
+    $this->dispatcher->subscribe('TestEvent', function () use (&$called): void {
+        $called = true;
+    });
+
+    $this->dispatcher->dispatchQuietly(DomainEvent::occur('TestEvent'));
+
+    expect($called)->toBeTrue();
 });
 
 it('clears deferred events even when a listener throws during release', function (): void {

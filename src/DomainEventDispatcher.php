@@ -11,6 +11,8 @@ namespace ZeroBoiler\Domain;
 use Closure;
 use Illuminate\Contracts\Events\Dispatcher as LaravelDispatcher;
 use Illuminate\Support\Collection;
+use Throwable;
+use ZeroBoiler\Domain\Exceptions\ListenerException;
 
 final class DomainEventDispatcher
 {
@@ -56,12 +58,28 @@ final class DomainEventDispatcher
         $this->eventForwarder = $forwarder;
     }
 
+    /**
+     * Dispatch an event to all subscribed listeners.
+     *
+     * Iterates every listener in a try/catch so one failure does not
+     * silently skip the rest. After all listeners run, any collected
+     * failures are aggregated into a single ListenerException.
+     *
+     * @throws ListenerException when one or more listeners fail
+     */
     public function dispatch(DomainEvent $event): void
     {
         $eventType = $event->eventType;
 
+        /** @var array<int, array{listener: callable, throwable: Throwable}> $failures */
+        $failures = [];
+
         foreach ($this->listeners[$eventType] ?? [] as $listener) {
-            $listener($event);
+            try {
+                $listener($event);
+            } catch (Throwable $e) {
+                $failures[] = ['listener' => $listener, 'throwable' => $e];
+            }
         }
 
         // Also dispatch through Laravel's event system so that
@@ -75,6 +93,26 @@ final class DomainEventDispatcher
         // for DB-driven triggers, without a hard coupling.
         if ($this->eventForwarder instanceof Closure) {
             ($this->eventForwarder)($eventType, $event->payload);
+        }
+
+        if ($failures !== []) {
+            throw ListenerException::withFailures($failures);
+        }
+    }
+
+    /**
+     * Dispatch an event without throwing on listener failures.
+     *
+     * Behaves exactly like {@see dispatch()} but swallows any
+     * ListenerException, allowing the caller to continue even when
+     * listeners are unreliable.
+     */
+    public function dispatchQuietly(DomainEvent $event): void
+    {
+        try {
+            $this->dispatch($event);
+        } catch (ListenerException) {
+            // Intentionally silenced — callers opt in to this behaviour.
         }
     }
 
