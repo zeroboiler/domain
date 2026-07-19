@@ -13,6 +13,11 @@ beforeEach(function (): void {
     $this->dispatcher = new DomainEventDispatcher;
 });
 
+afterEach(function (): void {
+    // Ensure complete test isolation — no listener leakage between tests.
+    $this->dispatcher->flush();
+});
+
 it('can subscribe to events', function (): void {
     $called = false;
 
@@ -224,4 +229,141 @@ it('clears deferred events even when a listener throws during release', function
     // The deferred collection must be cleared despite the exception
     expect($this->dispatcher->hasDeferredEvents())->toBeFalse()
         ->and($this->dispatcher->getDeferredEventsCount())->toBe(0);
+});
+
+// ============================================================================
+// clearListeners() tests — issue #2: listener accumulation prevention
+// ============================================================================
+
+it('can clear all listeners', function (): void {
+    $this->dispatcher->subscribe('EventA', fn () => true);
+    $this->dispatcher->subscribe('EventB', fn () => true);
+
+    expect($this->dispatcher->getListenerCount())->toBe(2);
+
+    $this->dispatcher->clearListeners();
+
+    expect($this->dispatcher->getListenerCount())->toBe(0)
+        ->and($this->dispatcher->hasListeners('EventA'))->toBeFalse()
+        ->and($this->dispatcher->hasListeners('EventB'))->toBeFalse();
+});
+
+it('can clear listeners for a specific event type only', function (): void {
+    $this->dispatcher->subscribe('EventA', fn () => true);
+    $this->dispatcher->subscribe('EventA', fn () => true);
+    $this->dispatcher->subscribe('EventB', fn () => true);
+
+    $this->dispatcher->clearListeners('EventA');
+
+    expect($this->dispatcher->hasListeners('EventA'))->toBeFalse()
+        ->and($this->dispatcher->hasListeners('EventB'))->toBeTrue()
+        ->and($this->dispatcher->getListenerCount())->toBe(1);
+});
+
+it('does not dispatch to cleared listeners', function (): void {
+    $called = false;
+
+    $this->dispatcher->subscribe('TestEvent', function () use (&$called): void {
+        $called = true;
+    });
+
+    $this->dispatcher->clearListeners();
+    $this->dispatcher->dispatch(DomainEvent::occur('TestEvent'));
+
+    expect($called)->toBeFalse();
+});
+
+it('can clear listeners for non-existent event type without error', function (): void {
+    $this->dispatcher->clearListeners('NonExistent');
+
+    expect($this->dispatcher->getListenerCount())->toBe(0);
+});
+
+// ============================================================================
+// flush() tests — full reset for test isolation
+// ============================================================================
+
+it('can flush all state completely', function (): void {
+    $this->dispatcher->subscribe('TestEvent', fn () => true);
+    $this->dispatcher->setEventForwarder(fn () => true);
+    $this->dispatcher->defer(DomainEvent::occur('TestEvent'));
+
+    $this->dispatcher->flush();
+
+    expect($this->dispatcher->getListenerCount())->toBe(0)
+        ->and($this->dispatcher->hasListeners('TestEvent'))->toBeFalse()
+        ->and($this->dispatcher->hasDeferredEvents())->toBeFalse();
+});
+
+it('flush removes event forwarder', function (): void {
+    $forwarded = [];
+
+    $this->dispatcher->setEventForwarder(function () use (&$forwarded): void {
+        $forwarded[] = 'called';
+    });
+
+    $this->dispatcher->flush();
+    $this->dispatcher->dispatch(DomainEvent::occur('TestEvent'));
+
+    expect($forwarded)->toBeEmpty();
+});
+
+it('flush allows clean re-subscription after reset', function (): void {
+    $callCount = 0;
+
+    $this->dispatcher->subscribe('TestEvent', function () use (&$callCount): void {
+        $callCount++;
+    });
+
+    $this->dispatcher->dispatch(DomainEvent::occur('TestEvent'));
+    expect($callCount)->toBe(1);
+
+    $this->dispatcher->flush();
+
+    $this->dispatcher->subscribe('TestEvent', function () use (&$callCount): void {
+        $callCount++;
+    });
+
+    $this->dispatcher->dispatch(DomainEvent::occur('TestEvent'));
+    expect($callCount)->toBe(2);
+});
+
+// ============================================================================
+// hasListeners() and getListenerCount() tests
+// ============================================================================
+
+it('reports hasListeners correctly', function (): void {
+    expect($this->dispatcher->hasListeners('TestEvent'))->toBeFalse();
+
+    $this->dispatcher->subscribe('TestEvent', fn () => true);
+
+    expect($this->dispatcher->hasListeners('TestEvent'))->toBeTrue();
+});
+
+it('reports getListenerCount correctly across multiple subscriptions', function (): void {
+    expect($this->dispatcher->getListenerCount())->toBe(0);
+
+    $this->dispatcher->subscribe('EventA', fn () => true);
+    $this->dispatcher->subscribe('EventA', fn () => true);
+    $this->dispatcher->subscribe('EventB', fn () => true);
+
+    expect($this->dispatcher->getListenerCount())->toBe(3);
+});
+
+it('decrements listener count when clearing specific event type', function (): void {
+    $this->dispatcher->subscribe('EventA', fn () => true);
+    $this->dispatcher->subscribe('EventA', fn () => true);
+    $this->dispatcher->subscribe('EventB', fn () => true);
+
+    $this->dispatcher->clearListeners('EventA');
+
+    expect($this->dispatcher->getListenerCount())->toBe(1);
+});
+
+it('hasListeners returns false after clearing all listeners', function (): void {
+    $this->dispatcher->subscribe('TestEvent', fn () => true);
+
+    $this->dispatcher->clearListeners();
+
+    expect($this->dispatcher->hasListeners('TestEvent'))->toBeFalse();
 });
