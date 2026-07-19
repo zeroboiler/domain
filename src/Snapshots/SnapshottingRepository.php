@@ -9,10 +9,10 @@ declare(strict_types=1);
 namespace ZeroBoiler\Domain\Snapshots;
 
 use ZeroBoiler\Domain\AggregateRoot;
-use ZeroBoiler\Domain\Concerns\EventSourced;
+use ZeroBoiler\Events\Domain\Concerns\EventSourced;
 use ZeroBoiler\Domain\Concerns\HasSnapshots;
 use ZeroBoiler\Domain\Contracts\Repository;
-use ZeroBoiler\Domain\DomainEvent;
+use ZeroBoiler\Events\Domain\DomainEvent;
 use ZeroBoiler\Observability\Trace;
 
 /**

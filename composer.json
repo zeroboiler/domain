@@ -1,6 +1,6 @@
 {
     "name": "zeroboiler/domain",
-    "description": "DDD building blocks for rich domain models with aggregate roots, entities, value objects, and domain events",
+    "description": "DDD building blocks for rich domain models with aggregate roots, entities, value objects, and repositories",
     "type": "library",
     "license": "MIT",
     "keywords": [
@@ -8,7 +8,7 @@
         "domain-driven-design",
         "aggregate-root",
         "value-object",
-        "domain-event"
+        "repository"
     ],
     "authors": [
         {
@@ -17,6 +17,10 @@
         }
     ],
     "repositories": [
+        {
+            "type": "path",
+            "url": "../events"
+        },
         {
             "type": "path",
             "url": "../value-objects"
@@ -28,6 +32,7 @@
         "php": "^8.5",
         "ramsey/uuid": "^4.7",
         "symfony/uid": "^7.0",
+        "zeroboiler/events": "^0.1",
         "zeroboiler/value-objects": "^0.1"
     },
     "require-dev": {
@@ -76,7 +81,7 @@
             "pestphp/pest-plugin": true
         }
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true,
     "suggest": {
         "zeroboiler/observability": "Enables #[Trace] auto-instrumentation for aggregate root operations"

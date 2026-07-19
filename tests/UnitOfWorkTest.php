@@ -7,7 +7,7 @@
 declare(strict_types=1);
 
 use ZeroBoiler\Domain\AggregateRootId;
-use ZeroBoiler\Domain\DomainEvent;
+use ZeroBoiler\Events\Domain\DomainEvent;
 use ZeroBoiler\Domain\InMemoryUnitOfWork;
 use ZeroBoiler\Domain\Tests\Fixtures\TestAggregate;
 

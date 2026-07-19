@@ -8,9 +8,10 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Domain;
 
-use ZeroBoiler\Domain\Collections\DomainEventCollection;
 use ZeroBoiler\Domain\Contracts\AggregateRoot as AggregateRootContract;
 use ZeroBoiler\Domain\Contracts\Entity as EntityContract;
+use ZeroBoiler\Events\Domain\Collections\DomainEventCollection;
+use ZeroBoiler\Events\Domain\DomainEvent;
 
 /**
  * Base class for aggregate roots in a DDD architecture.

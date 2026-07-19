@@ -9,7 +9,8 @@ declare(strict_types=1);
 namespace ZeroBoiler\Domain;
 
 use ZeroBoiler\Domain\Contracts\Entity as EntityContract;
-use ZeroBoiler\Domain\Support\HasDomainEvents;
+use ZeroBoiler\Events\Domain\DomainEvent;
+use ZeroBoiler\Events\Domain\Support\HasDomainEvents;
 
 abstract class Entity implements EntityContract
 {

@@ -13,6 +13,7 @@ use RuntimeException;
 use Throwable;
 use ZeroBoiler\Domain\Contracts\AggregateRoot;
 use ZeroBoiler\Domain\Contracts\UnitOfWork as UnitOfWorkContract;
+use ZeroBoiler\Events\Domain\DomainEvent;
 
 /**
  * In-memory UnitOfWork implementation with domain event integration.

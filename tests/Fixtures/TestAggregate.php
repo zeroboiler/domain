@@ -6,7 +6,7 @@ namespace ZeroBoiler\Domain\Tests\Fixtures;
 
 use ZeroBoiler\Domain\AggregateRoot;
 use ZeroBoiler\Domain\AggregateRootId;
-use ZeroBoiler\Domain\DomainEvent;
+use ZeroBoiler\Events\Domain\DomainEvent;
 
 final class TestAggregate extends AggregateRoot
 {
