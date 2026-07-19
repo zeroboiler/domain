@@ -619,3 +619,239 @@ it('manual queueEvent still works alongside auto-collect', function (): void {
         'TestAggregateRenamed',
     ]);
 });
+
+// ─── ISSUE-#7: Snapshot-based rollback ─────────────────────────────
+
+it('rollback restores aggregate mutable state from snapshot', function (): void {
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+    $aggregate->clearEvents();
+
+    $this->uow->begin();
+    $this->uow->track($aggregate);
+
+    // Mutate after tracking
+    $aggregate->rename('Changed Name');
+    expect($aggregate->name)->toBe('Changed Name');
+
+    $this->uow->rollback();
+
+    // State should be restored to snapshot (name = null)
+    expect($aggregate->name)->toBeNull();
+    expect($aggregate->nameChanged)->toBeFalse();
+});
+
+it('rollback restores aggregate version from snapshot', function (): void {
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+    $aggregate->clearEvents();
+    $versionBeforeTrack = $aggregate->version();
+
+    $this->uow->begin();
+    $this->uow->track($aggregate);
+    $aggregate->rename('Version Bump'); // increments version
+    expect($aggregate->version())->toBeGreaterThan($versionBeforeTrack);
+
+    $this->uow->rollback();
+
+    expect($aggregate->version())->toBe($versionBeforeTrack);
+});
+
+it('commit does not restore snapshot (mutations persist)', function (): void {
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+    $aggregate->clearEvents();
+
+    $this->uow->begin();
+    $this->uow->track($aggregate);
+    $aggregate->rename('Committed Name');
+    $this->uow->commit();
+
+    expect($aggregate->name)->toBe('Committed Name');
+});
+
+it('inner rollback does not restore state (snapshot is per-track not per-begin)', function (): void {
+    // This test documents the design: snapshots are taken in track(),
+    // not in begin(). Inner savepoints that don't call track() will
+    // not capture/restore aggregate state on rollback.
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+    $aggregate->clearEvents();
+
+    $this->uow->begin();
+    $this->uow->track($aggregate); // snapshot taken here with name=null
+    $aggregate->rename('Outer');
+
+    // Inner savepoint — no track() call, so no snapshot
+    $this->uow->begin();
+    $aggregate->rename('Inner');
+    $this->uow->rollback(); // inner rollback discards inner events only
+
+    // State is NOT restored to 'Outer' because inner scope had no snapshot.
+    // State restoration only happens for the scope where track() was called.
+    expect($aggregate->name)->toBe('Inner');
+
+    $this->uow->rollback(); // outer rollback restores to snapshot (name=null)
+    expect($aggregate->name)->toBeNull();
+});
+
+it('snapshot taken at track time captures pre-mutation state', function (): void {
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+    $aggregate->rename('Initial');
+    $aggregate->clearEvents();
+
+    $this->uow->begin();
+    $this->uow->track($aggregate); // snapshot taken here with name='Initial'
+    $aggregate->rename('After Track');
+    $this->uow->rollback();
+
+    expect($aggregate->name)->toBe('Initial');
+});
+
+it('multiple aggregates restored independently on rollback', function (): void {
+    $a1 = TestAggregate::create(AggregateRootId::generate());
+    $a2 = TestAggregate::create(AggregateRootId::generate());
+    $a1->clearEvents();
+    $a2->clearEvents();
+
+    $this->uow->begin();
+    $this->uow->track($a1);
+    $this->uow->track($a2);
+    $a1->rename('A1 Changed');
+    $a2->rename('A2 Changed');
+    $this->uow->rollback();
+
+    expect($a1->name)->toBeNull();
+    expect($a2->name)->toBeNull();
+});
+
+it('aggregate can be tracked in new transaction after rollback with state restored', function (): void {
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+    $aggregate->clearEvents();
+
+    // First transaction: track, mutate, rollback
+    $this->uow->begin();
+    $this->uow->track($aggregate);
+    $aggregate->rename('Rolled Back');
+    $this->uow->rollback();
+
+    expect($aggregate->name)->toBeNull();
+
+    // Second transaction: track again, mutate, commit
+    $dispatched = [];
+    $this->uow->setEventDispatcher(function (DomainEvent $event) use (&$dispatched): void {
+        $dispatched[] = $event->eventType;
+    });
+
+    $this->uow->begin();
+    $aggregate->rename('Committed');
+    $this->uow->track($aggregate);
+    $this->uow->commit();
+
+    expect($aggregate->name)->toBe('Committed');
+    expect($dispatched)->toBe(['TestAggregateRenamed']);
+});
+
+// ─── ISSUE-#7: Persistence callback ────────────────────────────────
+
+it('invokes persistence callback on commit with committed and deleted aggregates', function (): void {
+    $persisted = null;
+    $deletedData = null;
+    $this->uow->setPersistenceCallback(function (array $committed, array $deleted) use (&$persisted, &$deletedData): void {
+        $persisted = $committed;
+        $deletedData = $deleted;
+    });
+
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+
+    $this->uow->begin();
+    $this->uow->track($aggregate);
+    $this->uow->commit();
+
+    expect($persisted)->toHaveCount(1);
+    expect(array_first($persisted))->toBe($aggregate);
+    expect($deletedData)->toBeEmpty();
+});
+
+it('invokes persistence callback with deleted aggregates', function (): void {
+    $persisted = [];
+    $deletedData = [];
+    $this->uow->setPersistenceCallback(function (array $committed, array $deleted) use (&$persisted, &$deletedData): void {
+        $persisted = $committed;
+        $deletedData = $deleted;
+    });
+
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+
+    $this->uow->begin();
+    $this->uow->track($aggregate);
+    $this->uow->commit();
+
+    // Now delete in a second transaction
+    $this->uow->begin();
+    $this->uow->markForDeletion($aggregate);
+    $this->uow->commit();
+
+    expect($deletedData)->toHaveCount(1);
+    expect(array_first($deletedData))->toBe($aggregate);
+});
+
+it('does not invoke persistence callback on rollback', function (): void {
+    $called = false;
+    $this->uow->setPersistenceCallback(function () use (&$called): void {
+        $called = true;
+    });
+
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+
+    $this->uow->begin();
+    $this->uow->track($aggregate);
+    $this->uow->rollback();
+
+    expect($called)->toBeFalse();
+});
+
+it('persistence callback receives aggregates from all committed scopes', function (): void {
+    $persistedCount = 0;
+    $this->uow->setPersistenceCallback(function (array $committed) use (&$persistedCount): void {
+        $persistedCount = count($committed);
+    });
+
+    $a1 = TestAggregate::create(AggregateRootId::generate());
+    $a2 = TestAggregate::create(AggregateRootId::generate());
+
+    $this->uow->run(function () use ($a1, $a2): void {
+        $this->uow->track($a1);
+
+        $this->uow->run(function () use ($a2): void {
+            $this->uow->track($a2);
+        });
+    });
+
+    expect($persistedCount)->toBe(2);
+});
+
+it('persistence callback fires before event dispatch', function (): void {
+    $order = [];
+    $this->uow->setPersistenceCallback(function () use (&$order): void {
+        $order[] = 'persist';
+    });
+    $this->uow->setEventDispatcher(function (DomainEvent $event) use (&$order): void {
+        $order[] = 'dispatch:' . $event->eventType;
+    });
+
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+
+    $this->uow->begin();
+    $this->uow->track($aggregate);
+    $this->uow->commit();
+
+    expect($order[0])->toBe('persist');
+    expect($order[1])->toBe('dispatch:TestAggregateCreated');
+});
+
+it('works without persistence callback set', function (): void {
+    $aggregate = TestAggregate::create(AggregateRootId::generate());
+
+    $this->uow->begin();
+    $this->uow->track($aggregate);
+    $this->uow->commit();
+
+    expect($this->uow->getCommitted())->toHaveCount(1);
+});

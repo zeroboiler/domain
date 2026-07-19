@@ -20,7 +20,7 @@ use ZeroBoiler\Domain\Contracts\UnitOfWork as UnitOfWorkContract;
  * Provides transactional semantics for aggregate operations:
  * - Domain events raised during a transaction are queued
  * - Events are dispatched only after a successful commit
- * - Rollback discards all pending events
+ * - Rollback discards all pending events and restores aggregate state
  * - Supports nested run() calls via savepoint semantics
  *
  * Events maintain chronological dispatch order across nested scopes.
@@ -35,6 +35,13 @@ use ZeroBoiler\Domain\Contracts\UnitOfWork as UnitOfWorkContract;
  * IMP-1-R39 FIX: At commit time, all tracked aggregates are re-checked for
  * events raised after track() was called. This eliminates the need for
  * manual queueEvent() calls for post-track events.
+ *
+ * ISSUE-#7 FIX: Transactional safety via snapshot-based rollback.
+ * - track() now clones the aggregate so rollback can restore its state.
+ * - commit() invokes an optional persistence callback for integration
+ *   with real persistence layers.
+ * - rollback() restores aggregate state from snapshots, preventing dirty
+ *   objects from leaking after a failed transaction.
  */
 class InMemoryUnitOfWork implements UnitOfWorkContract
 {
@@ -71,6 +78,22 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
      */
     private array $aggregateEventOffsets = [];
 
+    /**
+     * Snapshots of aggregate state taken at track() time.
+     * Keyed by scope, then by aggregate identity.
+     * Used to restore aggregate state on rollback.
+     *
+     * @var array<int, array<string, AggregateRoot>>
+     */
+    private array $snapshots = [];
+
+    /**
+     * Callback invoked during commit() to persist aggregates.
+     *
+     * @var (?Closure(array<string, AggregateRoot>, array<string, AggregateRoot>): void)
+     */
+    private ?Closure $persistenceCallback = null;
+
     /** @var \WeakMap<object, string>|null Instance-local identity map for aggregates without domain ID */
     private ?\WeakMap $idMap = null;
 
@@ -94,6 +117,19 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
         $this->eventDispatcher = $dispatcher;
     }
 
+    /**
+     * Set the persistence callback invoked during commit().
+     *
+     * The callback receives two arrays: committed aggregates and deleted aggregates.
+     * Use this to integrate with a real persistence layer (e.g. Eloquent, Doctrine).
+     *
+     * @param  ?Closure(array<string, AggregateRoot>, array<string, AggregateRoot>): void  $callback
+     */
+    public function setPersistenceCallback(?Closure $callback): void
+    {
+        $this->persistenceCallback = $callback;
+    }
+
     #[\Override]
     public function begin(): void
     {
@@ -106,6 +142,7 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
                 'tracked' => [],
                 'deleted' => [],
             ];
+            $this->snapshots[0] = [];
             $this->scopeEventCounts[0] = count($this->pendingEvents);
         } else {
             $this->nestingDepth++;
@@ -115,6 +152,7 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
                 'tracked' => [],
                 'deleted' => [],
             ];
+            $this->snapshots[$this->currentScope] = [];
             $this->scopeEventCounts[$this->currentScope] = count($this->pendingEvents);
         }
     }
@@ -154,12 +192,16 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
         $this->nestingDepth--;
         $this->currentScope--;
 
-        // Only dispatch events when the outermost transaction commits
+        // Only dispatch events and persist when the outermost transaction commits
         if ($this->nestingDepth === 0) {
+            // ISSUE-#7: Invoke persistence callback before event dispatch
+            // so aggregates are durably stored before consumers react to events.
+            $this->invokePersistenceCallback();
             $this->dispatchPendingEvents();
             $this->pendingEvents = [];
             $this->aggregateEventOffsets = [];
             $this->savepoints = [];
+            $this->snapshots = [];
             $this->scopeEventCounts = [];
             $this->currentScope = -1;
         }
@@ -184,10 +226,23 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
             unset($this->aggregateEventOffsets[$id]);
         }
 
+        // ISSUE-#7: Restore aggregate state from snapshots so objects
+        // are not left dirty after a failed transaction.
+        $scopeSnapshots = $this->snapshots[$this->currentScope] ?? [];
+        foreach ($scope['tracked'] as $id => $aggregate) {
+            if (isset($scopeSnapshots[$id])) {
+                $this->restoreAggregateState($aggregate, $scopeSnapshots[$id]);
+                // Events were pulled during track() and are being discarded
+                // on rollback, so clear them from the restored aggregate too.
+                $aggregate->clearDomainEvents();
+            }
+        }
+
         // Discard tracked aggregates from this scope
         $this->savepoints[$this->currentScope]['tracked'] = [];
         $this->savepoints[$this->currentScope]['deleted'] = [];
         $this->savepoints[$this->currentScope]['active'] = false;
+        unset($this->snapshots[$this->currentScope]);
 
         // Truncate pending events back to the savepoint snapshot
         $eventCount = $this->scopeEventCounts[$this->currentScope] ?? 0;
@@ -201,6 +256,7 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
             $this->pendingEvents = [];
             $this->aggregateEventOffsets = [];
             $this->savepoints = [];
+            $this->snapshots = [];
             $this->scopeEventCounts = [];
             $this->currentScope = -1;
         }
@@ -258,6 +314,10 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
         if ($this->isTracking($aggregate)) {
             return;
         }
+
+        // ISSUE-#7: Snapshot the aggregate before tracking so rollback
+        // can restore its pre-transaction state.
+        $this->snapshots[$this->currentScope][$id] = clone $aggregate;
 
         $this->savepoints[$this->currentScope]['tracked'][$id] = $aggregate;
 
@@ -399,6 +459,62 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
     }
 
     /**
+     * ISSUE-#7: Invoke the persistence callback with committed & deleted aggregates.
+     *
+     * Called at commit time (outermost scope) before event dispatch so that
+     * aggregates are durably stored before any event consumers react.
+     */
+    private function invokePersistenceCallback(): void
+    {
+        if ($this->persistenceCallback instanceof Closure) {
+            ($this->persistenceCallback)($this->committed, $this->deleted);
+        }
+    }
+
+    /**
+     * ISSUE-#7: Restore mutable state from a snapshot clone back into the original aggregate.
+     *
+     * Uses reflection to copy non-readonly properties from the snapshot into
+     * the live object, preserving identity (same reference) while reverting state.
+     * Readonly properties (e.g. AggregateRootId) are skipped since they cannot change.
+     *
+     * @param  AggregateRoot  $target  The live aggregate to restore state into
+     * @param  AggregateRoot  $snapshot  The cloned snapshot to read state from
+     */
+    private function restoreAggregateState(AggregateRoot $target, AggregateRoot $snapshot): void
+    {
+        $reflection = new \ReflectionClass($target);
+
+        foreach ($reflection->getProperties() as $property) {
+            if ($property->isReadOnly()) {
+                continue;
+            }
+
+            $property->setValue($target, $property->getValue($snapshot));
+        }
+
+        // Also restore properties declared on parent classes (e.g. Entity)
+        $parent = $reflection->getParentClass();
+
+        while ($parent !== false) {
+            foreach ($parent->getProperties() as $property) {
+                if ($property->isReadOnly()) {
+                    continue;
+                }
+
+                // Skip if already handled by the child class
+                if ($reflection->hasProperty($property->name) && ! $parent->hasProperty($property->name)) {
+                    continue;
+                }
+
+                $property->setValue($target, $property->getValue($snapshot));
+            }
+
+            $parent = $parent->getParentClass();
+        }
+    }
+
+    /**
      * Clear all state including committed data.
      */
     public function clear(): void
@@ -406,6 +522,7 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
         $this->savepoints = [];
         $this->scopeEventCounts = [];
         $this->aggregateEventOffsets = [];
+        $this->snapshots = [];
         $this->currentScope = -1;
         $this->committed = [];
         $this->deleted = [];
