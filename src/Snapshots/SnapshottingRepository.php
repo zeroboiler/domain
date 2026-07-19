@@ -13,6 +13,7 @@ use ZeroBoiler\Domain\Concerns\EventSourced;
 use ZeroBoiler\Domain\Concerns\HasSnapshots;
 use ZeroBoiler\Domain\Contracts\Repository;
 use ZeroBoiler\Domain\DomainEvent;
+use ZeroBoiler\Observability\Trace;
 
 /**
  * Repository decorator that adds snapshot support to event-sourced aggregates.
@@ -43,6 +44,7 @@ final readonly class SnapshottingRepository implements Repository
     ) {}
 
     #[\Override]
+    #[Trace(operation: 'domain.aggregate.find')]
     public function find(string|int $id): ?AggregateRoot
     {
         // Try loading from snapshot
@@ -85,6 +87,7 @@ final readonly class SnapshottingRepository implements Repository
     }
 
     #[\Override]
+    #[Trace(operation: 'domain.aggregate.save')]
     public function save(AggregateRoot $aggregate): void
     {
         // Save via inner repository
@@ -100,6 +103,7 @@ final readonly class SnapshottingRepository implements Repository
     }
 
     #[\Override]
+    #[Trace(operation: 'domain.aggregate.delete')]
     public function delete(string|int $id): void
     {
         $this->inner->delete($id);
