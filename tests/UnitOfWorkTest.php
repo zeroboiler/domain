@@ -7,9 +7,9 @@
 declare(strict_types=1);
 
 use ZeroBoiler\Domain\AggregateRootId;
-use ZeroBoiler\Events\Domain\DomainEvent;
 use ZeroBoiler\Domain\InMemoryUnitOfWork;
 use ZeroBoiler\Domain\Tests\Fixtures\TestAggregate;
+use ZeroBoiler\Events\Domain\DomainEvent;
 
 beforeEach(function (): void {
     $this->uow = new InMemoryUnitOfWork;
@@ -609,7 +609,8 @@ it('manual queueEvent still works alongside auto-collect', function (): void {
 
     $this->uow->begin();
     $this->uow->track($aggregate); // pulls TestAggregateCreated
-    $this->uow->queueEvent(DomainEvent::occur('manual.event')); // manual queue
+    $this->uow->queueEvent(DomainEvent::occur('manual.event'));
+    // manual queue
     $aggregate->rename('Auto'); // auto-collected at commit
     $this->uow->commit();
 
@@ -643,10 +644,12 @@ it('rollback restores aggregate mutable state from snapshot', function (): void 
 it('rollback restores aggregate version from snapshot', function (): void {
     $aggregate = TestAggregate::create(AggregateRootId::generate());
     $aggregate->clearEvents();
+
     $versionBeforeTrack = $aggregate->version();
 
     $this->uow->begin();
     $this->uow->track($aggregate);
+
     $aggregate->rename('Version Bump'); // increments version
     expect($aggregate->version())->toBeGreaterThan($versionBeforeTrack);
 
@@ -661,6 +664,7 @@ it('commit does not restore snapshot (mutations persist)', function (): void {
 
     $this->uow->begin();
     $this->uow->track($aggregate);
+
     $aggregate->rename('Committed Name');
     $this->uow->commit();
 
@@ -675,7 +679,8 @@ it('inner rollback does not restore state (snapshot is per-track not per-begin)'
     $aggregate->clearEvents();
 
     $this->uow->begin();
-    $this->uow->track($aggregate); // snapshot taken here with name=null
+    $this->uow->track($aggregate);
+    // snapshot taken here with name=null
     $aggregate->rename('Outer');
 
     // Inner savepoint — no track() call, so no snapshot
@@ -697,7 +702,8 @@ it('snapshot taken at track time captures pre-mutation state', function (): void
     $aggregate->clearEvents();
 
     $this->uow->begin();
-    $this->uow->track($aggregate); // snapshot taken here with name='Initial'
+    $this->uow->track($aggregate);
+    // snapshot taken here with name='Initial'
     $aggregate->rename('After Track');
     $this->uow->rollback();
 
@@ -713,6 +719,7 @@ it('multiple aggregates restored independently on rollback', function (): void {
     $this->uow->begin();
     $this->uow->track($a1);
     $this->uow->track($a2);
+
     $a1->rename('A1 Changed');
     $a2->rename('A2 Changed');
     $this->uow->rollback();
@@ -728,6 +735,7 @@ it('aggregate can be tracked in new transaction after rollback with state restor
     // First transaction: track, mutate, rollback
     $this->uow->begin();
     $this->uow->track($aggregate);
+
     $aggregate->rename('Rolled Back');
     $this->uow->rollback();
 
@@ -740,6 +748,7 @@ it('aggregate can be tracked in new transaction after rollback with state restor
     });
 
     $this->uow->begin();
+
     $aggregate->rename('Committed');
     $this->uow->track($aggregate);
     $this->uow->commit();

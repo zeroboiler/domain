@@ -17,6 +17,7 @@ use ZeroBoiler\Domain\Contracts\UnitOfWork as UnitOfWorkContract;
 use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
 use ZeroBoiler\Domain\Snapshots\SnapshotStore;
 use ZeroBoiler\Events\Domain\DomainEvent;
+use ZeroBoiler\Events\Domain\DomainEventDispatcher;
 
 class DomainServiceProvider extends ServiceProvider
 {
@@ -33,7 +34,7 @@ class DomainServiceProvider extends ServiceProvider
                 // UoW are dispatched after commit.
                 $uow->setEventDispatcher(
                     function (DomainEvent $event): void {
-                        $dispatcherClass = \ZeroBoiler\Events\Domain\DomainEventDispatcher::class;
+                        $dispatcherClass = DomainEventDispatcher::class;
 
                         if ($this->app->bound($dispatcherClass)) {
                             $this->app->make($dispatcherClass)
@@ -92,7 +93,7 @@ class DomainServiceProvider extends ServiceProvider
         }
 
         $this->app['events']->listen('octane.request.terminate', function (): void {
-            $dispatcherClass = \ZeroBoiler\Events\Domain\DomainEventDispatcher::class;
+            $dispatcherClass = DomainEventDispatcher::class;
 
             if ($this->app->bound($dispatcherClass)) {
                 $this->app->make($dispatcherClass)
