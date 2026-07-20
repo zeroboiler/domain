@@ -15,6 +15,7 @@ use Symfony\Component\Finder\Finder;
 #[Description('List all Domain classes (Aggregates, Events, Repositories, ValueObjects)')]
 final class DomainListCommand extends Command
 {
+    #[\Override]
     protected $name = 'zeroboiler:domain:list';
 
     public function handle(): int

@@ -9,9 +9,9 @@ declare(strict_types=1);
 namespace ZeroBoiler\Domain\Snapshots;
 
 use ZeroBoiler\Domain\AggregateRoot;
-use ZeroBoiler\Events\Domain\Concerns\EventSourced;
 use ZeroBoiler\Domain\Concerns\HasSnapshots;
 use ZeroBoiler\Domain\Contracts\Repository;
+use ZeroBoiler\Events\Domain\Concerns\EventSourced;
 use ZeroBoiler\Events\Domain\DomainEvent;
 use ZeroBoiler\Observability\Trace;
 
@@ -71,7 +71,7 @@ final readonly class SnapshottingRepository implements Repository
                 // (e.g., event store was pruned and no longer has all events).
                 $replayed = $this->inner->find($id);
 
-                if ($replayed !== null && $replayed->version() >= $snapshot->version) {
+                if ($replayed instanceof AggregateRoot && $replayed->version() >= $snapshot->version) {
                     // Full replay is at least as current as the snapshot — use it
                     return $replayed;
                 }
