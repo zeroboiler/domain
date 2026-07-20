@@ -6,6 +6,7 @@
 
 declare(strict_types=1);
 
+use ZeroBoiler\Domain\AggregateRootId;
 use ZeroBoiler\Domain\Entity;
 use ZeroBoiler\Domain\Identifiers\Identifier;
 use ZeroBoiler\Domain\Tests\Fixtures\TestEntity;
@@ -34,4 +35,42 @@ it('does not equal entities of different types', function (): void {
     $otherEntity = new class($this->id) extends Entity {};
 
     expect($entity->equals($otherEntity))->toBeFalse();
+});
+
+it('equals returns true for same-class entities with same int ID', function (): void {
+    // TestEntity uses the parent Entity::equals() which now casts
+    // both IDs to string for safe comparison.
+    $entity1 = new TestEntity(42);
+    $entity2 = new TestEntity(42);
+    $entity3 = new TestEntity(43);
+
+    expect($entity1->equals($entity2))->toBeTrue()
+        ->and($entity1->equals($entity3))->toBeFalse();
+});
+
+it('equals handles Stringable ID objects correctly', function (): void {
+    $id = AggregateRootId::generate();
+    $entity1 = new TestEntity($id);
+    $entity2 = new TestEntity($id);
+
+    expect($entity1->equals($entity2))->toBeTrue();
+});
+
+it('returns false when comparing entity with null-like IDs', function (): void {
+    $entity1 = new class(0) extends Entity
+    {
+        public function id(): string|int
+        {
+            return $this->id;
+        }
+    };
+    $entity2 = new class(1) extends Entity
+    {
+        public function id(): string|int
+        {
+            return $this->id;
+        }
+    };
+
+    expect($entity1->equals($entity2))->toBeFalse();
 });
