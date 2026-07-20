@@ -1,64 +1,10 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Class ZeroBoiler\\Domain\\Collections\\DomainEventCollection implements generic interface IteratorAggregate but does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Collections/DomainEventCollection.php
-
-		-
-			message: '#^Method ZeroBoiler\\Domain\\Collections\\DomainEventCollection\:\:__construct\(\) has parameter \$events with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Collections/DomainEventCollection.php
-
-		-
-			message: '#^Method ZeroBoiler\\Domain\\Collections\\DomainEventCollection\:\:fromArray\(\) has parameter \$events with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Collections/DomainEventCollection.php
-
-		-
-			message: '#^Method ZeroBoiler\\Domain\\Collections\\DomainEventCollection\:\:getIterator\(\) return type with generic class ArrayIterator does not specify its types\: TKey, TValue$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/Collections/DomainEventCollection.php
-
-		-
-			message: '#^Method ZeroBoiler\\Domain\\Collections\\DomainEventCollection\:\:map\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Collections/DomainEventCollection.php
-
-		-
-			message: '#^Method ZeroBoiler\\Domain\\Collections\\DomainEventCollection\:\:toArray\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Collections/DomainEventCollection.php
-
-		-
-			message: '#^Trait ZeroBoiler\\Domain\\Concerns\\EventSourced is used zero times and is not analysed\.$#'
-			identifier: trait.unused
-			count: 1
-			path: src/Concerns/EventSourced.php
-
-		-
 			message: '#^Trait ZeroBoiler\\Domain\\Concerns\\HasSnapshots is used zero times and is not analysed\.$#'
 			identifier: trait.unused
 			count: 1
 			path: src/Concerns/HasSnapshots.php
-
-		-
-			message: '#^Method ZeroBoiler\\Domain\\Contracts\\UnitOfWork\:\:getCommitted\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Contracts/UnitOfWork.php
-
-		-
-			message: '#^Method ZeroBoiler\\Domain\\Contracts\\UnitOfWork\:\:getDeleted\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Contracts/UnitOfWork.php
 
 		-
 			message: '#^Unsafe usage of new static\(\)\.$#'
@@ -85,34 +31,10 @@ parameters:
 			path: src/Identifiers/UuidIdentifier.php
 
 		-
-			message: '#^Method ZeroBoiler\\Domain\\InMemoryUnitOfWork\:\:getCommitted\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/InMemoryUnitOfWork.php
-
-		-
-			message: '#^Method ZeroBoiler\\Domain\\InMemoryUnitOfWork\:\:getDeleted\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/InMemoryUnitOfWork.php
-
-		-
-			message: '#^Property ZeroBoiler\\Domain\\InMemoryUnitOfWork\:\:\$committed type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/InMemoryUnitOfWork.php
-
-		-
-			message: '#^Property ZeroBoiler\\Domain\\InMemoryUnitOfWork\:\:\$deleted type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/InMemoryUnitOfWork.php
-
-		-
-			message: '#^Property ZeroBoiler\\Domain\\InMemoryUnitOfWork\:\:\$tracked type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/InMemoryUnitOfWork.php
+			message: '#^Attribute class ZeroBoiler\\Observability\\Trace does not exist\.$#'
+			identifier: attribute.notFound
+			count: 3
+			path: src/Snapshots/SnapshottingRepository.php
 
 		-
 			message: '#^Method ZeroBoiler\\Domain\\Snapshots\\SnapshottingRepository\:\:instantiateFromSnapshot\(\) never returns ZeroBoiler\\Domain\\AggregateRoot so it can be removed from the return type\.$#'
