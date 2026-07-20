@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Uid\Ulid;
 use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
 use ZeroBoiler\Domain\Identifiers\Identifier;
 use ZeroBoiler\Domain\Identifiers\IntegerIdentifier;
@@ -129,4 +130,28 @@ it('different identifier types are not equal', function (): void {
 
     expect($intId->equals($strId))->toBeFalse()
         ->and($strId->equals($intId))->toBeFalse();
+});
+
+it('Identifier::fromString() returns the correct subclass instance (#8)', function (): void {
+    // fromString() should use late static binding (new static)
+    // so that subclass instances are returned, not anonymous classes.
+    $uuid = Uuid::uuid4()->toString();
+    $id = TestUuidIdentifier::fromString($uuid);
+
+    expect($id)->toBeInstanceOf(TestUuidIdentifier::class)
+        ->and($id->toString())->toBe($uuid);
+});
+
+it('UlidIdentifier::fromString() returns subclass instance (#8)', function (): void {
+    $generated = TestUlidIdentifier::generate();
+    $id = TestUlidIdentifier::fromString($generated->toString());
+
+    expect($id)->toBeInstanceOf(TestUlidIdentifier::class)
+        ->and($id->toString())->toBe($generated->toString());
+});
+
+it('UlidIdentifier::toUlid() returns SymfonyUlid instance', function (): void {
+    $id = TestUlidIdentifier::generate();
+
+    expect($id->toUlid())->toBeInstanceOf(Ulid::class);
 });
