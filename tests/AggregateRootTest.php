@@ -7,8 +7,8 @@
 declare(strict_types=1);
 
 use ZeroBoiler\Domain\AggregateRootId;
-use ZeroBoiler\Events\Domain\DomainEvent;
 use ZeroBoiler\Domain\Tests\Fixtures\TestAggregate;
+use ZeroBoiler\Events\Domain\DomainEvent;
 
 beforeEach(function (): void {
     $this->aggregateId = AggregateRootId::generate();

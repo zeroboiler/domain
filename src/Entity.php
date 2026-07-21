@@ -20,14 +20,22 @@ abstract class Entity implements EntityContract
     ) {}
 
     /**
-     * Return the entity's domain identity.
+     * Return the entity's domain identity as a string.
      *
-     * Defaults to returning the raw $id property. Subclasses (like AggregateRoot)
-     * may override this to return a normalized string representation.
+     * Always returns a string representation for consistent identity
+     * handling across the entity hierarchy.
      */
-    public function id(): string|int
+    public function id(): string
     {
-        return $this->id instanceof \Stringable ? (string) $this->id : $this->id;
+        return match (true) {
+            is_string($this->id) => $this->id,
+            $this->id instanceof \Stringable => (string) $this->id,
+            is_int($this->id) => (string) $this->id,
+            default => throw new \LogicException(sprintf(
+                'Entity id must be string, int, or Stringable; got %s',
+                get_debug_type($this->id),
+            )),
+        };
     }
 
     public function equals(EntityContract $other): bool
