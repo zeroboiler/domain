@@ -50,6 +50,11 @@ trait HasSnapshots
                 continue;
             }
 
+            // Skip properties that aren't initialized (e.g., readonly unset)
+            if (! $property->isInitialized($this)) {
+                continue;
+            }
+
             // Skip the domainEvents collection (handled separately)
             if ($property->getName() === 'domainEvents') {
                 continue;
@@ -112,7 +117,9 @@ trait HasSnapshots
      * Restore aggregate state from a snapshot.
      *
      * Override this for custom restoration logic. Default implementation
-     * sets properties directly via reflection.
+     * sets properties directly via reflection, handling readonly properties
+     * by unsetting them first when necessary (PHP 8.5+ allows re-initialization
+     * of readonly properties after unset via Reflection).
      *
      * @param  array<string, mixed>  $state
      */
@@ -121,10 +128,27 @@ trait HasSnapshots
         $reflection = new \ReflectionClass($this);
 
         foreach ($state as $name => $value) {
-            if ($reflection->hasProperty($name)) {
-                $property = $reflection->getProperty($name);
-                $property->setValue($this, $value);
+            if (! $reflection->hasProperty($name)) {
+                continue;
             }
+
+            $property = $reflection->getProperty($name);
+
+            if ($property->isStatic()) {
+                continue;
+            }
+
+            // Handle readonly properties: if the property is readonly and
+            // already initialized, we need to unset it first, then set the
+            // new value via reflection. This avoids "Cannot modify readonly
+            // property" errors when restoring from snapshots.
+            if ($property->isReadOnly() && $property->isInitialized($this)) {
+                // Unset the readonly property so it can be re-initialized
+                $property->setValue($this, null);
+                unset($this->{$name});
+            }
+
+            $property->setValue($this, $value);
         }
     }
 

@@ -59,16 +59,16 @@ it('equals handles Stringable ID objects correctly', function (): void {
 it('returns false when comparing entity with null-like IDs', function (): void {
     $entity1 = new class(0) extends Entity
     {
-        public function id(): string|int
+        public function id(): string
         {
-            return $this->id;
+            return (string) $this->id;
         }
     };
     $entity2 = new class(1) extends Entity
     {
-        public function id(): string|int
+        public function id(): string
         {
-            return $this->id;
+            return (string) $this->id;
         }
     };
 
