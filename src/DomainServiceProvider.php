@@ -17,10 +17,15 @@ use ZeroBoiler\Domain\Contracts\UnitOfWork as UnitOfWorkContract;
 use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
 use ZeroBoiler\Domain\Snapshots\SnapshotStore;
 use ZeroBoiler\Events\Domain\DomainEvent;
-use ZeroBoiler\Events\Domain\DomainEventDispatcher;
 
 class DomainServiceProvider extends ServiceProvider
 {
+    /**
+     * The dispatcher class to use for domain event dispatch.
+     * Checked via app->bound() at runtime so the Events package is optional.
+     */
+    private const string DISPATCHER_CLASS = 'ZeroBoiler\\Events\\Domain\\DomainEventDispatcher';
+
     #[\Override]
     public function register(): void
     {
@@ -29,15 +34,13 @@ class DomainServiceProvider extends ServiceProvider
             function (): InMemoryUnitOfWork {
                 $uow = new InMemoryUnitOfWork;
 
-                // Wire event dispatching: when the DomainEventDispatcher is
-                // available (from the Events package), events queued in the
-                // UoW are dispatched after commit.
+                // Wire event dispatching: when a DomainEventDispatcher is
+                // bound in the container (optional, from the Events package),
+                // events queued in the UoW are dispatched after commit.
                 $uow->setEventDispatcher(
                     function (DomainEvent $event): void {
-                        $dispatcherClass = DomainEventDispatcher::class;
-
-                        if ($this->app->bound($dispatcherClass)) {
-                            $this->app->make($dispatcherClass)
+                        if ($this->app->bound(self::DISPATCHER_CLASS)) {
+                            $this->app->make(self::DISPATCHER_CLASS)
                                 ->dispatch($event);
                         }
                     }
@@ -61,8 +64,8 @@ class DomainServiceProvider extends ServiceProvider
     /**
      * Boot domain services.
      *
-     * Domain event dispatching is now handled by the Events package's
-     * DomainEventDispatcher, which is auto-wired in EventsServiceProvider.
+     * Domain event dispatching is optionally handled by the Events package's
+     * DomainEventDispatcher, which may be auto-wired in EventsServiceProvider.
      */
     public function boot(): void
     {
@@ -81,7 +84,7 @@ class DomainServiceProvider extends ServiceProvider
     /**
      * Register Octane request-reset hook to clear listeners between requests.
      *
-     * In long-running processes (Octane, Swoole, RoadRunner), the singleton
+     * In long-running processes (Octane, Swoole, RoadRunner), a singleton
      * DomainEventDispatcher persists across requests. Without clearing,
      * listeners accumulate and cause memory leaks and cross-request
      * contamination.
@@ -93,10 +96,8 @@ class DomainServiceProvider extends ServiceProvider
         }
 
         $this->app['events']->listen('octane.request.terminate', function (): void {
-            $dispatcherClass = DomainEventDispatcher::class;
-
-            if ($this->app->bound($dispatcherClass)) {
-                $this->app->make($dispatcherClass)
+            if ($this->app->bound(self::DISPATCHER_CLASS)) {
+                $this->app->make(self::DISPATCHER_CLASS)
                     ->clearListeners();
             }
         });

@@ -1,6 +1,12 @@
 parameters:
 	ignoreErrors:
 		-
+			message: '#^Trait ZeroBoiler\\Domain\\Concerns\\EventSourced is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Concerns/EventSourced.php
+
+		-
 			message: '#^Trait ZeroBoiler\\Domain\\Concerns\\HasSnapshots is used zero times and is not analysed\.$#'
 			identifier: trait.unused
 			count: 1

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Domain\Contracts;
 
-use ZeroBoiler\Events\Domain\Collections\DomainEventCollection;
+use ZeroBoiler\Domain\DomainEventCollection;
 
 interface AggregateRoot extends Entity
 {

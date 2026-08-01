@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 use ZeroBoiler\Domain\AggregateRoot;
 use ZeroBoiler\Domain\AggregateRootId;
+use ZeroBoiler\Domain\Concerns\EventSourced;
 use ZeroBoiler\Domain\Concerns\HasSnapshots;
 use ZeroBoiler\Domain\Contracts\Repository;
 use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
@@ -15,7 +16,6 @@ use ZeroBoiler\Domain\Snapshots\Snapshot;
 use ZeroBoiler\Domain\Snapshots\SnapshotPolicy;
 use ZeroBoiler\Domain\Snapshots\SnapshottingRepository;
 use ZeroBoiler\Domain\TestStatus;
-use ZeroBoiler\Events\Domain\Concerns\EventSourced;
 use ZeroBoiler\Events\Domain\DomainEvent;
 
 describe('Snapshot', function (): void {

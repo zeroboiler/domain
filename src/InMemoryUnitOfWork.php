@@ -418,7 +418,7 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
             $aggregateId = $aggregate->id();
 
             if ($aggregateId !== '') {
-                return (string) $aggregateId;
+                return $aggregateId;
             }
         } catch (Throwable) {
             // Aggregate may not have an ID yet

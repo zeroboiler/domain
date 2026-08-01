@@ -8,8 +8,8 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Domain;
 
+use ZeroBoiler\Domain\Concerns\HasDomainEvents;
 use ZeroBoiler\Domain\Contracts\Entity as EntityContract;
-use ZeroBoiler\Events\Domain\Support\HasDomainEvents;
 
 abstract class Entity implements EntityContract
 {
@@ -41,6 +41,6 @@ abstract class Entity implements EntityContract
     public function equals(EntityContract $other): bool
     {
         return static::class === $other::class
-            && (string) $this->id() === (string) $other->id();
+            && $this->id() === $other->id();
     }
 }
