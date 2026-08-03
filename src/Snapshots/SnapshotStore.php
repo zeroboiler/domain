@@ -47,4 +47,35 @@ interface SnapshotStore
      * Useful for cleanup — keep only the latest snapshot per aggregate.
      */
     public function deleteOlderThan(string $aggregateType, string $aggregateId, int $version): void;
+
+    /**
+     * Count snapshots for a given aggregate type.
+     *
+     * If aggregateType is null, counts all snapshots in the store.
+     * Useful for monitoring and capacity planning.
+     *
+     * @param  string|null  $aggregateType  The FQCN to filter by, or null for all.
+     */
+    public function count(?string $aggregateType = null): int;
+
+    /**
+     * Get snapshot statistics for monitoring.
+     *
+     * Returns aggregate counts grouped by type, plus total count
+     * and optionally the oldest/newest snapshot timestamps.
+     *
+     * @return array{total: int, by_type: array<string, int>}
+     */
+    public function stats(): array;
+
+    /**
+     * Purge all snapshots for a given aggregate type.
+     *
+     * If aggregateType is null, purges ALL snapshots from the store.
+     * Use with caution — this is destructive and irreversible.
+     *
+     * @param  string|null  $aggregateType  The FQCN to purge, or null for all.
+     * @return int Number of snapshots removed.
+     */
+    public function purge(?string $aggregateType = null): int;
 }

@@ -54,18 +54,70 @@ final class InMemorySnapshotStore implements SnapshotStore
 
     /**
      * Clear all snapshots.
+     *
+     * Alias of purge() for backward compatibility.
      */
     public function clear(): void
     {
         $this->snapshots = [];
     }
 
-    /**
-     * Count all stored snapshots.
-     */
-    public function count(): int
+    #[\Override]
+    public function count(?string $aggregateType = null): int
     {
-        return count($this->snapshots);
+        if ($aggregateType === null) {
+            return count($this->snapshots);
+        }
+
+        $prefix = $aggregateType . ':';
+        $count = 0;
+
+        foreach (array_keys($this->snapshots) as $key) {
+            if (str_starts_with($key, $prefix)) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    #[\Override]
+    public function stats(): array
+    {
+        $byType = [];
+
+        foreach ($this->snapshots as $snapshot) {
+            $type = $snapshot->aggregateType;
+            $byType[$type] = ($byType[$type] ?? 0) + 1;
+        }
+
+        return [
+            'total' => count($this->snapshots),
+            'by_type' => $byType,
+        ];
+    }
+
+    #[\Override]
+    public function purge(?string $aggregateType = null): int
+    {
+        if ($aggregateType === null) {
+            $removed = count($this->snapshots);
+            $this->snapshots = [];
+
+            return $removed;
+        }
+
+        $prefix = $aggregateType . ':';
+        $removed = 0;
+
+        foreach (array_keys($this->snapshots) as $key) {
+            if (str_starts_with($key, $prefix)) {
+                unset($this->snapshots[$key]);
+                $removed++;
+            }
+        }
+
+        return $removed;
     }
 
     private function key(string $aggregateType, string $aggregateId): string
