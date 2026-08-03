@@ -52,35 +52,9 @@ trait EventSourced
         /** @var static $aggregate */
         $aggregate = new \ReflectionClass(static::class)->newInstanceWithoutConstructor();
 
-        // Walk up the class hierarchy to find and set properties
-        // since aggregateId is private on AggregateRoot and id is on Entity
-        $reflection = new \ReflectionClass($aggregate);
-
-        // Find and set aggregateId (declared on AggregateRoot, private readonly)
-        $target = $reflection;
-
-        while ($target !== false) {
-            if ($target->hasProperty('aggregateId')) {
-                $idProp = $target->getProperty('aggregateId');
-                $idProp->setValue($aggregate, $aggregateId);
-                break;
-            }
-
-            $target = $target->getParentClass();
-        }
-
-        // Find and set id (declared on Entity, public readonly)
-        $target = $reflection;
-
-        while ($target !== false) {
-            if ($target->hasProperty('id')) {
-                $idProp = $target->getProperty('id');
-                $idProp->setValue($aggregate, $aggregateId);
-                break;
-            }
-
-            $target = $target->getParentClass();
-        }
+        // Set inherited readonly properties via reflection
+        self::setInheritedProperty($aggregate, 'aggregateId', $aggregateId);
+        self::setInheritedProperty($aggregate, 'id', $aggregateId);
 
         // Replay all events in lenient mode
         foreach ($events as $event) {
@@ -128,6 +102,27 @@ trait EventSourced
         if (method_exists($this, 'apply')) {
             // @phpstan-ignore-next-line
             $this->apply($event);
+        }
+    }
+
+    /**
+     * Set a property that may be declared on a parent class (e.g. readonly private).
+     *
+     * Walks the class hierarchy from the instance's class upward to find
+     * the property declaration, then sets its value via reflection.
+     */
+    private static function setInheritedProperty(object $instance, string $name, mixed $value): void
+    {
+        $target = new \ReflectionClass($instance);
+
+        while ($target !== false) {
+            if ($target->hasProperty($name)) {
+                $target->getProperty($name)->setValue($instance, $value);
+
+                return;
+            }
+
+            $target = $target->getParentClass();
         }
     }
 }

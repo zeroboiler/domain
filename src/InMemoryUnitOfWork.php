@@ -135,53 +135,34 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
     public function begin(): void
     {
         if ($this->nestingDepth === 0) {
-            $this->nestingDepth = 1;
-            $this->currentScope = 0;
             $this->savepoints = [];
-            $this->savepoints[0] = [
-                'active' => true,
-                'tracked' => [],
-                'deleted' => [],
-            ];
-            $this->snapshots[0] = [];
-            $this->scopeEventCounts[0] = count($this->pendingEvents);
-        } else {
-            $this->nestingDepth++;
-            $this->currentScope++;
-            $this->savepoints[$this->currentScope] = [
-                'active' => true,
-                'tracked' => [],
-                'deleted' => [],
-            ];
-            $this->snapshots[$this->currentScope] = [];
-            $this->scopeEventCounts[$this->currentScope] = count($this->pendingEvents);
+            $this->currentScope = -1;
         }
+
+        $this->nestingDepth++;
+        $this->currentScope++;
+
+        $this->savepoints[$this->currentScope] = [
+            'active' => true,
+            'tracked' => [],
+            'deleted' => [],
+        ];
+        $this->snapshots[$this->currentScope] = [];
+        $this->scopeEventCounts[$this->currentScope] = count($this->pendingEvents);
     }
 
     #[\Override]
     public function commit(): void
     {
-        if ($this->nestingDepth === 0) {
-            throw new RuntimeException('No active unit of work');
-        }
-
-        $scope = $this->savepoints[$this->currentScope] ?? null;
-
-        if ($scope === null || ! $scope['active']) {
-            throw new RuntimeException('No active unit of work');
-        }
+        $scope = $this->requireActiveScope();
 
         // IMP-1-R39: Re-collect events raised after track() from all tracked aggregates
         foreach ($scope['tracked'] as $id => $aggregate) {
             $this->collectNewEventsFromAggregate($aggregate);
         }
 
-        // Merge tracked aggregates into committed set
-        foreach ($scope['tracked'] as $id => $aggregate) {
-            $this->committed[$id] = $aggregate;
-        }
-
-        // Merge deleted aggregates
+        // Merge tracked + deleted aggregates into their respective sets
+        $this->committed = array_merge($this->committed, $scope['tracked']);
         foreach ($scope['deleted'] as $id => $aggregate) {
             $this->deleted[$id] = $aggregate;
             unset($this->committed[$id]);
@@ -190,8 +171,7 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
         // Mark scope as inactive
         $this->savepoints[$this->currentScope]['active'] = false;
 
-        $this->nestingDepth--;
-        $this->currentScope--;
+        $this->exitScope();
 
         // Only dispatch events and persist when the outermost transaction commits
         if ($this->nestingDepth === 0) {
@@ -199,27 +179,14 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
             // so aggregates are durably stored before consumers react to events.
             $this->invokePersistenceCallback();
             $this->dispatchPendingEvents();
-            $this->pendingEvents = [];
-            $this->aggregateEventOffsets = [];
-            $this->savepoints = [];
-            $this->snapshots = [];
-            $this->scopeEventCounts = [];
-            $this->currentScope = -1;
+            $this->resetTransactionState();
         }
     }
 
     #[\Override]
     public function rollback(): void
     {
-        if ($this->nestingDepth === 0) {
-            throw new RuntimeException('No active unit of work');
-        }
-
-        $scope = $this->savepoints[$this->currentScope] ?? null;
-
-        if ($scope === null || ! $scope['active']) {
-            throw new RuntimeException('No active unit of work');
-        }
+        $scope = $this->requireActiveScope();
 
         // BUG-1-R39: Reset event offsets for aggregates tracked in this scope
         // so they can be re-collected in a future transaction.
@@ -249,17 +216,11 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
         $eventCount = $this->scopeEventCounts[$this->currentScope] ?? 0;
         $this->pendingEvents = array_slice($this->pendingEvents, 0, $eventCount);
 
-        $this->nestingDepth--;
-        $this->currentScope--;
+        $this->exitScope();
 
         if ($this->nestingDepth === 0) {
             // Outer scope rolled back — discard ALL pending events
-            $this->pendingEvents = [];
-            $this->aggregateEventOffsets = [];
-            $this->savepoints = [];
-            $this->snapshots = [];
-            $this->scopeEventCounts = [];
-            $this->currentScope = -1;
+            $this->resetTransactionState();
         }
     }
 
@@ -359,11 +320,7 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
      */
     private function collectEventsFromAggregate(AggregateRoot $aggregate): void
     {
-        $events = $aggregate->pullDomainEvents();
-
-        foreach ($events as $event) {
-            $this->pendingEvents[] = $event;
-        }
+        $this->appendEvents($aggregate->pullDomainEvents());
     }
 
     /**
@@ -378,8 +335,19 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
             return;
         }
 
-        $events = $aggregate->pullDomainEvents();
+        $this->appendEvents($aggregate->pullDomainEvents());
+    }
 
+    /**
+     * Append domain events to the pending event queue.
+     *
+     * Accepts both DomainEventCollection (from pullDomainEvents())
+     * and plain arrays (from releaseEvents()).
+     *
+     * @param  DomainEventCollection|list<DomainEvent>  $events
+     */
+    private function appendEvents(DomainEventCollection|array $events): void
+    {
         foreach ($events as $event) {
             $this->pendingEvents[] = $event;
         }
@@ -484,35 +452,78 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
      */
     private function restoreAggregateState(AggregateRoot $target, AggregateRoot $snapshot): void
     {
+        // Walk the entire class hierarchy and copy non-readonly properties.
+        // We collect all properties first to avoid duplicate work when a
+        // child overrides a parent property declaration.
+        $seen = [];
         $reflection = new \ReflectionClass($target);
 
-        foreach ($reflection->getProperties() as $property) {
-            if ($property->isReadOnly()) {
-                continue;
-            }
+        while ($reflection !== false) {
+            foreach ($reflection->getProperties() as $property) {
+                $name = $property->getName();
 
-            $property->setValue($target, $property->getValue($snapshot));
-        }
+                if (isset($seen[$name])) {
+                    continue;
+                }
 
-        // Also restore properties declared on parent classes (e.g. Entity)
-        $parent = $reflection->getParentClass();
-
-        while ($parent !== false) {
-            foreach ($parent->getProperties() as $property) {
                 if ($property->isReadOnly()) {
                     continue;
                 }
 
-                // Skip if already handled by the child class
-                if ($reflection->hasProperty($property->name) && ! $parent->hasProperty($property->name)) {
+                if ($property->isStatic()) {
                     continue;
                 }
 
+                $seen[$name] = true;
                 $property->setValue($target, $property->getValue($snapshot));
             }
 
-            $parent = $parent->getParentClass();
+            $reflection = $reflection->getParentClass();
         }
+    }
+
+    /**
+     * Require an active transaction scope, returning its data array.
+     *
+     * @return array{active: bool, tracked: array<string, AggregateRoot>, deleted: array<string, AggregateRoot>}
+     *
+     * @throws RuntimeException When no unit of work is active.
+     */
+    private function requireActiveScope(): array
+    {
+        if ($this->nestingDepth === 0) {
+            throw new RuntimeException('No active unit of work');
+        }
+
+        $scope = $this->savepoints[$this->currentScope] ?? null;
+
+        if ($scope === null || ! $scope['active']) {
+            throw new RuntimeException('No active unit of work');
+        }
+
+        return $scope;
+    }
+
+    /**
+     * Decrement nesting depth and scope counter after commit/rollback.
+     */
+    private function exitScope(): void
+    {
+        $this->nestingDepth--;
+        $this->currentScope--;
+    }
+
+    /**
+     * Reset all transactional state after the outermost scope completes.
+     */
+    private function resetTransactionState(): void
+    {
+        $this->pendingEvents = [];
+        $this->aggregateEventOffsets = [];
+        $this->savepoints = [];
+        $this->snapshots = [];
+        $this->scopeEventCounts = [];
+        $this->currentScope = -1;
     }
 
     /**
