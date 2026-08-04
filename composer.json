@@ -19,6 +19,14 @@
     "repositories": [
         {
             "type": "path",
+            "url": "../dto"
+        },
+        {
+            "type": "path",
+            "url": "../enums"
+        },
+        {
+            "type": "path",
             "url": "../events"
         },
         {
@@ -32,6 +40,8 @@
         "php": "^8.5",
         "ramsey/uuid": "^4.7",
         "symfony/uid": "^7.0|^8.0",
+        "zeroboiler/dto": "^1.0",
+        "zeroboiler/enums": "^1.0",
         "zeroboiler/events": "^1.0",
         "zeroboiler/value-objects": "^1.0"
     },
