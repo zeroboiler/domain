@@ -60,6 +60,13 @@ trait HasSnapshots
                 continue;
             }
 
+            // Skip version — restored separately via setVersion()
+            // in restoreFromSnapshot(). Including it in state would cause
+            // a double-restore and potential inconsistency.
+            if ($property->getName() === 'version') {
+                continue;
+            }
+
             $value = $property->getValue($this);
 
             // Skip closures and resources

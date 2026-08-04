@@ -40,7 +40,17 @@ abstract class Entity implements EntityContract
 
     public function equals(EntityContract $other): bool
     {
-        return static::class === $other::class
-            && $this->id() === $other->id();
+        if (static::class !== $other::class) {
+            return false;
+        }
+
+        // Guard against uninitialized IDs to prevent LogicException crashes.
+        // Entities that haven't been assigned an ID yet cannot be equal
+        // to anything — even another ID-less entity of the same type.
+        try {
+            return $this->id() === $other->id();
+        } catch (\LogicException) {
+            return false;
+        }
     }
 }
