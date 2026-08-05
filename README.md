@@ -14,8 +14,8 @@ composer require zeroboiler/domain
 - Laravel 13+
 - `zeroboiler/events` — domain event infrastructure
 - `zeroboiler/value-objects` — base value object support
-- `zeroboiler/enums` (optional) — smart enum metadata
-- `zeroboiler/dto` (optional) — data transfer objects
+- `zeroboiler/enums` — smart enum metadata
+- `zeroboiler/dto` — data transfer objects
 - `zeroboiler/observability` (optional) — `#[Trace]` auto-instrumentation
 
 ## Features
