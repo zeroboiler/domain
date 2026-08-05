@@ -95,6 +95,5 @@
     "prefer-stable": true,
     "suggest": {
         "zeroboiler/observability": "Enables #[Trace] auto-instrumentation for aggregate root operations"
-    },
-    "version": "1.1.0"
+    }
 }
