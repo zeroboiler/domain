@@ -130,11 +130,13 @@ use ZeroBoiler\Domain\Entity;
 class OrderItem extends Entity
 {
     public function __construct(
-        public readonly mixed $id,
+        int|string|\Stringable $id,
         public readonly string $productId,
         public int $quantity,
         public float $unitPrice,
-    ) {}
+    ) {
+        parent::__construct($id);
+    }
 
     public function updateQuantity(int $quantity): void
     {
