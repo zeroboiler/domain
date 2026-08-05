@@ -28,7 +28,7 @@ jobs:
         run: composer config -g github-oauth.github.com ${{ secrets.COMPOSER_TOKEN }}
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --no-suggest
+        run: composer update --prefer-dist --no-progress --no-interaction
 
       - name: Run Pint
         run: vendor/bin/pint
