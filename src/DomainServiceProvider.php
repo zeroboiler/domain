@@ -16,7 +16,6 @@ use ZeroBoiler\Domain\Console\Commands\SnapshotCommand;
 use ZeroBoiler\Domain\Contracts\UnitOfWork as UnitOfWorkContract;
 use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
 use ZeroBoiler\Domain\Snapshots\SnapshotStore;
-use ZeroBoiler\Events\Domain\DomainEvent;
 
 class DomainServiceProvider extends ServiceProvider
 {
@@ -38,9 +37,13 @@ class DomainServiceProvider extends ServiceProvider
                 // bound in the container (optional, from the Events package),
                 // events queued in the UoW are dispatched after commit.
                 $uow->setEventDispatcher(
-                    function (DomainEvent $event): void {
-                        if ($this->app->bound(self::DISPATCHER_CLASS)) {
-                            $this->app->make(self::DISPATCHER_CLASS)
+                    function (object $event): void {
+                        $dispatcherClass = self::DISPATCHER_CLASS;
+
+                        // Only dispatch if the Events package is installed and
+                        // the dispatcher is registered in the container.
+                        if ($this->app->bound($dispatcherClass)) {
+                            $this->app->make($dispatcherClass)
                                 ->dispatch($event);
                         }
                     }

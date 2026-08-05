@@ -18,6 +18,24 @@ composer require zeroboiler/domain
 - `zeroboiler/dto` — data transfer objects
 - `zeroboiler/observability` (optional) — `#[Trace]` auto-instrumentation
 
+## Cross-Package Dependencies
+
+The domain package depends on sibling ZeroBoiler packages for type safety
+and interoperability:
+
+| Dependency | Usage | Required |
+|---|---|---|
+| `zeroboiler/events` | `DomainEvent`, `DomainEventCollection` | Yes |
+| `zeroboiler/value-objects` | Base value object support | Yes |
+| `zeroboiler/enums` | Smart enum metadata | Yes |
+| `zeroboiler/dto` | Data transfer objects | Yes |
+| `zeroboiler/observability` | `#[Trace]` attribute (stubbed when absent) | No |
+
+**Runtime guards**: The service provider uses `app->bound()` checks to make
+the Events package integration truly optional at runtime. The Observability
+`#[Trace]` attribute is provided via a no-op stub when the package is not
+installed, ensuring `SnapshottingRepository` works without it.
+
 ## Features
 
 - **AggregateRoot** — typed identity (UUID v4), domain events, versioning, optimistic locking

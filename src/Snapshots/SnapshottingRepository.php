@@ -9,10 +9,8 @@ declare(strict_types=1);
 namespace ZeroBoiler\Domain\Snapshots;
 
 use ZeroBoiler\Domain\AggregateRoot;
-use ZeroBoiler\Domain\Concerns\EventSourced;
 use ZeroBoiler\Domain\Concerns\HasSnapshots;
 use ZeroBoiler\Domain\Contracts\Repository;
-use ZeroBoiler\Events\Domain\DomainEvent;
 
 // When zeroboiler/observability is not installed, the #[Trace] attribute
 // must still be available since SnapshottingRepository uses it on methods.
