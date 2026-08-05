@@ -2,10 +2,11 @@ includes:
     - phpstan-baseline.neon
 
 parameters:
-  level: 6
+  level: 9
   paths:
     - src
   excludePaths:
     - src/Commands/*
+    - src/stubs/*
   treatPhpDocTypesAsCertain: false
   reportUnmatchedIgnoredErrors: false

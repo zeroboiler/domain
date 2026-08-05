@@ -1,61 +1,96 @@
+includes:
+    - phpstan-baseline.neon
+
 parameters:
-	ignoreErrors:
-		-
-			message: '#^Trait ZeroBoiler\\Domain\\Concerns\\EventSourced is used zero times and is not analysed\.$#'
-			identifier: trait.unused
-			count: 1
-			path: src/Concerns/EventSourced.php
+  level: 9
+  paths:
+    - src
+  excludePaths:
+    - src/Commands/*
+    - src/stubs/*
+  treatPhpDocTypesAsCertain: false
+  reportUnmatchedIgnoredErrors: false
+  ignoreErrors:
+    -
+      message: '#^Trait ZeroBoiler\\Domain\\Concerns\\EventSourced is used zero times and is not analysed\.$#'
+      identifier: trait.unused
+      count: 1
+      path: src/Concerns/EventSourced.php
 
-		-
-			message: '#^Trait ZeroBoiler\\Domain\\Concerns\\HasSnapshots is used zero times and is not analysed\.$#'
-			identifier: trait.unused
-			count: 1
-			path: src/Concerns/HasSnapshots.php
+    -
+      message: '#^Trait ZeroBoiler\\Domain\\Concerns\\HasSnapshots is used zero times and is not analysed\.$#'
+      identifier: trait.unused
+      count: 1
+      path: src/Concerns/HasSnapshots.php
 
-		-
-			message: '#^Unsafe usage of new static\(\)\.$#'
-			identifier: new.static
-			count: 1
-			path: src/Identifiers/Identifier.php
+    -
+      message: '#^Unsafe usage of new static\(\)\.$#'
+      identifier: new.static
+      count: 1
+      path: src/Identifiers/Identifier.php
 
-		-
-			message: '#^Unsafe usage of new static\(\)\.$#'
-			identifier: new.static
-			count: 1
-			path: src/Identifiers/StringIdentifier.php
+    -
+      message: '#^Unsafe usage of new static\(\)\.$#'
+      identifier: new.static
+      count: 1
+      path: src/Identifiers/StringIdentifier.php
 
-		-
-			message: '#^Unsafe usage of new static\(\)\.$#'
-			identifier: new.static
-			count: 2
-			path: src/Identifiers/UlidIdentifier.php
+    -
+      message: '#^Unsafe usage of new static\(\)\.$#'
+      identifier: new.static
+      count: 2
+      path: src/Identifiers/UlidIdentifier.php
 
-		-
-			message: '#^Unsafe usage of new static\(\)\.$#'
-			identifier: new.static
-			count: 2
-			path: src/Identifiers/UuidIdentifier.php
+    -
+      message: '#^Unsafe usage of new static\(\)\.$#'
+      identifier: new.static
+      count: 2
+      path: src/Identifiers/UuidIdentifier.php
 
-		-
-			message: '#^Attribute class ZeroBoiler\\Observability\\Trace does not exist\.$#'
-			identifier: attribute.notFound
-			count: 3
-			path: src/Snapshots/SnapshottingRepository.php
+    -
+      message: '#^Attribute class ZeroBoiler\\Observability\\Trace does not exist\.$#'
+      identifier: attribute.notFound
+      count: 3
+      path: src/Snapshots/SnapshottingRepository.php
 
-		-
-			message: '#^Method ZeroBoiler\\Domain\\Snapshots\\SnapshottingRepository\:\:instantiateFromSnapshot\(\) never returns ZeroBoiler\\Domain\\AggregateRoot so it can be removed from the return type\.$#'
-			identifier: return.unusedType
-			count: 1
-			path: src/Snapshots/SnapshottingRepository.php
+    -
+      message: '#^Method ZeroBoiler\\Domain\\Snapshots\\SnapshottingRepository::instantiateFromSnapshot\(\) never returns ZeroBoiler\\Domain\\AggregateRoot so it can be removed from the return type\.$#'
+      identifier: return.unusedType
+      count: 1
+      path: src/Snapshots/SnapshottingRepository.php
 
-		-
-			message: '#^PHPDoc tag @var for variable \$aggregate contains unresolvable type\.$#'
-			identifier: varTag.unresolvableType
-			count: 3
-			path: src/Snapshots/SnapshottingRepository.php
+    -
+      message: '#^PHPDoc tag @var for variable \$(aggregate|instance) contains unresolvable type\.$#'
+      identifier: varTag.unresolvableType
+      count: 4
+      path: src/Snapshots/SnapshottingRepository.php
 
-		-
-			message: '#^PHPDoc tag @var for variable \$instance contains unresolvable type\.$#'
-			identifier: varTag.unresolvableType
-			count: 1
-			path: src/Snapshots/SnapshottingRepository.php
+    -
+      message: '#^Construct empty\(\) is not allowed\. Use new self\(\) or null coalesce instead\.$#'
+      identifier: emptyConstruct
+      count: 1
+      path: src/Snapshots/InMemorySnapshotStore.php
+
+    -
+      message: '#^PHPDoc tag @var for variable \$this contains unresolvable type\.$#'
+      identifier: varTag.unresolvableType
+      count: 2
+      path: src/Concerns/EventSourced.php
+
+    -
+      message: '#^Method ZeroBoiler\\Domain\\DomainEventCollection::__construct\(\) has parameter \$events with no type specified\.$#'
+      identifier: missingType.parameter
+      count: 1
+      path: src/DomainEventCollection.php
+
+    -
+      message: '#^Method ZeroBoiler\\Domain\\Identifiers\\UuidIdentifier::__construct\(\) has unused parameter \$value\.$#'
+      identifier: unusedParameter
+      count: 1
+      path: src/Identifiers/UuidIdentifier.php
+
+    -
+      message: '#^Method ZeroBoiler\\Domain\\Identifiers\\UlidIdentifier::__construct\(\) has unused parameter \$value\.$#'
+      identifier: unusedParameter
+      count: 1
+      path: src/Identifiers/UlidIdentifier.php
