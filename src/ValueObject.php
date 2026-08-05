@@ -20,8 +20,6 @@ use ZeroBoiler\ValueObjects\ValueObject as BaseValueObject;
  *
  * Domain VOs (OrderId, CustomerId, Address, etc.) should extend
  * this class to get full integration with the value-objects ecosystem.
- *
- * @extends BaseValueObject<string, mixed>
  */
 abstract class ValueObject extends BaseValueObject
 {

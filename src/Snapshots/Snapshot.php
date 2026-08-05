@@ -76,12 +76,27 @@ final readonly class Snapshot
      */
     public static function fromArray(array $data): self
     {
+        $aggregateType = $data['aggregate_type'];
+        $aggregateId = $data['aggregate_id'];
+        $version = $data['version'];
+        $state = $data['state'];
+        $createdAt = $data['created_at'];
+
+        assert(
+            is_string($aggregateType) && is_string($aggregateId) && is_int($version)
+            && is_array($state) && is_string($createdAt),
+            'Invalid snapshot data: expected string, string, int, array, string.',
+        );
+
+        /** @var array<string, mixed> $state */
+        $state = $state;
+
         return new self(
-            aggregateType: $data['aggregate_type'],
-            aggregateId: $data['aggregate_id'],
-            version: (int) $data['version'],
-            state: $data['state'],
-            createdAt: new \DateTimeImmutable($data['created_at']),
+            aggregateType: $aggregateType,
+            aggregateId: $aggregateId,
+            version: $version,
+            state: $state,
+            createdAt: new \DateTimeImmutable($createdAt),
         );
     }
 }

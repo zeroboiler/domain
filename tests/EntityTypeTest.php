@@ -10,8 +10,8 @@ use ZeroBoiler\Domain\AggregateRoot;
 use ZeroBoiler\Domain\AggregateRootId;
 use ZeroBoiler\Domain\Identifiers\IntegerIdentifier;
 use ZeroBoiler\Domain\Identifiers\StringIdentifier;
-use ZeroBoiler\Domain\Identifiers\UuidIdentifier;
 use ZeroBoiler\Domain\Identifiers\UlidIdentifier;
+use ZeroBoiler\Domain\Identifiers\UuidIdentifier;
 use ZeroBoiler\Domain\Tests\Fixtures\TestEntity;
 
 // ===========================================================================

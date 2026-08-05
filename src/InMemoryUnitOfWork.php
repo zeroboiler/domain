@@ -46,7 +46,7 @@ use ZeroBoiler\Events\Domain\DomainEvent;
  */
 class InMemoryUnitOfWork implements UnitOfWorkContract
 {
-    /** @var array<int, array{active: bool, tracked: array<string, AggregateRoot>, deleted: array<string, AggregateRoot>}> */
+    /** @var array<int, array{active?: bool, tracked: array<string, AggregateRoot>, deleted: array<string, AggregateRoot>}> */
     private array $savepoints = [];
 
     private int $currentScope = -1;
@@ -420,9 +420,11 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
      */
     private function dispatchPendingEvents(): void
     {
-        if ($this->eventDispatcher instanceof Closure) {
+        $dispatcher = $this->eventDispatcher;
+
+        if ($dispatcher !== null) {
             foreach ($this->pendingEvents as $event) {
-                ($this->eventDispatcher)($event);
+                $dispatcher($event);
             }
         }
     }
@@ -497,7 +499,7 @@ class InMemoryUnitOfWork implements UnitOfWorkContract
 
         $scope = $this->savepoints[$this->currentScope] ?? null;
 
-        if ($scope === null || ! $scope['active']) {
+        if ($scope === null || ! isset($scope['active']) || ! $scope['active']) {
             throw new RuntimeException('No active unit of work');
         }
 

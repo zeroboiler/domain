@@ -10,6 +10,8 @@ namespace ZeroBoiler\Domain;
 
 use ZeroBoiler\Domain\Contracts\AggregateRoot as AggregateRootContract;
 use ZeroBoiler\Domain\Contracts\Entity as EntityContract;
+use ZeroBoiler\Domain\Snapshots\Snapshot;
+use ZeroBoiler\Domain\Snapshots\SnapshotStore;
 use ZeroBoiler\Events\Domain\DomainEvent;
 
 /**
@@ -18,6 +20,12 @@ use ZeroBoiler\Events\Domain\DomainEvent;
  * Extends Entity to ensure consistent initialization and inheritance.
  * The AggregateRootId is stored as a typed internal property while
  * also being passed to the parent Entity constructor for the generic $id.
+ *
+ * @method bool shouldSnapshot() Check if a snapshot should be taken (from HasSnapshots trait)
+ * @method void createSnapshot(SnapshotStore $store) Create and store a snapshot (from HasSnapshots trait)
+ * @method void restoreFromSnapshot(Snapshot $snapshot) Restore from a snapshot (from HasSnapshots trait)
+ *
+ * @extends Entity<AggregateRootId>
  */
 abstract class AggregateRoot extends Entity implements AggregateRootContract
 {
@@ -90,7 +98,7 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
         $events = $this->domainEvents;
         $this->domainEvents = [];
 
-        return new DomainEventCollection($events);
+        return new DomainEventCollection(array_values($events));
     }
 
     #[\Override]

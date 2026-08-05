@@ -28,7 +28,12 @@ final readonly class DomainEventCollection implements Countable, IteratorAggrega
      */
     public function __construct(
         private readonly array $events = [],
-    ) {}
+    ) {
+        assert(
+            array_is_list($events),
+            'DomainEventCollection expects a list (sequential array) of DomainEvent objects.',
+        );
+    }
 
     /**
      * @return ArrayIterator<int, DomainEvent>

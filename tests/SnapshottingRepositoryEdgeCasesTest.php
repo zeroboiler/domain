@@ -11,12 +11,11 @@ use ZeroBoiler\Domain\AggregateRootId;
 use ZeroBoiler\Domain\Concerns\EventSourced;
 use ZeroBoiler\Domain\Concerns\HasSnapshots;
 use ZeroBoiler\Domain\Contracts\Repository;
-use ZeroBoiler\Domain\Identifiers\UuidIdentifier;
 use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
 use ZeroBoiler\Domain\Snapshots\Snapshot;
 use ZeroBoiler\Domain\Snapshots\SnapshotPolicy;
 use ZeroBoiler\Domain\Snapshots\SnapshottingRepository;
-use ZeroBoiler\Events\Domain\DomainEvent;
+use ZeroBoiler\Observability\Trace;
 
 // ===========================================================================
 //  SnapshottingRepository — edge cases and cross-cutting tests
@@ -291,10 +290,15 @@ describe('SnapshottingRepository edge cases', function (): void {
             use HasSnapshots;
 
             public string $name = 'test';
+
             public int $count = 0;
+
             public ?string $nullable = null;
+
             public array $items = [];
+
             public bool $active = true;
+
             public float $rate = 0.0;
 
             public function __construct()
@@ -375,9 +379,9 @@ describe('SnapshottingRepository observability stub', function (): void {
 
         require_once $stubFile;
 
-        expect(class_exists(\ZeroBoiler\Observability\Trace::class))->toBeTrue();
+        expect(class_exists(Trace::class))->toBeTrue();
 
-        $attr = new \ZeroBoiler\Observability\Trace(operation: 'test');
+        $attr = new Trace(operation: 'test');
         expect($attr->operation)->toBe('test');
     });
 });

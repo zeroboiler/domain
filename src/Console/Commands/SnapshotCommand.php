@@ -22,17 +22,17 @@ use ZeroBoiler\Domain\Snapshots\SnapshotStore;
  */
 final class SnapshotCommand extends Command
 {
-    #[\Override]
     protected $signature = 'domain:snapshot
                             {--class= : Aggregate class FQCN to inspect}
                             {--id= : Aggregate ID to inspect}';
 
-    #[\Override]
     protected $description = 'Inspect domain aggregate snapshot store';
 
     public function handle(): int
     {
+        /** @var string|null $class */
         $class = $this->option('class');
+        /** @var string|null $id */
         $id = $this->option('id');
 
         /** @var SnapshotStore|null $store */
@@ -76,7 +76,7 @@ final class SnapshotCommand extends Command
                     if ($display === false) {
                         $display = '<non-serializable>';
                     }
-                } elseif (is_null($value)) {
+                } elseif ($value === null) {
                     $display = 'null';
                 } else {
                     $display = '<' . gettype($value) . '>';

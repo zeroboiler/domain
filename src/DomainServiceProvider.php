@@ -16,6 +16,7 @@ use ZeroBoiler\Domain\Console\Commands\SnapshotCommand;
 use ZeroBoiler\Domain\Contracts\UnitOfWork as UnitOfWorkContract;
 use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
 use ZeroBoiler\Domain\Snapshots\SnapshotStore;
+
 /**
  * Domain service provider.
  *
@@ -31,13 +32,15 @@ class DomainServiceProvider extends ServiceProvider
 {
     /**
      * Optional dispatcher class — checked via app->bound() at runtime.
-     * @var class-string
+     *
+     * @var string
      */
     private const string DISPATCHER_CLASS = 'ZeroBoiler\\Events\\Domain\\DomainEventDispatcher';
 
     /**
      * Optional enum manager class — checked via class_exists() at runtime.
-     * @var class-string
+     *
+     * @phpstan-ignore classConstant.unused
      */
     private const string ENUM_MANAGER_CLASS = 'ZeroBoiler\\Enums\\EnumManager';
 
@@ -67,8 +70,9 @@ class DomainServiceProvider extends ServiceProvider
                         $dispatcherClass = self::DISPATCHER_CLASS;
 
                         if ($this->app->bound($dispatcherClass)) {
-                            $this->app->make($dispatcherClass)
-                                ->dispatch($event);
+                            $dispatcher = $this->app->make($dispatcherClass);
+                            // @phpstan-ignore method.nonObject
+                            $dispatcher->dispatch($event);
                         }
                     }
                 );
@@ -86,9 +90,11 @@ class DomainServiceProvider extends ServiceProvider
     private function registerSnapshotStore(): void
     {
         $this->app->singleton(SnapshotStore::class, function (): SnapshotStore {
-            $config = $this->app['config']['domain'] ?? [];
+            $config = $this->app->make('config');
+            // @phpstan-ignore method.nonObject
+            $domainConfig = $config->get('domain', []);
 
-            return match ($config['snapshot_driver'] ?? 'memory') {
+            return match (is_array($domainConfig) ? ($domainConfig['snapshot_driver'] ?? 'memory') : 'memory') {
                 'memory' => new InMemorySnapshotStore,
                 default => new InMemorySnapshotStore,
             };
@@ -129,10 +135,13 @@ class DomainServiceProvider extends ServiceProvider
             return;
         }
 
-        $this->app['events']->listen('octane.request.terminate', function (): void {
+        $events = $this->app->make('events');
+        // @phpstan-ignore method.nonObject
+        $events->listen('octane.request.terminate', function (): void {
             if ($this->app->bound(self::DISPATCHER_CLASS)) {
-                $this->app->make(self::DISPATCHER_CLASS)
-                    ->clearListeners();
+                $dispatcher = $this->app->make(self::DISPATCHER_CLASS);
+                // @phpstan-ignore method.nonObject
+                $dispatcher->clearListeners();
             }
         });
     }

@@ -14,9 +14,7 @@ use ZeroBoiler\Domain\Contracts\Repository;
 use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
 use ZeroBoiler\Domain\Snapshots\Snapshot;
 use ZeroBoiler\Domain\Snapshots\SnapshotPolicy;
-use ZeroBoiler\Domain\Snapshots\SnapshotStore;
 use ZeroBoiler\Domain\Snapshots\SnapshottingRepository;
-use ZeroBoiler\Events\Domain\DomainEvent;
 
 // ===========================================================================
 //  SnapshottingRepository — production-ready tests

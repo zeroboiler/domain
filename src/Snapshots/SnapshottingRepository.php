@@ -15,9 +15,11 @@ use ZeroBoiler\Domain\Contracts\Repository;
 // When zeroboiler/observability is not installed, the #[Trace] attribute
 // must still be available since SnapshottingRepository uses it on methods.
 // This stub file provides a no-op fallback.
-if (! class_exists(\ZeroBoiler\Observability\Trace::class)) {
-    require_once __DIR__.'/../../stubs/Trace.php';
+if (! class_exists(Trace::class)) {
+    require_once __DIR__ . '/../../stubs/Trace.php';
 }
+
+use ZeroBoiler\Observability\Trace;
 
 /**
  * Repository decorator that adds snapshot support to event-sourced aggregates.
@@ -34,6 +36,9 @@ if (! class_exists(\ZeroBoiler\Observability\Trace::class)) {
  * BUG-2-R39 FIX: When the inner repository doesn't support snapshot-aware
  * loading (findAfterVersion), the fallback now correctly prefers the snapshot
  * over a potentially incomplete full replay (e.g., pruned event store).
+ *
+ * The aggregate root must use the {@see HasSnapshots} trait for snapshot
+ * operations (shouldSnapshot, createSnapshot, restoreFromSnapshot).
  */
 final readonly class SnapshottingRepository implements Repository
 {

@@ -12,8 +12,8 @@ use ZeroBoiler\Domain\Concerns\HasDomainEvents;
 use ZeroBoiler\Domain\Contracts\Entity as EntityContract;
 use ZeroBoiler\Domain\Identifiers\IntegerIdentifier;
 use ZeroBoiler\Domain\Identifiers\StringIdentifier;
-use ZeroBoiler\Domain\Identifiers\UuidIdentifier;
 use ZeroBoiler\Domain\Identifiers\UlidIdentifier;
+use ZeroBoiler\Domain\Identifiers\UuidIdentifier;
 
 /**
  * Base class for domain entities with flexible identity types.
@@ -39,9 +39,9 @@ abstract class Entity implements EntityContract
 
     /**
      * @param  TId  $id  The entity's identity.
-     *                  Aggregate roots should extend AggregateRoot instead.
-     *                  Simple entities may use int, string, or any Stringable identifier
-     *                  (UUID, ULID, custom Identifier, etc.).
+     *                   Aggregate roots should extend AggregateRoot instead.
+     *                   Simple entities may use int, string, or any Stringable identifier
+     *                   (UUID, ULID, custom Identifier, etc.).
      */
     public function __construct(
         public readonly int|string|\Stringable $id,

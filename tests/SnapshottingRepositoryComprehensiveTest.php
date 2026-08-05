@@ -11,7 +11,6 @@ use ZeroBoiler\Domain\AggregateRootId;
 use ZeroBoiler\Domain\Concerns\EventSourced;
 use ZeroBoiler\Domain\Concerns\HasSnapshots;
 use ZeroBoiler\Domain\Contracts\Repository;
-use ZeroBoiler\Domain\Identifiers\UuidIdentifier;
 use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
 use ZeroBoiler\Domain\Snapshots\Snapshot;
 use ZeroBoiler\Domain\Snapshots\SnapshotPolicy;
@@ -32,6 +31,7 @@ describe('SnapshottingRepository comprehensive', function (): void {
             use HasSnapshots;
 
             public string $status = 'pending';
+
             public int $amount = 0;
 
             public function __construct()

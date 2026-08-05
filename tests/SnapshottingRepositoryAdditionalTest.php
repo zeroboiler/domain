@@ -225,6 +225,7 @@ describe('SnapshottingRepository additional tests', function (): void {
             use HasSnapshots;
 
             public string $status = 'pending';
+
             public int $count = 0;
 
             public function __construct()

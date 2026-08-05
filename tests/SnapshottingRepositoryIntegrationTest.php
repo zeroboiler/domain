@@ -11,7 +11,6 @@ use ZeroBoiler\Domain\AggregateRootId;
 use ZeroBoiler\Domain\Concerns\EventSourced;
 use ZeroBoiler\Domain\Concerns\HasSnapshots;
 use ZeroBoiler\Domain\Contracts\Repository;
-use ZeroBoiler\Domain\InMemoryUnitOfWork;
 use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
 use ZeroBoiler\Domain\Snapshots\Snapshot;
 use ZeroBoiler\Domain\Snapshots\SnapshotPolicy;
@@ -31,7 +30,7 @@ describe('SnapshottingRepository integration', function (): void {
 
         $innerRepo = new class implements Repository
         {
-            /** @var array<string, \ZeroBoiler\Domain\AggregateRoot> */
+            /** @var array<string, AggregateRoot> */
             public array $store = [];
 
             public function find(string|int $id): ?AggregateRoot
@@ -57,6 +56,7 @@ describe('SnapshottingRepository integration', function (): void {
             use HasSnapshots;
 
             public string $status = 'created';
+
             public int $eventCount = 0;
 
             public function __construct()
@@ -131,6 +131,7 @@ describe('SnapshottingRepository integration', function (): void {
             use HasSnapshots;
 
             public int $counter = 0;
+
             public string $label = 'initial';
 
             public function __construct()
