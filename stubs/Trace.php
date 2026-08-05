@@ -15,7 +15,7 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Observability;
 
-#[\Attribute(\Attribute::TARGET_METHOD)]
+#[\Attribute(\Attribute::TARGET_METHOD | \Attribute::TARGET_CLASS)]
 final readonly class Trace
 {
     /**

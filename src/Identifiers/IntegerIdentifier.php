@@ -10,43 +10,100 @@ namespace ZeroBoiler\Domain\Identifiers;
 
 use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
 
+/**
+ * Final readonly integer identifier for domain entities.
+ *
+ * Ideal for auto-increment database IDs, sequence numbers, and
+ * numeric natural keys.
+ *
+ * @implements IdentifierContract
+ *
+ * @example
+ * ```php
+ * $id = IntegerIdentifier::from(42);
+ * $id->toString();     // '42'
+ * $id->toInt();        // 42
+ * $id->isValid('abc'); // false
+ * ```
+ */
 final readonly class IntegerIdentifier implements IdentifierContract
 {
+    /**
+     * Create an integer identifier.
+     *
+     * @param  int  $value  The integer value.
+     */
     public function __construct(public int $value) {}
 
+    /**
+     * Create an identifier from an integer.
+     *
+     * @param  int  $value  The integer value.
+     * @return self
+     */
     public static function from(int $value): self
     {
         return new self($value);
     }
 
     /**
-     * Validate whether a string represents a valid integer.
+     * Validate whether a string represents a valid integer without throwing.
+     *
+     * Accepts positive integers, negative integers, and zero.
+     *
+     * @param  string  $value  The string to validate.
+     * @return bool True if the string represents a valid integer.
      */
     public static function isValid(string $value): bool
     {
         return ctype_digit($value) || (str_starts_with($value, '-') && ctype_digit(substr($value, 1)));
     }
 
+    /**
+     * Create an identifier from a string representation (IdentifierContract interface).
+     *
+     * @param  string  $value  A string that represents an integer.
+     * @return static
+     */
     public static function fromString(string $value): static
     {
         return new self((int) $value);
     }
 
+    /**
+     * Get the integer value.
+     *
+     * @return int The integer value.
+     */
     public function toInt(): int
     {
         return $this->value;
     }
 
+    /**
+     * Get the string representation of the identifier.
+     *
+     * @return string The integer as a string.
+     */
     public function toString(): string
     {
         return (string) $this->value;
     }
 
+    /**
+     * Check equality with another identifier.
+     *
+     * @param  IdentifierContract  $other  The identifier to compare against.
+     * @return bool True if both identifiers are IntegerIdentifiers with the same value.
+     */
     public function equals(IdentifierContract $other): bool
     {
         return $other instanceof IntegerIdentifier && $this->value === $other->value;
     }
 
+    /**
+     * @return string The integer as a string.
+     */
     public function __toString(): string
     {
         return $this->toString();

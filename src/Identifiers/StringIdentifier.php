@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * This file is part of ZeroBoiler, licensed under the proprietary license.
+ */
+
 declare(strict_types=1);
 
 namespace ZeroBoiler\Domain\Identifiers;
@@ -8,8 +12,30 @@ use JsonSerializable;
 use ValueError;
 use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
 
+/**
+ * Readonly string identifier for domain entities.
+ *
+ * Enforces non-empty strings at construction time, ensuring identifiers
+ * are always meaningful. Ideal for slugs, codes, and natural keys.
+ *
+ * @implements IdentifierContract
+ *
+ * @example
+ * ```php
+ * $slug = StringIdentifier::from('my-blog-post');
+ * $slug->toString();   // 'my-blog-post'
+ * $slug->isValid('');  // false
+ * ```
+ */
 readonly class StringIdentifier implements IdentifierContract, JsonSerializable
 {
+    /**
+     * Create a validated non-empty string identifier.
+     *
+     * @param  string  $value  A non-empty string identifier.
+     *
+     * @throws ValueError If the value is an empty string.
+     */
     public function __construct(
         public string $value,
     ) {
@@ -18,39 +44,77 @@ readonly class StringIdentifier implements IdentifierContract, JsonSerializable
         }
     }
 
+    /**
+     * Create an identifier from a non-empty string.
+     *
+     * @param  string  $value  A non-empty string.
+     * @return static
+     *
+     * @throws ValueError If the value is an empty string.
+     */
     public static function from(string $value): static
     {
         return new static($value);
     }
 
     /**
-     * Validate whether a string is a valid non-empty identifier.
+     * Validate whether a string is a valid non-empty identifier without throwing.
+     *
+     * @param  string  $value  The string to validate.
+     * @return bool True if the string is non-empty.
      */
     public static function isValid(string $value): bool
     {
         return $value !== '';
     }
 
+    /**
+     * Create an identifier from a string (IdentifierContract interface).
+     *
+     * @param  string  $value  A non-empty string.
+     * @return static
+     *
+     * @throws ValueError If the value is an empty string.
+     */
     public static function fromString(string $value): static
     {
         return static::from($value);
     }
 
+    /**
+     * Check equality with another identifier.
+     *
+     * @param  IdentifierContract  $other  The identifier to compare against.
+     * @return bool True if both identifiers are StringIdentifiers with the same value.
+     */
     public function equals(IdentifierContract $other): bool
     {
         return $other instanceof StringIdentifier && $this->value === $other->value;
     }
 
+    /**
+     * Get the string representation of the identifier.
+     *
+     * @return string The identifier string.
+     */
     public function toString(): string
     {
         return $this->value;
     }
 
+    /**
+     * Serialize the identifier to JSON.
+     *
+     * @return string The identifier string.
+     */
     public function jsonSerialize(): string
     {
         return $this->value;
     }
 
+    /**
+     * @return string The identifier string.
+     */
     public function __toString(): string
     {
         return $this->value;
