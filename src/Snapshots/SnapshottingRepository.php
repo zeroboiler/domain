@@ -101,7 +101,6 @@ final readonly class SnapshottingRepository implements Repository
 
         // Check if snapshot should be created
         if ($this->usesSnapshots($aggregate)) {
-            /** @var AggregateRoot&HasSnapshots $aggregate */
             if ($aggregate->shouldSnapshot()) {
                 $aggregate->createSnapshot($this->snapshotStore);
             }
