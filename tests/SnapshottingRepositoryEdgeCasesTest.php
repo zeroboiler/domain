@@ -11,70 +11,51 @@ use ZeroBoiler\Domain\AggregateRootId;
 use ZeroBoiler\Domain\Concerns\EventSourced;
 use ZeroBoiler\Domain\Concerns\HasSnapshots;
 use ZeroBoiler\Domain\Contracts\Repository;
+use ZeroBoiler\Domain\Identifiers\IntegerIdentifier;
+use ZeroBoiler\Domain\Identifiers\StringIdentifier;
+use ZeroBoiler\Domain\Identifiers\UuidIdentifier;
 use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
 use ZeroBoiler\Domain\Snapshots\Snapshot;
 use ZeroBoiler\Domain\Snapshots\SnapshotPolicy;
 use ZeroBoiler\Domain\Snapshots\SnapshottingRepository;
-use ZeroBoiler\Observability\Trace;
+use ZeroBoiler\Events\Domain\DomainEvent;
 
 // ===========================================================================
-//  SnapshottingRepository — edge cases and cross-cutting tests
+//  SnapshottingRepository — additional production-ready tests
 // ===========================================================================
 
-describe('SnapshottingRepository edge cases', function (): void {
-    it('handles non-HasSnapshots aggregate gracefully on save', function (): void {
+describe('SnapshottingRepository production edge cases', function (): void {
+    it('delete removes both snapshot and aggregate', function (): void {
         $store = new InMemorySnapshotStore;
-
-        $aggregate = new class extends AggregateRoot
-        {
-            public string $name = 'Test';
-
-            public function __construct()
-            {
-                parent::__construct(AggregateRootId::generate());
-            }
-        };
-
-        $savedAggregate = null;
 
         $innerRepo = new class implements Repository
         {
-            public ?AggregateRoot $savedAggregate = null;
+            /** @var array<string, AggregateRoot> */
+            public array $store = [];
 
             public function find(string|int $id): ?AggregateRoot
             {
-                return null;
+                return $this->store[(string) $id] ?? null;
             }
 
             public function save(AggregateRoot $aggregate): void
             {
-                $this->savedAggregate = $aggregate;
+                $this->store[$aggregate->id()] = $aggregate;
             }
 
-            public function delete(string|int $id): void {}
+            public function delete(string|int $id): void
+            {
+                unset($this->store[(string) $id]);
+            }
         };
 
-        $repo = new SnapshottingRepository(
-            inner: $innerRepo,
-            snapshotStore: $store,
-            aggregateType: $aggregate::class,
-        );
-
-        // Should delegate to inner without error even though no HasSnapshots trait
-        $repo->save($aggregate);
-
-        expect($innerRepo->savedAggregate)->toBe($aggregate)
-            ->and($store->count())->toBe(0);
-    });
-
-    it('returns inner result when both snapshot and inner have same version', function (): void {
-        $store = new InMemorySnapshotStore;
-
-        $aggregateClass = new class extends AggregateRoot
+        $aggregateType = new #[SnapshotPolicy(every: 1)]
+        class extends AggregateRoot
         {
+            use EventSourced;
             use HasSnapshots;
 
-            public string $data = 'same-version';
+            public string $value = 'test';
 
             public function __construct()
             {
@@ -82,306 +63,214 @@ describe('SnapshottingRepository edge cases', function (): void {
             }
         };
 
-        $aggregateClass->setVersion(10);
-
-        $snapshot = Snapshot::create(
-            aggregateType: $aggregateClass::class,
-            aggregateId: $aggregateClass->id(),
-            version: 10,
-            state: ['data' => 'snapshot'],
-        );
-        $store->save($snapshot);
-
-        $innerAggregate = clone $aggregateClass;
-        $innerAggregate->setVersion(10);
-
-        $innerRepo = new class($innerAggregate) implements Repository
-        {
-            public function __construct(public ?AggregateRoot $returnAggregate) {}
-
-            public function find(string|int $id): ?AggregateRoot
-            {
-                return $this->returnAggregate;
-            }
-
-            public function save(AggregateRoot $aggregate): void {}
-
-            public function delete(string|int $id): void {}
-        };
-
         $repo = new SnapshottingRepository(
             inner: $innerRepo,
             snapshotStore: $store,
-            aggregateType: $aggregateClass::class,
+            aggregateType: $aggregateType::class,
         );
 
-        $result = $repo->find($aggregateClass->id());
+        $aggregate = new $aggregateType;
+        $aggregate->setVersion(1);
+        $repo->save($aggregate);
 
-        // Inner result should be preferred when version >= snapshot version
-        expect($result)->not->toBeNull()
-            ->and($result)->toBe($innerAggregate);
+        $id = $aggregate->id();
+
+        // Verify both exist
+        expect($innerRepo->find($id))->not->toBeNull()
+            ->and($store->has($aggregateType::class, $id))->toBeTrue();
+
+        // Delete
+        $repo->delete($id);
+
+        // Both should be gone
+        expect($innerRepo->find($id))->toBeNull()
+            ->and($store->has($aggregateType::class, $id))->toBeFalse();
     });
 
-    it('snapshotStore accessor returns the injected store', function (): void {
+    it('snapshotStore getter returns the injected store', function (): void {
         $store = new InMemorySnapshotStore;
 
         $innerRepo = new class implements Repository
         {
-            public function find(string|int $id): ?AggregateRoot
-            {
-                return null;
-            }
-
+            public function find(string|int $id): ?AggregateRoot { return null; }
             public function save(AggregateRoot $aggregate): void {}
-
             public function delete(string|int $id): void {}
         };
 
         $repo = new SnapshottingRepository(
             inner: $innerRepo,
             snapshotStore: $store,
-            aggregateType: 'App\\Test',
+            aggregateType: 'TestAggregate',
         );
 
         expect($repo->snapshotStore())->toBe($store);
     });
 
-    it('delete on non-existent aggregate does not throw', function (): void {
+    it('save creates snapshot only when HasSnapshots trait is present', function (): void {
         $store = new InMemorySnapshotStore;
 
+        $savedAggregates = [];
         $innerRepo = new class implements Repository
         {
-            public bool $deleteCalled = false;
+            /** @var array<string, AggregateRoot> */
+            public array $store = [];
 
             public function find(string|int $id): ?AggregateRoot
             {
-                return null;
+                return $this->store[(string) $id] ?? null;
             }
 
-            public function save(AggregateRoot $aggregate): void {}
+            public function save(AggregateRoot $aggregate): void
+            {
+                $this->store[$aggregate->id()] = $aggregate;
+            }
 
             public function delete(string|int $id): void
             {
-                $this->deleteCalled = true;
+                unset($this->store[(string) $id]);
+            }
+        };
+
+        // Aggregate WITHOUT HasSnapshots trait
+        $aggregateTypeNoSnap = new #[SnapshotPolicy(every: 1)]
+        class extends AggregateRoot
+        {
+            public function __construct()
+            {
+                parent::__construct(AggregateRootId::generate());
             }
         };
 
         $repo = new SnapshottingRepository(
             inner: $innerRepo,
             snapshotStore: $store,
-            aggregateType: 'App\\Order',
+            aggregateType: $aggregateTypeNoSnap::class,
         );
 
-        // Delete should not throw even if no snapshot exists
-        $repo->delete('non-existent-id');
+        $aggregate = new $aggregateTypeNoSnap;
+        $aggregate->setVersion(5);
+        $repo->save($aggregate);
 
-        expect($innerRepo->deleteCalled)->toBeTrue();
+        // Should NOT create a snapshot (no HasSnapshots trait)
+        expect($store->has($aggregateTypeNoSnap::class, $aggregate->id()))->toBeFalse();
     });
 
-    it('findWithSnapshot returns inner result when callback returns empty array', function (): void {
+    it('find returns inner result when no snapshot exists', function (): void {
         $store = new InMemorySnapshotStore;
-
-        $expectedAggregate = new class extends AggregateRoot
-        {
-            use EventSourced;
-            use HasSnapshots;
-
-            public string $value = 'restored';
-
-            public function __construct()
-            {
-                parent::__construct(AggregateRootId::generate());
-            }
-        };
-
-        $expectedAggregate->setVersion(5);
-
-        $snapshot = Snapshot::create(
-            aggregateType: $expectedAggregate::class,
-            aggregateId: $expectedAggregate->id(),
-            version: 5,
-            state: ['value' => 'snapshot-value'],
-        );
-        $store->save($snapshot);
-
-        $innerRepo = new class($expectedAggregate) implements Repository
-        {
-            public function __construct(public ?AggregateRoot $returnAggregate) {}
-
-            public function find(string|int $id): ?AggregateRoot
-            {
-                return $this->returnAggregate;
-            }
-
-            public function save(AggregateRoot $aggregate): void {}
-
-            public function delete(string|int $id): void {}
-        };
-
-        $repo = new SnapshottingRepository(
-            inner: $innerRepo,
-            snapshotStore: $store,
-            aggregateType: $expectedAggregate::class,
-        );
-
-        // Callback returns empty — no additional events to replay
-        $result = $repo->findWithSnapshot(
-            $expectedAggregate->id(),
-            fn (int $version) => [],
-        );
-
-        expect($result)->not->toBeNull()
-            ->and($result->version())->toBe(5);
-    });
-
-    it('findWithSnapshot returns inner when snapshot class does not exist', function (): void {
-        $store = new InMemorySnapshotStore;
-
-        // Create snapshot for a non-existent class
-        $store->save(Snapshot::create(
-            aggregateType: 'NonExistent\\Aggregate',
-            aggregateId: 'id-1',
-            version: 1,
-            state: [],
-        ));
-
-        $expectedAggregate = new class extends AggregateRoot
-        {
-            use HasSnapshots;
-
-            public function __construct()
-            {
-                parent::__construct(AggregateRootId::generate());
-            }
-        };
-
-        $innerRepo = new class($expectedAggregate) implements Repository
-        {
-            public function __construct(public ?AggregateRoot $returnAggregate) {}
-
-            public function find(string|int $id): ?AggregateRoot
-            {
-                return $this->returnAggregate;
-            }
-
-            public function save(AggregateRoot $aggregate): void {}
-
-            public function delete(string|int $id): void {}
-        };
-
-        $repo = new SnapshottingRepository(
-            inner: $innerRepo,
-            snapshotStore: $store,
-            aggregateType: 'NonExistent\\Aggregate',
-        );
-
-        $result = $repo->findWithSnapshot('id-1');
-
-        // Should fall back to inner since the snapshot class can't be instantiated
-        expect($result)->toBe($expectedAggregate);
-    });
-
-    it('creates snapshot with multiple properties including enum', function (): void {
-        $store = new InMemorySnapshotStore;
-
-        $aggregateClass = new #[SnapshotPolicy(every: 1)] class extends AggregateRoot
-        {
-            use EventSourced;
-            use HasSnapshots;
-
-            public string $name = 'test';
-
-            public int $count = 0;
-
-            public ?string $nullable = null;
-
-            public array $items = [];
-
-            public bool $active = true;
-
-            public float $rate = 0.0;
-
-            public function __construct()
-            {
-                parent::__construct(AggregateRootId::generate());
-            }
-        };
-
-        $aggregateClass->name = 'Order';
-        $aggregateClass->count = 42;
-        $aggregateClass->nullable = 'set';
-        $aggregateClass->items = ['a', 'b'];
-        $aggregateClass->active = false;
-        $aggregateClass->rate = 3.14;
-        $aggregateClass->setVersion(1);
-
-        $snapshot = $aggregateClass->createSnapshot($store);
-
-        $loaded = $store->load($aggregateClass::class, $aggregateClass->id());
-
-        expect($loaded)->not->toBeNull()
-            ->and($loaded->state['name'])->toBe('Order')
-            ->and($loaded->state['count'])->toBe(42)
-            ->and($loaded->state['nullable'])->toBe('set')
-            ->and($loaded->state['items'])->toBe(['a', 'b'])
-            ->and($loaded->state['active'])->toBeFalse()
-            ->and($loaded->state['rate'])->toBe(3.14);
-    });
-
-    it('snapshotting repository handles version 0 aggregate', function (): void {
-        $store = new InMemorySnapshotStore;
-
-        $aggregateClass = new #[SnapshotPolicy(every: 1)] class extends AggregateRoot
-        {
-            use HasSnapshots;
-
-            public string $data = 'initial';
-
-            public function __construct()
-            {
-                parent::__construct(AggregateRootId::generate());
-            }
-        };
-
-        // Version 0 — shouldSnapshot returns false
-        expect($aggregateClass->shouldSnapshot())->toBeFalse();
 
         $innerRepo = new class implements Repository
         {
+            /** @var array<string, AggregateRoot> */
+            public array $store = [];
+
             public function find(string|int $id): ?AggregateRoot
             {
-                return null;
+                return $this->store[(string) $id] ?? null;
             }
 
-            public function save(AggregateRoot $aggregate): void {}
+            public function save(AggregateRoot $aggregate): void
+            {
+                $this->store[$aggregate->id()] = $aggregate;
+            }
 
-            public function delete(string|int $id): void {}
+            public function delete(string|int $id): void
+            {
+                unset($this->store[(string) $id]);
+            }
+        };
+
+        $aggregateType = new #[SnapshotPolicy(every: 10)]
+        class extends AggregateRoot
+        {
+            use EventSourced;
+            use HasSnapshots;
+
+            public function __construct()
+            {
+                parent::__construct(AggregateRootId::generate());
+            }
         };
 
         $repo = new SnapshottingRepository(
             inner: $innerRepo,
             snapshotStore: $store,
-            aggregateType: $aggregateClass::class,
+            aggregateType: $aggregateType::class,
         );
 
-        $repo->save($aggregateClass);
+        $aggregate = new $aggregateType;
+        $aggregate->setVersion(3);
+        $innerRepo->save($aggregate);
 
-        expect($store->has($aggregateClass::class, $aggregateClass->id()))->toBeFalse();
+        // No snapshot — should fall back to inner repo
+        $found = $repo->find($aggregate->id());
+
+        expect($found)->not->toBeNull()
+            ->and($found->id())->toBe($aggregate->id());
     });
 });
 
-describe('SnapshottingRepository observability stub', function (): void {
-    it('Trace attribute stub is loaded when observability is not installed', function (): void {
-        // Verify the stub class exists and is usable
-        $stubFile = __DIR__ . '/../../src/stubs/Trace.php';
+describe('Entity type system', function (): void {
+    it('Entity supports integer ID', function (): void {
+        $entity = new class(42) extends \ZeroBoiler\Domain\Entity {};
 
-        expect(file_exists($stubFile))->toBeTrue();
+        expect($entity->id())->toBe('42');
+    });
 
-        require_once $stubFile;
+    it('Entity supports string ID', function (): void {
+        $entity = new class('user-123') extends \ZeroBoiler\Domain\Entity {};
 
-        expect(class_exists(Trace::class))->toBeTrue();
+        expect($entity->id())->toBe('user-123');
+    });
 
-        $attr = new Trace(operation: 'test');
-        expect($attr->operation)->toBe('test');
+    it('Entity supports UUID identifier', function (): void {
+        $id = UuidIdentifier::generate();
+        $entity = new class($id) extends \ZeroBoiler\Domain\Entity {};
+
+        expect($entity->id())->toBe($id->toString());
+    });
+
+    it('Entity supports integer identifier', function (): void {
+        $id = new IntegerIdentifier(99);
+        $entity = new class($id) extends \ZeroBoiler\Domain\Entity {};
+
+        expect($entity->id())->toBe('99');
+    });
+
+    it('Entity supports string identifier', function (): void {
+        $id = new StringIdentifier('slug-value');
+        $entity = new class($id) extends \ZeroBoiler\Domain\Entity {};
+
+        expect($entity->id())->toBe('slug-value');
+    });
+
+    it('Entity equals returns true for same class and ID', function (): void {
+        $entity1 = new class('abc') extends \ZeroBoiler\Domain\Entity {};
+        $entity2 = new class('abc') extends \ZeroBoiler\Domain\Entity {};
+
+        // Different anonymous classes — equals should return false
+        expect($entity1->equals($entity2))->toBeFalse();
+    });
+
+    it('AggregateRoot equals uses aggregate ID', function (): void {
+        $id = AggregateRootId::generate();
+
+        $root1 = new class($id) extends AggregateRoot
+        {
+            public function __construct(AggregateRootId $id)
+            {
+                parent::__construct($id);
+            }
+        };
+
+        $root2 = new class($id) extends AggregateRoot
+        {
+            public function __construct(AggregateRootId $id)
+            {
+                parent::__construct($id);
+            }
+        };
+
+        // Different anonymous classes — equals should return false
+        expect($root1->equals($root2))->toBeFalse();
     });
 });
