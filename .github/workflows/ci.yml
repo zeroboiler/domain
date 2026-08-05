@@ -24,8 +24,14 @@ jobs:
           tools: composer:v2
 
 
-      - name: Configure composer auth
-        run: composer config -g github-oauth.github.com ${{ secrets.COMPOSER_TOKEN }}
+      - name: Configure git and composer auth
+        env:
+          COMPOSER_TOKEN: ${{ secrets.COMPOSER_TOKEN }}
+        run: |
+          git config --global url."https://${COMPOSER_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://${COMPOSER_TOKEN}@github.com/".insteadOf "git@github.com:"
+          composer config -g github-oauth.github.com "${COMPOSER_TOKEN}"
+
 
       - name: Install dependencies
         run: composer update --prefer-dist --no-progress --no-interaction
@@ -56,8 +62,14 @@ jobs:
           tools: composer:v2, pint, phpstan, rector, pest
 
 
-      - name: Configure composer auth
-        run: composer config -g github-oauth.github.com ${{ secrets.COMPOSER_TOKEN }}
+      - name: Configure git and composer auth
+        env:
+          COMPOSER_TOKEN: ${{ secrets.COMPOSER_TOKEN }}
+        run: |
+          git config --global url."https://${COMPOSER_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://${COMPOSER_TOKEN}@github.com/".insteadOf "git@github.com:"
+          composer config -g github-oauth.github.com "${COMPOSER_TOKEN}"
+
 
       - name: Install dependencies
         run: composer update --prefer-dist --no-progress --no-interaction
