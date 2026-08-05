@@ -15,6 +15,11 @@ abstract class Entity implements EntityContract
 {
     use HasDomainEvents;
 
+    /**
+     * @param  int|string|\Stringable  $id  The entity's identity.
+     *                                      Aggregate roots should extend AggregateRoot instead.
+     *                                      Simple entities may use int, string, or any Stringable identifier.
+     */
     public function __construct(
         public readonly mixed $id,
     ) {}

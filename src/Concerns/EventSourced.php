@@ -49,7 +49,6 @@ trait EventSourced
 
         $aggregateId = AggregateRootId::fromString((string) $idString);
 
-        /** @var static $aggregate */
         $aggregate = new \ReflectionClass(static::class)->newInstanceWithoutConstructor();
 
         // Set inherited readonly properties via reflection

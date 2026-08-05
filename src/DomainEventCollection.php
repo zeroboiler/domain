@@ -24,10 +24,10 @@ use ZeroBoiler\Events\Domain\DomainEvent;
 final readonly class DomainEventCollection implements Countable, IteratorAggregate
 {
     /**
-     * @param  array<int, DomainEvent>  $events
+     * @param  list<DomainEvent>  $events
      */
     public function __construct(
-        private array $events = [],
+        private readonly array $events = [],
     ) {}
 
     /**

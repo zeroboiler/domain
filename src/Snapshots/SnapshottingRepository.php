@@ -66,9 +66,9 @@ final readonly class SnapshottingRepository implements Repository
                 // If the inner repository supports snapshot-aware loading
                 // (e.g., via a method like findAfterVersion), we use it.
                 if (method_exists($this->inner, 'findAfterVersion')) {
-                    /** @var AggregateRoot&EventSourced $aggregate */
-                    return $this->inner->findAfterVersion($id, $snapshot->version, $aggregate)
-                        ?? $aggregate;
+                    $aggregateAfter = $this->inner->findAfterVersion($id, $snapshot->version, $aggregate);
+
+                    return $aggregateAfter instanceof AggregateRoot ? $aggregateAfter : $aggregate;
                 }
 
                 // BUG-2-R39 FIX: No snapshot-aware inner repository.
@@ -147,13 +147,11 @@ final readonly class SnapshottingRepository implements Repository
 
             if ($aggregate instanceof AggregateRoot) {
                 // Get events after the snapshot version
-                /** @var list<DomainEvent> $postSnapshotEvents */
                 $postSnapshotEvents = $replayCallback($snapshot->version);
 
                 // Replay remaining events
                 foreach ($postSnapshotEvents as $event) {
                     if (method_exists($aggregate, 'applyEvent')) {
-                        /** @var AggregateRoot&EventSourced $aggregate */
                         $reflection = new \ReflectionMethod($aggregate, 'applyEvent');
                         $reflection->invoke($aggregate, $event, true);
                     }
@@ -195,7 +193,6 @@ final readonly class SnapshottingRepository implements Repository
         // Use reflection to create instance without constructor
         $reflection = new \ReflectionClass($class);
 
-        /** @var AggregateRoot&HasSnapshots $instance */
         $instance = $reflection->newInstanceWithoutConstructor();
 
         // Restore from snapshot state
