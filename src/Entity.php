@@ -18,10 +18,11 @@ abstract class Entity implements EntityContract
     /**
      * @param  int|string|\Stringable  $id  The entity's identity.
      *                                      Aggregate roots should extend AggregateRoot instead.
-     *                                      Simple entities may use int, string, or any Stringable identifier.
+     *                                      Simple entities may use int, string, or any Stringable identifier
+     *                                      (UUID, ULID, custom Identifier, etc.).
      */
     public function __construct(
-        public readonly mixed $id,
+        public readonly int|string|\Stringable $id,
     ) {}
 
     /**

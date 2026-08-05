@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-namespace ZeroBoiler\Domain;
+namespace ZeroBoiler\Domain\Tests\Fixtures;
 
 /**
  * Test-only enum for snapshot serialization tests.
