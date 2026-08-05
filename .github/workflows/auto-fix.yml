@@ -23,6 +23,32 @@ jobs:
           extensions: mbstring, ctype, json, bcmath
           tools: composer:v2
 
+      - name: Resolve private dependencies
+        env:
+          COMPOSER_TOKEN: ${{ secrets.COMPOSER_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          git clone https://x-access-token:${COMPOSER_TOKEN}@github.com/zeroboiler/value-objects.git /tmp/value-objects
+          git clone https://x-access-token:${COMPOSER_TOKEN}@github.com/zeroboiler/dto.git /tmp/dto
+          git clone https://x-access-token:${COMPOSER_TOKEN}@github.com/zeroboiler/enums.git /tmp/enums
+          git clone https://x-access-token:${COMPOSER_TOKEN}@github.com/zeroboiler/events.git /tmp/events
+          php -r "
+            \$repos = [
+              '/tmp/value-objects' => '1.1.0',
+              '/tmp/dto' => '1.1.0',
+              '/tmp/enums' => '1.0.0',
+              '/tmp/events' => '1.0.0',
+            ];
+            foreach (\$repos as \$dir => \$ver) {
+              \$f = \$dir . '/composer.json';
+              \$j = json_decode(file_get_contents(\$f), true);
+              if (empty(\$j['version'])) {
+                \$j['version'] = \$ver;
+                file_put_contents(\$f, json_encode(\$j, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . \"\n\");
+                echo \"Set \$f version to \$ver\n\";
+              }
+            }
+          "
+
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-suggest
 
