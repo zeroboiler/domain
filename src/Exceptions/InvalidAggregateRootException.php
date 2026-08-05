@@ -8,7 +8,15 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Domain\Exceptions;
 
-class InvalidAggregateRootException extends DomainException
+use function sprintf;
+
+/**
+ * Thrown when an object is not a valid aggregate root.
+ *
+ * Use this when validation expects an AggregateRoot but receives
+ * a different object type.
+ */
+final class InvalidAggregateRootException extends DomainException
 {
     public static function notAnAggregate(object $object): self
     {

@@ -15,7 +15,7 @@ namespace ZeroBoiler\Domain\Exceptions;
  * and one saves before the other. The second save will detect that
  * the version has changed and throw this exception.
  */
-class OptimisticLockException extends ConflictDomainException
+final class OptimisticLockException extends DomainException
 {
     public static function for(
         string $aggregateId,

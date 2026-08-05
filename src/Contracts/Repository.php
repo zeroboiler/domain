@@ -11,6 +11,12 @@ namespace ZeroBoiler\Domain\Contracts;
 use ZeroBoiler\Domain\AggregateRoot;
 use ZeroBoiler\Domain\Exceptions\OptimisticLockException;
 
+/**
+ * Contract for aggregate root repositories.
+ *
+ * Provides the standard CRUD operations for aggregate roots with
+ * optimistic locking support.
+ */
 interface Repository
 {
     /**

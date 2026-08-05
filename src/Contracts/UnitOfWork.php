@@ -1,11 +1,21 @@
 <?php
 
+/**
+ * This file is part of ZeroBoiler, licensed under the proprietary license.
+ */
+
 declare(strict_types=1);
 
 namespace ZeroBoiler\Domain\Contracts;
 
 use Closure;
 
+/**
+ * Contract for the unit of work pattern.
+ *
+ * Manages transactional consistency boundaries. Domain events raised
+ * within a unit of work are queued and dispatched atomically upon commit.
+ */
 interface UnitOfWork
 {
     /**
