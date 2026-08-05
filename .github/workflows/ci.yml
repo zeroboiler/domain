@@ -9,9 +9,7 @@ on:
 jobs:
   quality:
     runs-on: ubuntu-latest
-
     name: Code Quality
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,12 +27,10 @@ jobs:
         env:
           COMPOSER_TOKEN: ${{ secrets.COMPOSER_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
-          # Clone dependency chain: domain → events, dto, enums, value-objects
           git clone https://x-access-token:${COMPOSER_TOKEN}@github.com/zeroboiler/value-objects.git /tmp/value-objects
           git clone https://x-access-token:${COMPOSER_TOKEN}@github.com/zeroboiler/dto.git /tmp/dto
           git clone https://x-access-token:${COMPOSER_TOKEN}@github.com/zeroboiler/enums.git /tmp/enums
           git clone https://x-access-token:${COMPOSER_TOKEN}@github.com/zeroboiler/events.git /tmp/events
-          # Inject version fields for path-based packages that lack them
           php -r "
             \$repos = [
               '/tmp/value-objects' => '1.1.0',
@@ -47,8 +43,6 @@ jobs:
               \$j = json_decode(file_get_contents(\$f), true);
               if (empty(\$j['version'])) {
                 \$j['version'] = \$ver;
-                file_put_contents(\$f, json_encode(\$j, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . \"\n\");
-                echo \"Set \$f version to \$ver\n\";
               }
             }
           "
@@ -67,9 +61,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-
     name: Tests
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -103,8 +95,6 @@ jobs:
               \$j = json_decode(file_get_contents(\$f), true);
               if (empty(\$j['version'])) {
                 \$j['version'] = \$ver;
-                file_put_contents(\$f, json_encode(\$j, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . \"\n\");
-                echo \"Set \$f version to \$ver\n\";
               }
             }
           "
