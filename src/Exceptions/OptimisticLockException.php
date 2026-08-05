@@ -14,6 +14,17 @@ namespace ZeroBoiler\Domain\Exceptions;
  * This happens when two concurrent processes load the same aggregate,
  * and one saves before the other. The second save will detect that
  * the version has changed and throw this exception.
+ *
+ * @example
+ * ```php
+ * if ($persistedVersion !== $aggregate->version()) {
+ *     throw OptimisticLockException::for(
+ *         $aggregate->id(),
+ *         expectedVersion: $aggregate->version(),
+ *         actualVersion: $persistedVersion,
+ *     );
+ * }
+ * ```
  */
 final class OptimisticLockException extends DomainException
 {

@@ -15,6 +15,15 @@ use function sprintf;
  *
  * Use this when validation expects an AggregateRoot but receives
  * a different object type.
+ *
+ * @see \ZeroBoiler\Domain\Contracts\AggregateRoot
+ *
+ * @example
+ * ```php
+ * if (! $aggregate instanceof AggregateRoot) {
+ *     throw InvalidAggregateRootException::notAnAggregate($aggregate);
+ * }
+ * ```
  */
 final class InvalidAggregateRootException extends DomainException
 {

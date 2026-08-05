@@ -16,6 +16,13 @@ use Exception;
  * Unlike {@see InvalidStateDomainException}, this does not extend
  * DomainException and is used for general invalid-state checks
  * outside the domain layer.
+ *
+ * @example
+ * ```php
+ * if (! $config->isValid()) {
+ *     throw InvalidStateException::because('Application configuration is invalid.');
+ * }
+ * ```
  */
 final class InvalidStateException extends Exception
 {

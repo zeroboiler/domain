@@ -22,5 +22,19 @@ use Exception;
  * @see InvalidArgumentDomainException
  * @see NotFoundDomainException
  * @see ConflictDomainException
+ * @see AggregateNotFoundException
+ * @see OptimisticLockException
+ *
+ * @example
+ * ```php
+ * // Extend for custom domain exceptions:
+ * final class OrderAlreadyShippedException extends DomainException
+ * {
+ *     public static function forOrder(string $orderId): self
+ *     {
+ *         return new self("Order {$orderId} has already been shipped.");
+ *     }
+ * }
+ * ```
  */
 abstract class DomainException extends Exception {}
