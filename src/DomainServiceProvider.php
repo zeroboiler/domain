@@ -16,32 +16,59 @@ use ZeroBoiler\Domain\Console\Commands\SnapshotCommand;
 use ZeroBoiler\Domain\Contracts\UnitOfWork as UnitOfWorkContract;
 use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
 use ZeroBoiler\Domain\Snapshots\SnapshotStore;
+use ZeroBoiler\DTO\DataTransferObject;
+use ZeroBoiler\Enums\EnumManager;
 
+/**
+ * Domain service provider.
+ *
+ * Registers core domain infrastructure (UnitOfWork, SnapshotStore)
+ * and integrates with optional ZeroBoiler packages via runtime guards:
+ *
+ * - **Events package** (`zeroboiler/events`): Domain event dispatcher wired into UoW
+ * - **Observability package** (`zeroboiler/observability`): #[Trace] auto-instrumentation (stubbed when absent)
+ * - **DTO package** (`zeroboiler/dto`): DataTransferObject base class (used by domain commands)
+ * - **Enums package** (`zeroboiler/enums`): Enum metadata (used by domain commands)
+ */
 class DomainServiceProvider extends ServiceProvider
 {
     /**
-     * The dispatcher class to use for domain event dispatch.
-     * Checked via app->bound() at runtime so the Events package is optional.
+     * Optional dispatcher class — checked via app->bound() at runtime.
+     * @var class-string
      */
     private const string DISPATCHER_CLASS = 'ZeroBoiler\\Events\\Domain\\DomainEventDispatcher';
 
+    /**
+     * Optional enum manager class — checked via class_exists() at runtime.
+     * @var class-string
+     */
+    private const string ENUM_MANAGER_CLASS = 'ZeroBoiler\\Enums\\EnumManager';
+
     #[\Override]
     public function register(): void
+    {
+        $this->registerUnitOfWork();
+        $this->registerSnapshotStore();
+    }
+
+    /**
+     * Register the in-memory Unit of Work with optional event dispatching.
+     *
+     * When the Events package is installed and the DomainEventDispatcher
+     * is bound in the container, events queued in the UoW are dispatched
+     * after a successful commit.
+     */
+    private function registerUnitOfWork(): void
     {
         $this->app->singleton(
             UnitOfWorkContract::class,
             function (): InMemoryUnitOfWork {
                 $uow = new InMemoryUnitOfWork;
 
-                // Wire event dispatching: when a DomainEventDispatcher is
-                // bound in the container (optional, from the Events package),
-                // events queued in the UoW are dispatched after commit.
                 $uow->setEventDispatcher(
                     function (object $event): void {
                         $dispatcherClass = self::DISPATCHER_CLASS;
 
-                        // Only dispatch if the Events package is installed and
-                        // the dispatcher is registered in the container.
                         if ($this->app->bound($dispatcherClass)) {
                             $this->app->make($dispatcherClass)
                                 ->dispatch($event);
@@ -52,8 +79,15 @@ class DomainServiceProvider extends ServiceProvider
                 return $uow;
             }
         );
+    }
 
-        // Register snapshot store (in-memory by default; override in config)
+    /**
+     * Register the snapshot store (in-memory by default).
+     *
+     * Override via `config.domain.snapshot_driver` in your app config.
+     */
+    private function registerSnapshotStore(): void
+    {
         $this->app->singleton(SnapshotStore::class, function (): SnapshotStore {
             $config = $this->app['config']['domain'] ?? [];
 
