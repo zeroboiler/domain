@@ -18,20 +18,20 @@
     ],
     "repositories": [
         {
-            "type": "path",
-            "url": "/tmp/dto"
+            "type": "vcs",
+            "url": "https://github.com/zeroboiler/dto.git"
         },
         {
-            "type": "path",
-            "url": "/tmp/enums"
+            "type": "vcs",
+            "url": "https://github.com/zeroboiler/enums.git"
         },
         {
-            "type": "path",
-            "url": "/tmp/events"
+            "type": "vcs",
+            "url": "https://github.com/zeroboiler/events.git"
         },
         {
-            "type": "path",
-            "url": "/tmp/value-objects"
+            "type": "vcs",
+            "url": "https://github.com/zeroboiler/value-objects.git"
         }
     ],
     "require": {
@@ -91,7 +91,7 @@
             "pestphp/pest-plugin": true
         }
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true,
     "suggest": {
         "zeroboiler/observability": "Enables #[Trace] auto-instrumentation for aggregate root operations"
