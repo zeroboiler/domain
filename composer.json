@@ -18,20 +18,20 @@
     ],
     "repositories": [
         {
-            "type": "path",
-            "url": "../dto"
+            "type": "vcs",
+            "url": "https://github.com/zeroboiler/dto.git"
         },
         {
-            "type": "path",
-            "url": "../enums"
+            "type": "vcs",
+            "url": "https://github.com/zeroboiler/enums.git"
         },
         {
-            "type": "path",
-            "url": "../events"
+            "type": "vcs",
+            "url": "https://github.com/zeroboiler/events.git"
         },
         {
-            "type": "path",
-            "url": "../value-objects"
+            "type": "vcs",
+            "url": "https://github.com/zeroboiler/value-objects.git"
         }
     ],
     "require": {

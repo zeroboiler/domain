@@ -23,6 +23,10 @@ jobs:
           extensions: mbstring, ctype, json, bcmath
           tools: composer:v2
 
+
+      - name: Configure composer auth
+        run: composer config -g github-oauth.github.com ${{ secrets.COMPOSER_TOKEN }}
+
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-suggest
 
@@ -50,6 +54,10 @@ jobs:
           php-version: '8.5'
           extensions: mbstring, ctype, json, bcmath
           tools: composer:v2, pint, phpstan, rector, pest
+
+
+      - name: Configure composer auth
+        run: composer config -g github-oauth.github.com ${{ secrets.COMPOSER_TOKEN }}
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-suggest
