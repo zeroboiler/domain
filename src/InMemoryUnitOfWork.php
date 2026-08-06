@@ -16,7 +16,7 @@ use ZeroBoiler\Domain\Contracts\UnitOfWork as UnitOfWorkContract;
 use ZeroBoiler\Events\Domain\DomainEvent;
 
 /**
- * In-memory UnitOfWork implementation with domain event integration.
+ * In-memory Unit of Work implementation with domain event integration.
  *
  * Provides transactional semantics for aggregate operations:
  * - Domain events raised during a transaction are queued
@@ -28,21 +28,42 @@ use ZeroBoiler\Events\Domain\DomainEvent;
  * All events — regardless of which scope they were queued in — share
  * a single ordered list, ensuring dispatch order matches raise order.
  *
- * BUG-1-R39 FIX: Event collection is non-destructive. Events raised before
- * track() are NOT pulled from the aggregate — they are peeked. This means
- * if a transaction is rolled back, the aggregate still retains its events
- * and can be re-tracked in a new transaction without data loss.
+ * Snapshot-based rollback (ISSUE-#7): When tracking an aggregate, a clone
+ * is captured. On rollback, non-readonly properties are restored from the
+ * clone, preventing dirty objects from leaking after a failed transaction.
  *
- * IMP-1-R39 FIX: At commit time, all tracked aggregates are re-checked for
- * events raised after track() was called. This eliminates the need for
- * manual queueEvent() calls for post-track events.
+ * Persistence callback (ISSUE-#7): An optional persistence callback can
+ * be set via `setPersistenceCallback()`. It is invoked at commit time
+ * (outermost scope) BEFORE event dispatch so aggregates are durably
+ * stored before consumers react to events.
  *
- * ISSUE-#7 FIX: Transactional safety via snapshot-based rollback.
- * - track() now clones the aggregate so rollback can restore its state.
- * - commit() invokes an optional persistence callback for integration
- *   with real persistence layers.
- * - rollback() restores aggregate state from snapshots, preventing dirty
- *   objects from leaking after a failed transaction.
+ * @implements UnitOfWork
+ *
+ * @example
+ * ```php
+ * $uow = app(UnitOfWork::class);
+ *
+ * // Transactional with auto-commit/rollback
+ * $result = $uow->run(function () use ($repository, $id) {
+ *     $order = $repository->find($id);
+ *     $order->pay(100.00);
+ *     $repository->save($order);
+ *     return $order;
+ * });
+ * // Events dispatched automatically on commit
+ *
+ * // Manual transaction control
+ * $uow->begin();
+ * $uow->track($aggregate);
+ * $uow->commit();
+ *
+ * // With persistence callback
+ * $uow->setPersistenceCallback(function (array $committed, array $deleted): void {
+ *     foreach ($committed as $aggregate) {
+ *         DB::table('aggregates')->upsert([...]);
+ *     }
+ * });
+ * ```
  */
 class InMemoryUnitOfWork implements UnitOfWorkContract
 {
