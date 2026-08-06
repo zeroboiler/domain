@@ -932,6 +932,12 @@ class SmallAggregate extends AggregateRoot { ... }
 
 ## Changelog
 
+### v2.12.0 (2026-08-06)
+
+- Fix: Correct README license from "MIT" to "Proprietary" (matches code headers)
+- Test: Add `DomainProductionSerdeTest` — round-trip serialization for all identifiers, snapshots, event collections, cross-type safety, and legacy Identifier JSON
+- Test: Add `ProductionSerdeTest` for response package — `fromJson()` edge cases, wrap/unwrap behavior, JSON:API spec compliance, error field filtering, static factories, toArray consistency, DomainTransformer contract enforcement
+
 ### v2.11.0 (2026-08-06)
 
 - Feat: Add `JsonSerializable` to legacy `Identifier` class for consistent JSON serialization across all identifier types
@@ -983,4 +989,4 @@ class SmallAggregate extends AggregateRoot { ... }
 
 ## License
 
-MIT
+Proprietary
