@@ -13,7 +13,38 @@ namespace ZeroBoiler\Domain\Snapshots;
  *
  * Implementations: database, Redis, file-based, in-memory.
  *
+ * The snapshot store is used by {@see SnapshottingRepository} to persist
+ * and retrieve aggregate state snapshots, reducing the number of events
+ * that need to be replayed on aggregate reconstitution.
+ *
  * @see Snapshot
+ * @see SnapshottingRepository
+ * @see InMemorySnapshotStore Default in-memory implementation for testing
+ *
+ * @example
+ * ```php
+ * // Custom Redis implementation
+ * final class RedisSnapshotStore implements SnapshotStore
+ * {
+ *     public function __construct(private readonly \Redis $redis) {}
+ *
+ *     public function load(string $aggregateType, string $aggregateId): ?Snapshot
+ *     {
+ *         $data = $this->redis->get("snapshot:{$aggregateType}:{$aggregateId}");
+ *         return $data !== false ? Snapshot::fromArray(json_decode($data, true)) : null;
+ *     }
+ *
+ *     public function save(Snapshot $snapshot): void
+ *     {
+ *         $this->redis->set(
+ *             "snapshot:{$snapshot->aggregateType}:{$snapshot->aggregateId}",
+ *             json_encode($snapshot->toArray()),
+ *         );
+ *     }
+ *
+ *     // ... implement remaining methods
+ * }
+ * ```
  */
 interface SnapshotStore
 {

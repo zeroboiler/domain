@@ -15,20 +15,63 @@ use ZeroBoiler\Domain\Snapshots\SnapshotStore;
 /**
  * Provides snapshot serialization for event-sourced aggregate roots.
  *
- * Usage:
- *   ```php
- *   #[SnapshotPolicy(every: 50)]
- *   class Order extends AggregateRoot
- *   {
- *       use HasSnapshots;
- *   }
- *   ```
+ * When used with {@see EventSourced}, enables efficient aggregate reconstitution
+ * by periodically persisting aggregate state as a snapshot. On reload, only
+ * events after the snapshot version need to be replayed.
+ *
+ * Requires the aggregate to use the {@see EventSourced} trait and be decorated
+ * with a {@see SnapshotPolicy} attribute for automatic snapshot management.
  *
  * The trait provides:
- * - `toSnapshotState()` — Override to define what state to persist
- * - `restoreFromSnapshot()` — Override to restore state from snapshot
+ * - `toSnapshotState()` — Serialize aggregate state (override for custom logic)
+ * - `restoreFromSnapshotState()` — Restore state from array (override for custom logic)
+ * - `restoreFromSnapshot()` — Restore from a Snapshot object + set version
  * - `shouldSnapshot()` — Checks if snapshot is due (based on #[SnapshotPolicy])
- * - `createSnapshot()` — Creates and stores a snapshot
+ * - `createSnapshot()` — Creates and stores a snapshot via SnapshotStore
+ * - `getSnapshotPolicy()` — Reads the #[SnapshotPolicy] attribute from the class
+ *
+ * @see EventSourced
+ * @see SnapshotPolicy
+ * @see Snapshot
+ * @see SnapshottingRepository
+ * @see InMemorySnapshotStore
+ *
+ * @example
+ * ```php
+ * use ZeroBoiler\Domain\AggregateRoot;
+ * use ZeroBoiler\Domain\Concerns\EventSourced;
+ * use ZeroBoiler\Domain\Concerns\HasSnapshots;
+ * use ZeroBoiler\Domain\Snapshots\SnapshotPolicy;
+ *
+ * #[SnapshotPolicy(every: 50)]
+ * class Order extends AggregateRoot
+ * {
+ *     use EventSourced;
+ *     use HasSnapshots;
+ *
+ *     public string $status = 'pending';
+ *     public float $total = 0.0;
+ *
+ *     // Snapshots are automatically created every 50 events
+ *     // by SnapshottingRepository::save()
+ *
+ *     // Override toSnapshotState() for custom serialization:
+ *     // public function toSnapshotState(): array
+ *     // {
+ *     //     return [
+ *     //         'status' => $this->status,
+ *     //         'total' => $this->total,
+ *     //     ];
+ *     // }
+ *
+ *     // Override restoreFromSnapshotState() for custom restoration:
+ *     // public function restoreFromSnapshotState(array $state): void
+ *     // {
+ *     //     $this->status = $state['status'];
+ *     //     $this->total = $state['total'];
+ *     // }
+ * }
+ * ```
  */
 trait HasSnapshots
 {

@@ -932,6 +932,14 @@ class SmallAggregate extends AggregateRoot { ... }
 
 ## Changelog
 
+### v1.3.0 (2026-08-06)
+
+- Test: Add `DomainModelProductionTest` — comprehensive production-ready tests covering all identifiers (UUID, ULID, String, Integer), entity equality, AggregateRoot event recording/versioning, DomainEventCollection operations, Unit of Work (declarative/manual/nested/rollback/event queuing), Snapshot round-trip/JSON serialization, InMemorySnapshotStore operations (CRUD/purge/deleteOlderThan), ValueObject equality/fromArray/toArray round-trip, and domain exception hierarchy
+- Docs: Enrich `SnapshotStore` interface — add `@see` references to SnapshottingRepository and InMemorySnapshotStore, add Redis implementation `@example`
+- Docs: Enrich `HasSnapshots` trait — comprehensive docblock with all method descriptions, `@see`/`@example` annotations, and override guidance
+- Docs: Enrich `SnapshotPolicy` attribute — fix incorrect `@see` reference, add `@example` for every 50/100/disable configurations
+- Bump: Version 1.2.0 → 1.3.0
+
 ### v2.12.0 (2026-08-06)
 
 - Fix: Correct README license from "MIT" to "Proprietary" (matches code headers)
