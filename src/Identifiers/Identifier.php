@@ -32,6 +32,15 @@ use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
  */
 abstract class Identifier implements IdentifierContract
 {
+    /**
+     * The underlying Ramsey UUID value.
+     *
+     * Note: This property is public for backward compatibility with the
+     * deprecated Identifier base class. New code should use {@see UuidIdentifier}
+     * instead, which keeps the value truly readonly.
+     *
+     * @deprecated Use {@see UuidIdentifier::value} instead.
+     */
     public UuidInterface $value;
 
     /**

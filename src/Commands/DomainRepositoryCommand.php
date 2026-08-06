@@ -21,6 +21,7 @@ final class DomainRepositoryCommand extends GeneratorCommand
     #[\Override]
     protected $type = 'Repository';
 
+    #[\Override]
     protected function getStub(): string
     {
         return __DIR__ . '/../stubs/repository.stub';

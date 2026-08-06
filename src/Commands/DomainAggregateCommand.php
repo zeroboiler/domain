@@ -20,6 +20,7 @@ final class DomainAggregateCommand extends GeneratorCommand
     #[\Override]
     protected $type = 'Aggregate';
 
+    #[\Override]
     protected function getStub(): string
     {
         return __DIR__ . '/../stubs/aggregate.stub';

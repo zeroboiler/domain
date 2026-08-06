@@ -15,7 +15,7 @@ use ZeroBoiler\Domain\Contracts\Repository;
 // When zeroboiler/observability is not installed, the #[Trace] attribute
 // must still be available since SnapshottingRepository uses it on methods.
 // This stub file provides a no-op fallback.
-if (! class_exists(Trace::class)) {
+if (! class_exists(\ZeroBoiler\Observability\Trace::class)) {
     require_once __DIR__ . '/../../stubs/Trace.php';
 }
 
