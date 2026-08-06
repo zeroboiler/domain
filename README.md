@@ -514,6 +514,78 @@ if ($persistedVersion !== $aggregate->version()) {
 }
 ```
 
+### InMemorySnapshotStore API
+
+```php
+use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
+
+$store = new InMemorySnapshotStore();
+
+// Basic operations
+$store->save($snapshot);
+$loaded = $store->load(Order::class, $orderId);
+$store->has(Order::class, $orderId);    // bool
+$store->delete(Order::class, $orderId);
+
+// Lifecycle management
+$store->deleteOlderThan(Order::class, $orderId, 100);
+$store->count();                          // Total snapshots
+$store->count(Order::class);              // Type-filtered count
+$store->stats();                          // ['total' => 5, 'by_type' => [...]]
+$store->purge(Order::class);              // Purge type + return removed count
+$store->purge();                          // Purge all
+$store->clear();                          // Alias of purge()
+```
+
+### InMemoryUnitOfWork API
+
+```php
+use ZeroBoiler\Domain\Contracts\UnitOfWork;
+use ZeroBoiler\Domain\InMemoryUnitOfWork;
+use ZeroBoiler\Events\Domain\DomainEvent;
+
+$uow = app(UnitOfWork::class);
+
+// Transaction lifecycle
+$uow->begin();
+$uow->track($aggregate);
+$uow->isTracking($aggregate);             // bool
+$uow->markForDeletion($aggregate);
+$uow->commit();                           // Persists + dispatches events
+$uow->rollback();                         // Restores aggregate state
+
+// Declarative transaction
+$result = $uow->run(fn () => $order);      // Auto begin/commit/rollback
+
+// Event management
+$uow->queueEvent(DomainEvent::occur('side.effect', []));
+$uow->hasPendingEvents();                  // bool
+$uow->getPendingEventCount();              // int
+
+// Inspection
+$uow->isActive();                          // bool
+$uow->getCommitted();                      // array<string, AggregateRoot>
+$uow->getDeleted();                        // array<string, AggregateRoot>
+
+// Persistence callback (for custom storage)
+$uow->setPersistenceCallback(function (array $committed, array $deleted): void {
+    foreach ($committed as $aggregate) {
+        $this->repository->save($aggregate);
+    }
+    foreach ($deleted as $aggregate) {
+        $this->repository->delete($aggregate->id());
+    }
+});
+
+// Event dispatcher override
+$uow->setEventDispatcher(function (DomainEvent $event): void {
+    event($event);                          // Laravel event dispatcher
+});
+
+// Reset state (for testing)
+$uow->clear();                             // Resets everything to initial state
+```
+
 ### CLI Commands
 
 ```bash
