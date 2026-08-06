@@ -551,17 +551,17 @@ $store->purge(Order::class);              // Purge all Order snapshots
 
 ```
 Exception
-└── DomainException (abstract)
-    ├── InvalidStateDomainException       — entity/aggregate state violation
-    ├── InvalidArgumentDomainException    — domain argument validation failure
-    ├── NotFoundDomainException           — aggregate/entity not found
+└── DomainException (abstract, provides errorCode())
+    ├── InvalidStateDomainException       — entity/aggregate state violation (code: INVALID_STATE)
+    ├── InvalidArgumentDomainException    — domain argument validation failure (code: INVALID_ARGUMENT)
+    ├── NotFoundDomainException           — aggregate/entity not found (code: NOT_FOUND)
     │   └── forAggregate(type, id)        — typed not-found helper
-    ├── ConflictDomainException          — concurrent write-write conflict
-    ├── OptimisticLockException          — stale aggregate version detected
+    ├── ConflictDomainException          — concurrent write-write conflict (code: CONFLICT)
+    ├── OptimisticLockException          — stale aggregate version detected (code: OPTIMISTIC_LOCK)
     │   └── for(id, expected, actual)     — typed lock failure helper
-    ├── AggregateNotFoundException         — repository lookup returned null
+    ├── AggregateNotFoundException         — repository lookup returned null (code: AGGREGATE_NOT_FOUND)
     │   └── for(type, id)                 — typed not-found helper
-    └── InvalidAggregateRootException     — object is not an AggregateRoot
+    └── InvalidAggregateRootException     — object is not an AggregateRoot (code: INVALID_AGGREGATE_ROOT)
         └── notAnAggregate(object)         — validation helper
 
 Exception (standalone, outside domain)
@@ -603,9 +603,30 @@ if ($persistedVersion !== $aggregate->version()) {
     );
 }
 
+// Custom error codes for API consumers:
+throw InvalidStateDomainException::because(
+    'Order must be pending to pay.',
+    code: 'ORDER_NOT_PENDING',
+);
+
+// Machine-readable error code in API responses:
+try {
+    $order->pay($amount);
+} catch (DomainException $e) {
+    $e->errorCode(); // 'INVALID_STATE' or 'ORDER_NOT_PENDING'
+    Response::error(409, 'Invalid State', $e->getMessage())
+        ->withMeta(['code' => $e->errorCode()])
+        ->send();
+}
+
 // Custom domain exception — extend for business-specific violations
 final class OrderAlreadyShippedException extends DomainException
 {
+    protected function defaultErrorCode(): string
+    {
+        return 'ORDER_ALREADY_SHIPPED';
+    }
+
     public static function forOrder(string $orderId): self
     {
         return new self("Order {$orderId} has already been shipped.");
@@ -862,16 +883,16 @@ composer quality           # Pint + PHPStan + Rector + Tests
 
 ### Exceptions
 
-| Exception | Factory | When to Use |
-|---|---|---|
-| `DomainException` | (abstract base) | Extend for business-specific violations |
-| `InvalidStateDomainException` | `::because($reason)` | Entity/aggregate in wrong state |
-| `InvalidArgumentDomainException` | `::because($reason)` | Input fails domain validation |
-| `NotFoundDomainException` | `::because()`, `::forAggregate()` | Expected resource missing |
-| `AggregateNotFoundException` | `::for($type, $id)` | Repository lookup returned null |
-| `ConflictDomainException` | `::because($reason)` | Concurrent write-write conflict |
-| `OptimisticLockException` | `::for($id, $expected, $actual)` | Stale version on save |
-| `InvalidAggregateRootException` | `::notAnAggregate($obj)` | Object is not an AggregateRoot |
+| Exception | Factory | Default Code | When to Use |
+|---|---|---|---|
+| `DomainException` | (abstract base) | `DOMAIN_ERROR` | Extend for business-specific violations |
+| `InvalidStateDomainException` | `::because($reason, $code?)` | `INVALID_STATE` | Entity/aggregate in wrong state |
+| `InvalidArgumentDomainException` | `::because($reason, $code?)` | `INVALID_ARGUMENT` | Input fails domain validation |
+| `NotFoundDomainException` | `::because()`, `::forAggregate()` | `NOT_FOUND` | Expected resource missing |
+| `AggregateNotFoundException` | `::for($type, $id, $code?)` | `AGGREGATE_NOT_FOUND` | Repository lookup returned null |
+| `ConflictDomainException` | `::because($reason, $code?)` | `CONFLICT` | Concurrent write-write conflict |
+| `OptimisticLockException` | `::for($id, $expected, $actual, $code?)` | `OPTIMISTIC_LOCK` | Stale version on save |
+| `InvalidAggregateRootException` | `::notAnAggregate($obj, $code?)` | `INVALID_AGGREGATE_ROOT` | Object is not an AggregateRoot |
 
 ## Best Practices
 
@@ -931,6 +952,12 @@ class SmallAggregate extends AggregateRoot { ... }
 ```
 
 ## Changelog
+
+### v1.6.0 (2026-08-06)
+
+- Feat: Add machine-readable `errorCode()` method to all domain exceptions (INVALID_STATE, INVALID_ARGUMENT, NOT_FOUND, CONFLICT, OPTIMISTIC_LOCK, AGGREGATE_NOT_FOUND, INVALID_AGGREGATE_ROOT)
+- Feat: Domain exception factories accept optional `$code` parameter for custom machine-readable error codes
+- Test: Add `DomainErrorCodeTest` — comprehensive tests for default error codes, custom codes, uniqueness, stability, naming convention, and independence
 
 ### v1.5.0 (2026-08-06)
 

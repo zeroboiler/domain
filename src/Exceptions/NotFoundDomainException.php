@@ -18,18 +18,27 @@ namespace ZeroBoiler\Domain\Exceptions;
  * ```php
  * throw NotFoundDomainException::because('User not found with ID: ' . $id);
  * throw NotFoundDomainException::forAggregate('Order', $orderId);
+ *
+ * // With error code:
+ * $e->errorCode(); // 'NOT_FOUND'
  * ```
  */
 final class NotFoundDomainException extends DomainException
 {
+    protected function defaultErrorCode(): string
+    {
+        return 'NOT_FOUND';
+    }
+
     /**
      * Create an exception with a human-readable reason.
      *
      * @param  string  $reason  Description of what was not found and why.
+     * @param  string  $code  Optional machine-readable error code.
      */
-    public static function because(string $reason): self
+    public static function because(string $reason, string $code = ''): self
     {
-        return new self($reason);
+        return new self($reason, 0, null, $code);
     }
 
     /**
@@ -40,11 +49,15 @@ final class NotFoundDomainException extends DomainException
      *
      * @param  string  $aggregateType  The FQCN or human-readable name of the aggregate.
      * @param  string  $aggregateId    The identifier that was searched for.
+     * @param  string  $code  Optional machine-readable error code.
      */
-    public static function forAggregate(string $aggregateType, string $aggregateId): self
+    public static function forAggregate(string $aggregateType, string $aggregateId, string $code = ''): self
     {
         return new self(
             sprintf('Aggregate "%s" with ID "%s" was not found.', $aggregateType, $aggregateId),
+            0,
+            null,
+            $code,
         );
     }
 }

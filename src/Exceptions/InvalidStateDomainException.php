@@ -17,15 +17,31 @@ namespace ZeroBoiler\Domain\Exceptions;
  * @example
  * ```php
  * throw InvalidStateDomainException::because('Order must be pending to pay.');
+ *
+ * // With error code:
+ * $e->errorCode(); // 'INVALID_STATE'
+ *
+ * // In API response:
+ * Response::error(409, 'Invalid State', $e->getMessage())
+ *     ->withMeta(['code' => $e->errorCode()])
+ *     ->send();
  * ```
  */
 final class InvalidStateDomainException extends DomainException
 {
+    protected function defaultErrorCode(): string
+    {
+        return 'INVALID_STATE';
+    }
+
     /**
      * Create an exception with a human-readable reason.
+     *
+     * @param  string  $reason  Description of the invalid state.
+     * @param  string  $code  Optional machine-readable error code.
      */
-    public static function because(string $reason): self
+    public static function because(string $reason, string $code = ''): self
     {
-        return new self($reason);
+        return new self($reason, 0, null, $code);
     }
 }

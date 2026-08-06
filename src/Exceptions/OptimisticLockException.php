@@ -24,14 +24,31 @@ namespace ZeroBoiler\Domain\Exceptions;
  *         actualVersion: $persistedVersion,
  *     );
  * }
+ *
+ * // With error code:
+ * $e->errorCode(); // 'OPTIMISTIC_LOCK'
  * ```
  */
 final class OptimisticLockException extends DomainException
 {
+    protected function defaultErrorCode(): string
+    {
+        return 'OPTIMISTIC_LOCK';
+    }
+
+    /**
+     * Create an optimistic lock exception with typed parameters.
+     *
+     * @param  string  $aggregateId  The identity of the conflicting aggregate.
+     * @param  int  $expectedVersion  The version the caller expected.
+     * @param  int  $actualVersion  The version found in storage.
+     * @param  string  $code  Optional machine-readable error code.
+     */
     public static function for(
         string $aggregateId,
         int $expectedVersion,
         int $actualVersion,
+        string $code = '',
     ): self {
         return new self(
             sprintf(
@@ -41,6 +58,9 @@ final class OptimisticLockException extends DomainException
                 $expectedVersion,
                 $actualVersion,
             ),
+            0,
+            null,
+            $code,
         );
     }
 }

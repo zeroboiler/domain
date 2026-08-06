@@ -17,15 +17,31 @@ namespace ZeroBoiler\Domain\Exceptions;
  * @example
  * ```php
  * throw InvalidArgumentDomainException::because('Quantity must be positive.');
+ *
+ * // With error code:
+ * $e->errorCode(); // 'INVALID_ARGUMENT'
+ *
+ * // In API response:
+ * Response::error(422, 'Validation Error', $e->getMessage())
+ *     ->withMeta(['code' => $e->errorCode()])
+ *     ->send();
  * ```
  */
 final class InvalidArgumentDomainException extends DomainException
 {
+    protected function defaultErrorCode(): string
+    {
+        return 'INVALID_ARGUMENT';
+    }
+
     /**
      * Create an exception with a human-readable reason.
+     *
+     * @param  string  $reason  Description of the validation failure.
+     * @param  string  $code  Optional machine-readable error code.
      */
-    public static function because(string $reason): self
+    public static function because(string $reason, string $code = ''): self
     {
-        return new self($reason);
+        return new self($reason, 0, null, $code);
     }
 }

@@ -19,15 +19,26 @@ namespace ZeroBoiler\Domain\Exceptions;
  * @example
  * ```php
  * throw ConflictDomainException::because('Concurrent modification detected.');
+ *
+ * // With error code:
+ * $e->errorCode(); // 'CONFLICT'
  * ```
  */
 final class ConflictDomainException extends DomainException
 {
+    protected function defaultErrorCode(): string
+    {
+        return 'CONFLICT';
+    }
+
     /**
      * Create an exception with a human-readable reason.
+     *
+     * @param  string  $reason  Description of the conflict.
+     * @param  string  $code  Optional machine-readable error code.
      */
-    public static function because(string $reason): self
+    public static function because(string $reason, string $code = ''): self
     {
-        return new self($reason);
+        return new self($reason, 0, null, $code);
     }
 }
