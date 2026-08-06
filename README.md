@@ -190,6 +190,79 @@ class OrderItem extends Entity
 }
 ```
 
+### Value Objects
+
+```php
+use ZeroBoiler\Domain\ValueObject;
+
+// Domain value objects extend zeroboiler/value-objects BaseValueObject
+// with domain-level equality checking (toArray-based comparison).
+class Address extends ValueObject
+{
+    public function __construct(
+        public readonly string $street,
+        public readonly string $city,
+        public readonly string $country,
+    ) {}
+
+    public static function fromArray(array $data): static
+    {
+        return new static(
+            street: $data['street'],
+            city: $data['city'],
+            country: $data['country'],
+        );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'street' => $this->street,
+            'city' => $this->city,
+            'country' => $this->country,
+        ];
+    }
+}
+
+// Usage
+$address = Address::fromArray(['street' => '123 Main', 'city' => 'NYC', 'country' => 'US']);
+$address->equals($otherAddress);  // true if all fields match
+$address->toArray();               // ['street' => '123 Main', 'city' => 'NYC', 'country' => 'US']
+```
+
+### Domain Event Collection
+
+```php
+use ZeroBoiler\Domain\DomainEventCollection;
+use ZeroBoiler\Events\Domain\DomainEvent;
+
+$collection = new DomainEventCollection([$event1, $event2, $event3]);
+
+// Basic operations
+$collection->count();      // 3
+$collection->isEmpty();     // false
+$collection->all();         // [DomainEvent, DomainEvent, DomainEvent]
+$collection->get(1);        // $event2 (index-based)
+$collection->first();       // $event1
+$collection->last();        // $event3
+
+// Functional operations
+$types = $collection->map(fn (DomainEvent $e, int $i): string => $e->eventType);
+// ['order.placed', 'order.paid', 'order.shipped']
+
+$paidEvents = $collection->filter(
+    fn (DomainEvent $e): bool => str_starts_with($e->eventType, 'order.paid')
+);
+
+// Merging collections
+$merged = $collection->merge([$event4, $event5]);
+// New DomainEventCollection with all 5 events
+
+// JSON serialization
+echo json_encode($collection);
+// [[...], [...], [...]] — each event serialized via toArray()/jsonSerialize()
+```
+
 ### Identifiers
 
 ```php
@@ -725,6 +798,11 @@ composer quality           # Pint + PHPStan + Rector + Tests
 ```
 
 ## Changelog
+
+### v2.7.0 (2026-08-06)
+
+- Docs: Add Value Object usage example with `fromArray()`/`toArray()`/`equals()`
+- Docs: Add DomainEventCollection advanced usage — `map()`, `filter()`, `first()`, `last()`, `merge()`, `get()`, JSON serialization
 
 ### v2.6.0 (2026-08-06)
 
