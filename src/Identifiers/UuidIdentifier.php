@@ -31,6 +31,7 @@ use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
  * $id = OrderId::fromString('...');  // Parse existing UUID
  * $id->equals($otherId);             // Type-safe equality
  * $id->toUuid();                      // Ramsey UuidInterface
+ * $id->isValid('not-a-uuid');         // false
  * ```
  */
 abstract readonly class UuidIdentifier implements IdentifierContract, JsonSerializable
@@ -57,6 +58,17 @@ abstract readonly class UuidIdentifier implements IdentifierContract, JsonSerial
     public static function generate(): static
     {
         return new static(RamseyUuid::uuid4()->toString());
+    }
+
+    /**
+     * Validate whether a string is a valid UUID without throwing.
+     *
+     * @param  string  $value  The string to validate.
+     * @return bool True if the string is a valid UUID.
+     */
+    public static function isValid(string $value): bool
+    {
+        return RamseyUuid::isValid($value);
     }
 
     /**

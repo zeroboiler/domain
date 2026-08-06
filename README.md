@@ -275,17 +275,21 @@ use ZeroBoiler\Domain\Identifiers\IntegerIdentifier;
 class OrderId extends UuidIdentifier {}
 $orderId = OrderId::generate();           // random UUID v4
 $orderId = OrderId::fromString('...');     // parse existing UUID
+$orderId->isValid('not-a-uuid');           // false — pre-validate without throwing
 
 // ULID
 class ProductId extends UlidIdentifier {}
 $productId = ProductId::generate();        // monotonic ULID
 $productId->toUlid();                     // Symfony ULID object
+$productId->isValid('not-a-ulid');         // false — pre-validate without throwing
 
 // String
 $slug = StringIdentifier::from('my-post');
+$slug->isValid('');                          // false — empty not allowed
 
 // Integer
 $id = IntegerIdentifier::from(42);
+$id->isValid('abc');                         // false
 ```
 
 ### Repository
@@ -858,8 +862,8 @@ composer quality           # Pint + PHPStan + Rector + Tests
 
 | Class | Type | Underlying | Key Methods |
 |---|---|---|---|
-| `UuidIdentifier` | abstract readonly | String (validated UUID v4) | `generate()`, `fromString()`, `toUuid()`, `equals()` |
-| `UlidIdentifier` | abstract readonly | String (validated ULID) | `generate()`, `fromString()`, `toUlid()`, `equals()` |
+| `UuidIdentifier` | abstract readonly | String (validated UUID v4) | `generate()`, `fromString()`, `isValid()`, `toUuid()`, `equals()` |
+| `UlidIdentifier` | abstract readonly | String (validated ULID) | `generate()`, `fromString()`, `isValid()`, `toUlid()`, `equals()` |
 | `StringIdentifier` | readonly | String (non-empty) | `from()`, `fromString()`, `isValid()`, `equals()` |
 | `IntegerIdentifier` | final readonly | Int | `from()`, `fromString()`, `toInt()`, `isValid()`, `equals()` |
 
@@ -952,6 +956,14 @@ class SmallAggregate extends AggregateRoot { ... }
 ```
 
 ## Changelog
+
+### v1.9.0 (2026-08-06)
+
+- Feat: Add `UuidIdentifier::isValid()` static method — pre-validate UUID strings without throwing (parity with `UlidIdentifier::isValid()`, `StringIdentifier::isValid()`, `IntegerIdentifier::isValid()`)
+- Feat: Add `Snapshot::equals()` method — structural equality comparison for snapshot objects (type, ID, version, state)
+- Test: Add `DomainProductionAdditionsTest` — comprehensive tests for Snapshot::equals(), UuidIdentifier::isValid(), identifier parity, cross-type inequality, JSON serialization consistency, DomainEventCollection edge cases, Entity ID type coverage, ValueObject edge cases, and DomainException errorCode consistency
+- Docs: Add `isValid()` usage examples to Identifiers section
+- Docs: Update Quick Reference table with `isValid()` for all identifier types
 
 ### v1.8.0 (2026-08-06)
 

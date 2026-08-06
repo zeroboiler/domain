@@ -121,4 +121,21 @@ final readonly class Snapshot implements \JsonSerializable
     {
         return $this->toArray();
     }
+
+    /**
+     * Check equality with another snapshot.
+     *
+     * Two snapshots are equal if they represent the same aggregate type,
+     * aggregate ID, version, and state.
+     *
+     * @param  self  $other  The snapshot to compare against.
+     * @return bool True if both snapshots have identical content.
+     */
+    public function equals(self $other): bool
+    {
+        return $this->aggregateType === $other->aggregateType
+            && $this->aggregateId === $other->aggregateId
+            && $this->version === $other->version
+            && $this->state === $other->state;
+    }
 }
