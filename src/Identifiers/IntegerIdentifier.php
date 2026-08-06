@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Domain\Identifiers;
 
+use JsonSerializable;
 use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
 
 /**
@@ -24,9 +25,11 @@ use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
  * $id->toString();     // '42'
  * $id->toInt();        // 42
  * $id->isValid('abc'); // false
+ * echo json_encode(['order_id' => $id]);
+ * // → {"order_id": 42}
  * ```
  */
-final readonly class IntegerIdentifier implements IdentifierContract
+final readonly class IntegerIdentifier implements IdentifierContract, JsonSerializable
 {
     /**
      * Create an integer identifier.
@@ -99,6 +102,18 @@ final readonly class IntegerIdentifier implements IdentifierContract
     public function equals(IdentifierContract $other): bool
     {
         return $other instanceof IntegerIdentifier && $this->value === $other->value;
+    }
+
+    /**
+     * Serialize the identifier to JSON.
+     *
+     * Returns the integer value directly for clean API serialization.
+     *
+     * @return int The integer value.
+     */
+    public function jsonSerialize(): int
+    {
+        return $this->value;
     }
 
     /**

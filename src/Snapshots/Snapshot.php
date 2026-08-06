@@ -12,8 +12,18 @@ namespace ZeroBoiler\Domain\Snapshots;
  * Immutable snapshot of an aggregate root's state at a specific version.
  *
  * @see https://martinfowler.com/eaaDev/EventSourcing.html
+ *
+ * @implements \JsonSerializable
+ *
+ * @example
+ * ```php
+ * $snapshot = Snapshot::create(Order::class, $id, 50, $state);
+ * $snapshot->toArray();          // Serialize for storage
+ * $snapshot = Snapshot::fromArray($data); // Restore from storage
+ * json_encode($snapshot);       // JSON serialization
+ * ```
  */
-final readonly class Snapshot
+final readonly class Snapshot implements \JsonSerializable
 {
     /**
      * @param  string  $aggregateType  The FQCN of the aggregate root class.
@@ -98,5 +108,17 @@ final readonly class Snapshot
             state: $state,
             createdAt: new \DateTimeImmutable($createdAt),
         );
+    }
+
+    /**
+     * Serialize the snapshot to JSON.
+     *
+     * Delegates to toArray() for consistent JSON representation.
+     *
+     * @return array<string, mixed>
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->toArray();
     }
 }

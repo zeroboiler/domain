@@ -11,17 +11,30 @@ namespace ZeroBoiler\Domain;
 use ArrayIterator;
 use Countable;
 use IteratorAggregate;
+use JsonSerializable;
 use Traversable;
 use ZeroBoiler\Events\Domain\DomainEvent;
 
 /**
  * Type-safe collection for domain events.
  *
- * Provides iteration, counting, and array access for DomainEvent objects.
+ * Provides iteration, counting, array access, and JSON serialization
+ * for DomainEvent objects.
  *
  * @implements IteratorAggregate<int, DomainEvent>
+ * @implements JsonSerializable
+ *
+ * @example
+ * ```php
+ * $collection = new DomainEventCollection([$event1, $event2]);
+ * $collection->count();      // 2
+ * $collection->isEmpty();     // false
+ * $collection->all();         // [DomainEvent, DomainEvent]
+ * json_encode($collection);  // [[...], [...]]
+ * foreach ($collection as $event) { ... }
+ * ```
  */
-final readonly class DomainEventCollection implements Countable, IteratorAggregate
+final readonly class DomainEventCollection implements Countable, IteratorAggregate, JsonSerializable
 {
     /**
      * @param  list<DomainEvent>  $events
@@ -66,5 +79,31 @@ final readonly class DomainEventCollection implements Countable, IteratorAggrega
     public function isEmpty(): bool
     {
         return $this->events === [];
+    }
+
+    /**
+     * Serialize the event collection to JSON.
+     *
+     * Converts each event to an array. Uses toArray() if available,
+     * otherwise falls back to casting to array for maximum compatibility.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function jsonSerialize(): array
+    {
+        return array_map(
+            static function (DomainEvent $event): array {
+                if (method_exists($event, 'toArray')) {
+                    return $event->toArray();
+                }
+
+                if (method_exists($event, 'jsonSerialize')) {
+                    return $event->jsonSerialize();
+                }
+
+                return (array) $event;
+            },
+            $this->events,
+        );
     }
 }

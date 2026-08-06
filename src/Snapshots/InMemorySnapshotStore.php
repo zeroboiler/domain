@@ -12,6 +12,17 @@ namespace ZeroBoiler\Domain\Snapshots;
  * In-memory snapshot store for testing and development.
  *
  * Stores snapshots keyed by aggregate type + ID, keeping only the latest.
+ * Not suitable for production — use a persistent store (database, Redis)
+ * in production environments.
+ *
+ * @example
+ * ```php
+ * $store = new InMemorySnapshotStore();
+ * $store->save($snapshot);
+ * $loaded = $store->load(Order::class, $orderId);
+ * $store->count();           // 1
+ * $store->stats();           // ['total' => 1, 'by_type' => ['Order' => 1]]
+ * ```
  */
 final class InMemorySnapshotStore implements SnapshotStore
 {

@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Domain;
 
+use JsonSerializable;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
@@ -19,6 +20,7 @@ use Ramsey\Uuid\UuidInterface;
  * interoperability with the broader UUID ecosystem.
  *
  * @implements \Stringable
+ * @implements JsonSerializable
  *
  * @example
  * ```php
@@ -26,9 +28,11 @@ use Ramsey\Uuid\UuidInterface;
  * $id = AggregateRootId::fromString('...');   // Parse existing UUID
  * $id->toString();                             // '550e8400-e29b-41d4-...'
  * $id->equals($otherId);                      // Type-safe equality
+ * echo json_encode(['order_id' => $id]);
+ * // → {"order_id": "550e8400-e29b-41d4-a716-446655440000"}
  * ```
  */
-final readonly class AggregateRootId implements \Stringable
+final readonly class AggregateRootId implements \Stringable, JsonSerializable
 {
     public function __construct(public UuidInterface $value) {}
 
@@ -74,6 +78,16 @@ final readonly class AggregateRootId implements \Stringable
     public function equals(AggregateRootId $other): bool
     {
         return $this->value->equals($other->value);
+    }
+
+    /**
+     * Serialize the identifier to JSON.
+     *
+     * @return string The UUID as a canonical string.
+     */
+    public function jsonSerialize(): string
+    {
+        return $this->toString();
     }
 
     /**
