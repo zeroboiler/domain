@@ -15,6 +15,31 @@ use ZeroBoiler\Events\Domain\DomainEvent;
  *
  * Events are stored in an internal array and can be pulled (destructive)
  * or peeked (non-destructive) depending on the use case.
+ *
+ * @see HasSnapshots For snapshot support on event-sourced aggregates.
+ * @see EventSourced For reconstituting aggregates from event history.
+ *
+ * @example
+ * ```php
+ * class Order extends AggregateRoot
+ * {
+ *     use HasDomainEvents;
+ *
+ *     public function addItem(string $productId, int $qty): void
+ *     {
+ *         $this->recordThat(DomainEvent::occur('order.item_added', [
+ *             'product_id' => $productId,
+ *             'qty' => $qty,
+ *         ]));
+ *     }
+ *
+ *     // Check for uncommitted events
+ *     if ($this->hasUncommittedEvents()) {
+ *         $events = $this->releaseEvents(); // Destructive pull
+ *         // Dispatch events...
+ *     }
+ * }
+ * ```
  */
 trait HasDomainEvents
 {

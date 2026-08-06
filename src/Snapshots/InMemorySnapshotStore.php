@@ -72,6 +72,8 @@ final class InMemorySnapshotStore implements SnapshotStore
      * Clear all snapshots.
      *
      * Alias of purge() for backward compatibility.
+     *
+     * @deprecated Use {@see purge()} instead. This alias will be removed in v3.0.
      */
     public function clear(): void
     {

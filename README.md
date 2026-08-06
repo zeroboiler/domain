@@ -726,6 +726,14 @@ composer quality           # Pint + PHPStan + Rector + Tests
 
 ## Changelog
 
+### v2.5.0 (2026-08-06)
+
+- Docs: Enrich HasDomainEvents trait docblock with @see and @example
+- Docs: Enrich EventSourced trait docblocks — fromHistory, applyEvent @param/@return
+- Docs: Add @return and @example to SnapshottingRepository::findWithSnapshot()
+- Docs: Add @deprecated annotation to InMemorySnapshotStore::clear()
+- Docs: Add Event Sourcing → Response Mapping section to response README
+
 ### v2.4.0 (2026-08-06)
 
 - Fix: HasSnapshots readonly property restoration — remove premature `setValue(null)` before `unset()` to prevent PHP 8.5 error

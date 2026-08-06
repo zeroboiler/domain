@@ -136,6 +136,15 @@ final readonly class SnapshottingRepository implements Repository
      * @param  string  $id  The aggregate ID.
      * @param  callable|null  $replayCallback  Receives (snapshotVersion) and returns post-snapshot events.
      *                                         If null, delegates to inner repository.
+     * @return AggregateRoot|null The aggregate root, or null if not found.
+     *
+     * @example
+     * ```php
+     * $order = $repo->findWithSnapshot(
+     *     $orderId,
+     *     fn (int $version) => $eventStore->getEventsAfter($orderId, $version),
+     * );
+     * ```
      */
     public function findWithSnapshot(
         string $id,

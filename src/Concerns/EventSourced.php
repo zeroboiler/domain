@@ -28,8 +28,20 @@ trait EventSourced
     /**
      * Reconstitute an aggregate from its event history.
      *
+     * The first event must contain an 'id' or 'aggregate_id' key in its
+     * payload. All subsequent events are replayed in order, incrementing
+     * the aggregate version for each handled event.
+     *
+     * @param  DomainEvent  ...$events  The event history to replay (oldest first).
+     * @return static The reconstituted aggregate.
      *
      * @throws RuntimeException If events are empty or first event lacks an ID.
+     *
+     * @example
+     * ```php
+     * $order = Order::fromHistory($eventStream->getEventsFor($orderId));
+     * echo $order->version(); // 42 (events applied)
+     * ```
      */
     public static function fromHistory(DomainEvent ...$events): static
     {
@@ -74,6 +86,12 @@ trait EventSourced
      * In normal mode ($isReplay = false), the event is recorded and version
      * is incremented (delegates to AggregateRoot::apply()).
      *
+     * Handler method resolution uses dot/hyphen/underscore convention:
+     *   'aggregate.created' → applyAggregateCreated()
+     *   'order-shipped'     → applyOrderShipped()
+     *   'order_item.added'  → applyOrderItemAdded()
+     *
+     * @param  DomainEvent  $event  The event to apply.
      * @param  bool  $isReplay  When true, event is replayed without recording.
      */
     public function applyEvent(DomainEvent $event, bool $isReplay = false): void
