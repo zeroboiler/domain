@@ -53,6 +53,7 @@ abstract class Entity implements EntityContract
      * Always returns a string representation for consistent identity
      * handling across the entity hierarchy.
      */
+    #[\Override]
     public function id(): string
     {
         return match (true) {
@@ -66,6 +67,7 @@ abstract class Entity implements EntityContract
         };
     }
 
+    #[\Override]
     public function equals(EntityContract $other): bool
     {
         if (static::class !== $other::class) {
