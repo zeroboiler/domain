@@ -28,6 +28,10 @@ namespace ZeroBoiler\Domain\Snapshots;
  * $store->count();           // 1
  * $store->stats();           // ['total' => 1, 'by_type' => ['Order' => 1]]
  * ```
+ *
+ * @immutable All methods that modify state return void — the store itself
+ *             is intentionally mutable as an in-memory cache. Production
+ *             implementations (Redis, database) follow the same interface.
  */
 final class InMemorySnapshotStore implements SnapshotStore
 {

@@ -149,7 +149,8 @@ final readonly class SnapshottingRepository implements Repository
     public function findWithSnapshot(
         string $id,
         ?callable $replayCallback = null,
-    ): ?AggregateRoot {
+    ): ?AggregateRoot
+    {
         $snapshot = $this->snapshotStore->load($this->aggregateType, $id);
 
         if ($snapshot instanceof Snapshot && $replayCallback !== null) {

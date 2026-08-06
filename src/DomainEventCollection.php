@@ -75,6 +75,8 @@ final readonly class DomainEventCollection implements Countable, IteratorAggrega
 
     /**
      * Check if the collection is empty.
+     *
+     * @return bool True when the collection contains zero events.
      */
     public function isEmpty(): bool
     {
@@ -150,6 +152,7 @@ final readonly class DomainEventCollection implements Countable, IteratorAggrega
      * Get the first event that matches a predicate, or null.
      *
      * @param  (callable(DomainEvent): bool)|null  $predicate  If null, returns the first event.
+     * @return DomainEvent|null The first matching event, or null.
      */
     public function first(?callable $predicate = null): ?DomainEvent
     {
@@ -164,6 +167,8 @@ final readonly class DomainEventCollection implements Countable, IteratorAggrega
 
     /**
      * Get the last event in the collection.
+     *
+     * @return DomainEvent|null The last event, or null if empty.
      */
     public function last(): ?DomainEvent
     {
@@ -173,7 +178,8 @@ final readonly class DomainEventCollection implements Countable, IteratorAggrega
     /**
      * Merge another event collection into this one, returning a new collection.
      *
-     * @param  self|list<DomainEvent>  $other
+     * @param  self|list<DomainEvent>  $other  Events to append.
+     * @return self New collection with all events from both sources.
      */
     public function merge(self|array $other): self
     {
@@ -184,6 +190,9 @@ final readonly class DomainEventCollection implements Countable, IteratorAggrega
 
     /**
      * Get an event at a specific index, or null if out of bounds.
+     *
+     * @param  int  $index  Zero-based index.
+     * @return DomainEvent|null The event at the index, or null.
      */
     public function get(int $index): ?DomainEvent
     {
