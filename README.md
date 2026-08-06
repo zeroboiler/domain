@@ -726,6 +726,10 @@ composer quality           # Pint + PHPStan + Rector + Tests
 
 ## Changelog
 
+### v2.6.0 (2026-08-06)
+
+- Docs: Enrich `Identifier` contract docblock with FQCN `@see` references for all identifier implementations
+
 ### v2.5.0 (2026-08-06)
 
 - Docs: Enrich HasDomainEvents trait docblock with @see and @example

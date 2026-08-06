@@ -20,10 +20,12 @@ use ZeroBoiler\Domain\Identifiers\UuidIdentifier;
  * This interface allows persistence, tenancy, and state-machine
  * packages to work with any identifier implementation uniformly.
  *
- * @see UuidIdentifier
- * @see StringIdentifier
- * @see IntegerIdentifier
- * @see \ZeroBoiler\Domain\Identifiers\Identifier
+ * @see \ZeroBoiler\Domain\Identifiers\UuidIdentifier    Abstract readonly UUID v4 identifier
+ * @see \ZeroBoiler\Domain\Identifiers\UlidIdentifier    Abstract readonly ULID identifier
+ * @see \ZeroBoiler\Domain\Identifiers\StringIdentifier  Readonly non-empty string identifier
+ * @see \ZeroBoiler\Domain\Identifiers\IntegerIdentifier Final readonly integer identifier
+ * @see \ZeroBoiler\Domain\Identifiers\Identifier        Legacy base (deprecated)
+ * @see \ZeroBoiler\Domain\AggregateRootId              Final readonly UUID v4 for aggregate roots
  */
 interface Identifier extends Stringable
 {
