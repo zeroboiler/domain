@@ -50,22 +50,24 @@ final class DomainRepositoryCommand extends GeneratorCommand
     }
 
     #[\Override]
-    public function handle(): bool
+    public function handle(): int
     {
         $result = parent::handle();
 
-        if (! $result) {
-            return false;
+        if ($result === self::FAILURE || $result === false) {
+            return self::FAILURE;
         }
 
         // Generate the Eloquent implementation alongside the interface
         $this->generateImplementation();
 
-        return true;
+        return self::SUCCESS;
     }
 
     /**
      * Generate an Eloquent implementation of the repository interface.
+     *
+     * @return void
      */
     private function generateImplementation(): void
     {
