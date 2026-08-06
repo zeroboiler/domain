@@ -14,11 +14,16 @@ use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
 use ZeroBoiler\Domain\Snapshots\SnapshotStore;
 
 /**
- * Inspect snapshot store status.
+ * Inspect domain aggregate snapshot store.
+ *
+ * Displays snapshot statistics, and optionally inspects a specific
+ * aggregate's snapshot state for debugging event-sourced aggregates.
  *
  * Usage:
  *   php artisan domain:snapshot --class=App\\Models\\Order
  *   php artisan domain:snapshot --class=App\\Models\\Order --id=order-123
+ *
+ * @see \ZeroBoiler\Domain\Snapshots\SnapshotStore
  */
 final class SnapshotCommand extends Command
 {

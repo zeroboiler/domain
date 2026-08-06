@@ -7,7 +7,19 @@ namespace {{ namespace }};
 use {{ rootNamespace }}Domain\Aggregates\{{ name }};
 use ZeroBoiler\Domain\Contracts\Repository;
 
+/**
+ * {{ class }} — aggregate root repository.
+ *
+ * Extend this interface to add domain-specific query methods.
+ * Implementations should include optimistic locking checks.
+ */
 interface {{ class }} extends Repository
 {
+    /**
+     * Find an aggregate by its string identifier.
+     *
+     * @param  string  $id  The aggregate identity.
+     * @return {{ name }}|null The aggregate, or null if not found.
+     */
     public function findById(string $id): ?{{ name }};
 }

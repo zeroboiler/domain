@@ -8,16 +8,36 @@ use ZeroBoiler\Domain\AggregateRoot;
 use ZeroBoiler\Domain\AggregateRootId;
 use ZeroBoiler\Events\Domain\DomainEvent;
 
+/**
+ * {{ class }} — domain aggregate root.
+ *
+ * Business rules and invariant enforcement live here.
+ * State mutations are driven by domain events.
+ */
 final class {{ class }} extends AggregateRoot
 {
+    /**
+     * Create a new {{ name }} aggregate.
+     *
+     * @param  AggregateRootId  $id  The unique aggregate identity.
+     * @return self
+     */
     public static function create(AggregateRootId $id): self
     {
         $aggregate = new self($id);
 
-        $aggregate->apply(DomainEvent::occur('{{ class }}Created', [
+        $aggregate->apply(DomainEvent::occur('{{ class }}.created', [
             'id' => $id->toString(),
         ]));
 
         return $aggregate;
+    }
+
+    /**
+     * Apply the created event to initialize aggregate state.
+     */
+    protected function apply{{ class }}Created(DomainEvent $event): void
+    {
+        // Initialize state from event payload
     }
 }

@@ -12,6 +12,12 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Command;
 use Symfony\Component\Finder\Finder;
 
+/**
+ * List all domain classes (Aggregates, Events, Repositories, ValueObjects).
+ *
+ * Scans the `app/Domain` directory and groups classes by subdirectory.
+ * Useful for auditing the domain model structure in a project.
+ */
 #[Description('List all Domain classes (Aggregates, Events, Repositories, ValueObjects)')]
 final class DomainListCommand extends Command
 {

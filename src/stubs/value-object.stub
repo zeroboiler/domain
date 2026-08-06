@@ -6,18 +6,39 @@ namespace {{ namespace }};
 
 use ZeroBoiler\Domain\ValueObject;
 
+/**
+ * {{ class }} — immutable domain value object.
+ *
+ * Value objects have no identity — equality is determined by
+ * comparing all properties. Override equals() for custom logic.
+ */
 final readonly class {{ class }} extends ValueObject
 {
+    /**
+     * Create a new {{ class }} value object.
+     *
+     * @param  string  $value  The underlying value.
+     */
     public function __construct(
         public string $value,
-    ) {
-    }
+    ) {}
 
+    /**
+     * Create from a raw value.
+     *
+     * @param  string  $value  The underlying value.
+     * @return self
+     */
     public static function from(string $value): self
     {
         return new self($value);
     }
 
+    /**
+     * Serialize the value object to an array.
+     *
+     * @return array<string, mixed>
+     */
     public function toArray(): array
     {
         return [
@@ -25,6 +46,9 @@ final readonly class {{ class }} extends ValueObject
         ];
     }
 
+    /**
+     * Get the string representation.
+     */
     public function __toString(): string
     {
         return $this->value;
