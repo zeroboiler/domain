@@ -953,6 +953,11 @@ class SmallAggregate extends AggregateRoot { ... }
 
 ## Changelog
 
+### v1.7.0 (2026-08-06)
+
+- Fix: `DomainException` custom error code (`$code` parameter in `because()` / `for()` factories) was silently lost — passed as 4th arg to `Exception::__construct()` which only accepts 3 params. Added proper constructor with `$domainCode` parameter so custom codes like `'ORDER_NOT_PENDING'` now correctly flow through `errorCode()`.
+- Bump: Version 1.6.0 → 1.7.0
+
 ### v1.6.0 (2026-08-06)
 
 - Feat: Add machine-readable `errorCode()` method to all domain exceptions (INVALID_STATE, INVALID_ARGUMENT, NOT_FOUND, CONFLICT, OPTIMISTIC_LOCK, AGGREGATE_NOT_FOUND, INVALID_AGGREGATE_ROOT)

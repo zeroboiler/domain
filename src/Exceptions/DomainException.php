@@ -58,20 +58,41 @@ use Exception;
 abstract class DomainException extends Exception
 {
     /**
+     * Custom machine-readable error code, separate from PHP's int $code.
+     *
+     * @var string Custom domain error code (e.g., 'ORDER_NOT_PENDING').
+     */
+    private string $domainCode = '';
+
+    /**
+     * @param  string  $message  Human-readable exception message.
+     * @param  int  $code  PHP exception code (default: 0).
+     * @param  \Throwable|null  $previous  Previous exception for chaining.
+     * @param  string  $domainCode  Machine-readable error code for API consumers.
+     */
+    public function __construct(
+        string $message = '',
+        int $code = 0,
+        ?\Throwable $previous = null,
+        string $domainCode = '',
+    ) {
+        parent::__construct($message, $code, $previous);
+        $this->domainCode = $domainCode;
+    }
+
+    /**
      * Get a machine-readable error code for this exception.
      *
      * Subclasses override `defaultErrorCode()` to provide a stable
      * string identifier. When an explicit code is provided via the
-     * third constructor argument, it takes precedence.
+     * `$domainCode` constructor parameter, it takes precedence.
      *
      * @return string A machine-readable error code (e.g., 'INVALID_STATE', 'NOT_FOUND').
      */
     public function errorCode(): string
     {
-        $code = $this->getCode();
-
-        if (is_string($code) && $code !== '') {
-            return $code;
+        if ($this->domainCode !== '') {
+            return $this->domainCode;
         }
 
         return $this->defaultErrorCode();
