@@ -724,6 +724,15 @@ composer test:coverage     # With coverage
 composer quality           # Pint + PHPStan + Rector + Tests
 ```
 
+## Changelog
+
+### v2.4.0 (2026-08-06)
+
+- Fix: HasSnapshots readonly property restoration — remove premature `setValue(null)` before `unset()` to prevent PHP 8.5 error
+- Fix: DomainTransformer `extractId()` fallback documentation — clarify spl_object_id is last resort
+- Docs: Enrich TransformerInterface `@param` tags with `@return` descriptions
+- Docs: Add usage examples to all console command docblocks
+
 ## License
 
 MIT

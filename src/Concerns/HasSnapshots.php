@@ -146,12 +146,12 @@ trait HasSnapshots
             }
 
             // Handle readonly properties: if the property is readonly and
-            // already initialized, we need to unset it first, then set the
-            // new value via reflection. This avoids "Cannot modify readonly
-            // property" errors when restoring from snapshots.
+            // already initialized, we need to unset it first to make it
+            // uninitialized, then set the new value via reflection.
+            // This avoids "Cannot modify readonly property" errors when
+            // restoring from snapshots.
             if ($property->isReadOnly() && $property->isInitialized($this)) {
-                // Unset the readonly property so it can be re-initialized
-                $property->setValue($this, null);
+                // Unset first — makes the readonly property uninitialized
                 unset($this->{$name});
             }
 
