@@ -28,7 +28,7 @@ use ZeroBoiler\Domain\Snapshots\SnapshotStore;
  * - **DTO package** (`zeroboiler/dto`): DataTransferObject base class (used by domain commands)
  * - **Enums package** (`zeroboiler/enums`): Enum metadata (used by domain commands)
  */
-class DomainServiceProvider extends ServiceProvider
+final class DomainServiceProvider extends ServiceProvider
 {
     /**
      * Optional dispatcher class — checked via app->bound() at runtime.
