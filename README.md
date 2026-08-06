@@ -1,6 +1,10 @@
 # ZeroBoiler Domain
 
-DDD building blocks for rich domain models with aggregate roots, entities, value objects, and domain events.
+[![Latest Version](https://img.shields.io/packagist/v/zeroboiler/domain.svg?style=flat-square)](https://packagist.org/packages/zeroboiler/domain)
+[![License](https://img.shields.io/packagist/l/zeroboiler/domain.svg?style=flat-square)](LICENSE)
+[![PHP Version](https://img.shields.io/packagist/php-v/zeroboiler/domain.svg?style=flat-square)](https://packagist.org/packages/zeroboiler/domain)
+
+**DDD Building Blocks** — Rich domain models with aggregate roots, entities, value objects, identifiers, event sourcing, snapshots, and domain events.
 
 ## Installation
 
@@ -603,6 +607,115 @@ php artisan domain:snapshot list
 php artisan domain:snapshot purge --type=Order
 ```
 
+## Cross-Package Integration: Domain → Response
+
+When using `zeroboiler/domain` with `zeroboiler/response`, use `DomainTransformer`
+to map domain entities/aggregate roots to API responses. The transformer is
+**decoupled** — it uses duck typing (`id()` method) and works with any entity
+following the standard Entity contract.
+
+```php
+use ZeroBoiler\Domain\AggregateRoot;
+use ZeroBoiler\Domain\AggregateRootId;
+use ZeroBoiler\Events\Domain\DomainEvent;
+use ZeroBoiler\Response\Transformers\DomainTransformer;
+
+// 1. Define your aggregate
+class Order extends AggregateRoot
+{
+    public string $status = 'pending';
+    public float $total = 0.0;
+    public array $items = [];
+
+    public function __construct(AggregateRootId $id) { parent::__construct($id); }
+
+    public static function create(AggregateRootId $id, array $items): self
+    {
+        $order = new self($id);
+        $order->apply(DomainEvent::occur('order.placed', [
+            'id' => $id->toString(), 'items' => $items,
+        ]));
+        return $order;
+    }
+
+    protected function applyOrderPlaced(DomainEvent $event): void
+    {
+        $this->items = $event->payload['items'];
+    }
+}
+
+// 2. Create a DomainTransformer
+final class OrderTransformer extends DomainTransformer
+{
+    protected function mapDomainFields(object $entity, array $context = []): array
+    {
+        return [
+            'id'     => $this->extractId($entity),
+            'status' => $entity->status,
+            'total'  => $entity->total,
+        ];
+    }
+
+    protected function mapRelations(object $entity, array $context = []): array
+    {
+        if ($this->shouldInclude('items', $context)) {
+            return ['items' => $entity->items];
+        }
+        return [];
+    }
+
+    protected function mapMeta(object $entity, array $context = []): array
+    {
+        return ['version' => method_exists($entity, 'version') ? $entity->version() : null];
+    }
+}
+
+// 3. Use in controller via Response facade
+return Response::transform($order)
+    ->through(OrderTransformer::class)
+    ->include('items')
+    ->api()
+    ->send();
+// → {"data":{"id":"550e8400-...","status":"pending","total":0,"items":[],"_meta":{"version":0}}}
+```
+
+### Domain Identifier Serialization
+
+All domain identifiers implement `JsonSerializable` and `IdentifierContract`,
+so they serialize cleanly in API responses:
+
+```php
+use ZeroBoiler\Domain\Identifiers\UuidIdentifier;
+use ZeroBoiler\Domain\Identifiers\UlidIdentifier;
+
+class OrderId extends UuidIdentifier {}
+
+$id = OrderId::generate();
+echo json_encode(['order_id' => $id]);
+// → {"order_id":"550e8400-e29b-41d4-a716-446655440000"}
+
+echo json_encode(['product_id' => ProductId::generate()]);
+// → {"product_id":"01JF5K2R..."} (ULID, monotonic)
+
+echo json_encode(['slug' => StringIdentifier::from('my-post')]);
+// → {"slug":"my-post"}
+
+echo json_encode(['seq' => IntegerIdentifier::from(42)]);
+// → {"seq":42}
+```
+
+### Event Sourcing → Response Mapping
+
+When replaying events from history, aggregate roots maintain their version.
+Use `mapMeta()` to expose the version in API responses for client-side
+optimistic concurrency control:
+
+```php
+// Client sends: If-Match: "version:5"
+// Server checks: if ($aggregate->version() !== $requestVersion) { throw ... }
+// Response includes: {"_meta": {"version": 5}}
+```
+
 ## Testing
 
 ```bash
@@ -613,4 +726,4 @@ composer quality           # Pint + PHPStan + Rector + Tests
 
 ## License
 
-Proprietary
+MIT
