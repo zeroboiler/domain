@@ -932,6 +932,11 @@ class SmallAggregate extends AggregateRoot { ... }
 
 ## Changelog
 
+### v1.4.0 (2026-08-06)
+
+- Docs: Enrich `ValueObject` base class — comprehensive docblock with `@implements`, `@see`, `@example`, enriched `equals()` method documentation with `@param`/`@return`
+- Bump: Version 1.3.0 → 1.4.0
+
 ### v1.3.0 (2026-08-06)
 
 - Test: Add `DomainModelProductionTest` — comprehensive production-ready tests covering all identifiers (UUID, ULID, String, Integer), entity equality, AggregateRoot event recording/versioning, DomainEventCollection operations, Unit of Work (declarative/manual/nested/rollback/event queuing), Snapshot round-trip/JSON serialization, InMemorySnapshotStore operations (CRUD/purge/deleteOlderThan), ValueObject equality/fromArray/toArray round-trip, and domain exception hierarchy
