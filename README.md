@@ -819,7 +819,123 @@ composer test:coverage     # With coverage
 composer quality           # Pint + PHPStan + Rector + Tests
 ```
 
+## Quick Reference
+
+### Core Classes
+
+| Class | Type | Description | Key Methods |
+|---|---|---|---|
+| `AggregateRoot` | abstract | Top-level DDD entity with events, versioning | `apply()`, `pullDomainEvents()`, `id()`, `version()`, `reconstituteFromSnapshot()` |
+| `AggregateRootId` | final readonly | UUID v4 identity for aggregates | `generate()`, `fromString()`, `toString()`, `equals()`, `jsonSerialize()` |
+| `Entity` | abstract | Base domain entity with flexible ID | `id()`, `equals()`, constructor accepts `int\|string\|Stringable` |
+| `ValueObject` | abstract | Domain value object base | `equals()`, `toArray()` (from value-objects package) |
+| `DomainEventCollection` | final readonly | Type-safe event collection | `all()`, `count()`, `isEmpty()`, `filter()`, `map()`, `first()`, `last()`, `merge()` |
+| `InMemoryUnitOfWork` | final | Transactional event queuing | `begin()`, `commit()`, `rollback()`, `run()`, `track()`, `queueEvent()` |
+| `SnapshottingRepository` | final readonly | Repository decorator with snapshots | `find()`, `save()`, `delete()`, `findWithSnapshot()` |
+
+### Identifiers
+
+| Class | Type | Underlying | Key Methods |
+|---|---|---|---|
+| `UuidIdentifier` | abstract readonly | String (validated UUID v4) | `generate()`, `fromString()`, `toUuid()`, `equals()` |
+| `UlidIdentifier` | abstract readonly | String (validated ULID) | `generate()`, `fromString()`, `toUlid()`, `equals()` |
+| `StringIdentifier` | readonly | String (non-empty) | `from()`, `fromString()`, `isValid()`, `equals()` |
+| `IntegerIdentifier` | final readonly | Int | `from()`, `fromString()`, `toInt()`, `isValid()`, `equals()` |
+
+### Contracts
+
+| Interface | Extends | Key Methods |
+|---|---|---|
+| `Contracts\Entity` | — | `id(): string`, `equals(Entity): bool` |
+| `Contracts.AggregateRoot` | `Entity` | `version(): int`, `pullDomainEvents()`, `incrementVersion()`, `clearDomainEvents()` |
+| `Contracts.Identifier` | `Stringable` | `fromString()`, `toString()`, `equals()` |
+| `Contracts.Repository` | — | `find()`, `save()`, `delete()` |
+| `Contracts.UnitOfWork` | — | `begin()`, `commit()`, `rollback()`, `run()`, `track()`, `queueEvent()` |
+
+### Traits
+
+| Trait | Applied To | Purpose |
+|---|---|---|
+| `EventSourced` | `AggregateRoot` | `fromHistory()`, `applyEvent()` — replay/reconstitute from events |
+| `HasDomainEvents` | `Entity` | `recordThat()`, `releaseEvents()`, `hasUncommittedEvents()` |
+| `HasSnapshots` | `AggregateRoot` | `shouldSnapshot()`, `createSnapshot()`, `restoreFromSnapshot()`, `toSnapshotState()` |
+
+### Exceptions
+
+| Exception | Factory | When to Use |
+|---|---|---|
+| `DomainException` | (abstract base) | Extend for business-specific violations |
+| `InvalidStateDomainException` | `::because($reason)` | Entity/aggregate in wrong state |
+| `InvalidArgumentDomainException` | `::because($reason)` | Input fails domain validation |
+| `NotFoundDomainException` | `::because()`, `::forAggregate()` | Expected resource missing |
+| `AggregateNotFoundException` | `::for($type, $id)` | Repository lookup returned null |
+| `ConflictDomainException` | `::because($reason)` | Concurrent write-write conflict |
+| `OptimisticLockException` | `::for($id, $expected, $actual)` | Stale version on save |
+| `InvalidAggregateRootException` | `::notAnAggregate($obj)` | Object is not an AggregateRoot |
+
+## Best Practices
+
+### Choosing the Right Identifier
+
+```php
+// UUID v4 — Most common for aggregate roots
+class OrderId extends UuidIdentifier {}
+// Random, no ordering guarantee, globally unique
+
+// ULID — High-throughput insertion-ordered
+class ProductId extends UlidIdentifier {}
+// Monotonic, lexicographically sortable, 48-bit timestamp
+
+// String — Natural keys, slugs, codes
+class ProductSlug extends StringIdentifier {}
+// Non-empty string, ideal for URL-friendly IDs
+
+// Integer — Auto-increment DB IDs
+class RowNumber extends IntegerIdentifier {}
+// Numeric sequence, ideal for legacy/migration IDs
+```
+
+### Unit of Work Patterns
+
+```php
+// ✅ RECOMMENDED: Declarative transactions via run()
+$result = $uow->run(fn () => $service->process($order));
+
+// ✅ OK: Manual control when you need fine-grained tracking
+$uow->begin();
+$uow->track($order);
+$uow->track($payment);
+$uow->commit();
+
+// ❌ AVOID: Forgetting to track aggregates (events won't be collected)
+$uow->begin();
+$order->addItem($item);
+// Events raised here are LOST if $order is not tracked
+$uow->commit();
+```
+
+### Snapshot Configuration
+
+```php
+// Snapshot every 50 events (default)
+#[SnapshotPolicy(every: 50)]
+class Order extends AggregateRoot { ... }
+
+// Snapshot every 100 events for large aggregates
+#[SnapshotPolicy(every: 100)]
+class AuditLog extends AggregateRoot { ... }
+
+// Disable automatic snapshots (manual only)
+#[SnapshotPolicy(every: 0)]
+class SmallAggregate extends AggregateRoot { ... }
+```
+
 ## Changelog
+
+### v2.10.0 (2026-08-06)
+
+- Docs: Add Quick Reference tables for all classes, traits, identifiers, exceptions, and contracts
+- Docs: Add Best Practices section with identifier selection guide, UoW patterns, and snapshot configuration
 
 ### v2.9.0 (2026-08-06)
 
