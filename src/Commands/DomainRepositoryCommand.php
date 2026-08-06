@@ -21,10 +21,8 @@ use Illuminate\Support\Str;
 #[Description('Generate a new Domain Repository interface and Eloquent implementation')]
 final class DomainRepositoryCommand extends GeneratorCommand
 {
-    #[\Override]
     protected $name = 'zeroboiler:domain:repository';
 
-    #[\Override]
     protected $type = 'Repository';
 
     #[\Override]

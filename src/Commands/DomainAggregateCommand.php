@@ -20,10 +20,8 @@ use Illuminate\Console\GeneratorCommand;
 #[Description('Generate a new Domain AggregateRoot class')]
 final class DomainAggregateCommand extends GeneratorCommand
 {
-    #[\Override]
     protected $name = 'zeroboiler:domain:aggregate';
 
-    #[\Override]
     protected $type = 'Aggregate';
 
     #[\Override]
