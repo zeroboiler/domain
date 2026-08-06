@@ -932,6 +932,15 @@ class SmallAggregate extends AggregateRoot { ... }
 
 ## Changelog
 
+### v2.11.0 (2026-08-06)
+
+- Feat: Add `JsonSerializable` to legacy `Identifier` class for consistent JSON serialization across all identifier types
+- Fix: Add missing `use ZeroBoiler\Domain\AggregateRoot` import to `UnitOfWork` contract (fragile namespace fallback eliminated)
+- Docs: Enrich ViewModel docblocks — `with()`, `toApi()`, `toInertia()`, `transform()`, `handle()`, `toArray()`, `merge()`, `withWhen()`, `withUnless()`
+- Docs: Enrich InertiaResponse docblocks — `withMany()`, `shareMany()` with full `@param`/`@return`
+- Docs: Enrich Transformer docblocks — `isCollection()`, `getTransformerClass()` with `@throws`
+- Docs: Enrich TransformerContract `toArrayable()` docblock
+
 ### v2.10.0 (2026-08-06)
 
 - Docs: Add Quick Reference tables for all classes, traits, identifiers, exceptions, and contracts

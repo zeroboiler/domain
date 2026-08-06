@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Domain\Identifiers;
 
+use JsonSerializable;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
@@ -30,7 +31,7 @@ use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
  *
  * @deprecated Use {@see UuidIdentifier} for new code. This class will be removed in v3.0.
  */
-abstract class Identifier implements IdentifierContract
+abstract class Identifier implements IdentifierContract, JsonSerializable
 {
     /**
      * The underlying Ramsey UUID value.
@@ -118,6 +119,16 @@ abstract class Identifier implements IdentifierContract
      * @return string The UUID as a canonical string.
      */
     public function __toString(): string
+    {
+        return $this->toString();
+    }
+
+    /**
+     * Serialize the identifier to JSON.
+     *
+     * @return string The UUID as a canonical string.
+     */
+    public function jsonSerialize(): string
     {
         return $this->toString();
     }
