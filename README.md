@@ -932,6 +932,14 @@ class SmallAggregate extends AggregateRoot { ... }
 
 ## Changelog
 
+### v1.5.0 (2026-08-06)
+
+- Refactor: Add PHP 8.4 `#[Deprecated]` attribute to `AggregateRoot::getVersion()` (backward compat alias)
+- Docs: Enrich `AggregateRoot::setVersion()` docblock — document infrastructure-only usage
+- Refactor: Add PHP 8.4 `#[Deprecated]` attribute to `InMemorySnapshotStore::clear()` (backward compat alias)
+- Docs: Add `#[Deprecated]` attributes to deprecated class/interface targets blocked by PHP 8.4 — docblock `@deprecated` retained
+- Bump: Version 1.4.0 → 1.5.0
+
 ### v1.4.0 (2026-08-06)
 
 - Docs: Enrich `ValueObject` base class — comprehensive docblock with `@implements`, `@see`, `@example`, enriched `equals()` method documentation with `@param`/`@return`

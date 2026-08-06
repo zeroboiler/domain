@@ -69,7 +69,10 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
 
     /**
      * Alias for version() — backward compatibility.
+     *
+     * @deprecated Use {@see version()} instead. This alias will be removed in v3.0.
      */
+    #[\Deprecated(message: 'Use version() instead.', since: '1.5.0')]
     public function getVersion(): int
     {
         return $this->version;
@@ -77,6 +80,9 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
 
     /**
      * Set the version (used by repositories when loading from storage).
+     *
+     * Not part of the AggregateRoot contract — intended for infrastructure
+     * use only (repository hydration, event replay, snapshot restoration).
      */
     public function setVersion(int $version): void
     {

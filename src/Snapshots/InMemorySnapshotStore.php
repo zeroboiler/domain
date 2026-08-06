@@ -79,6 +79,7 @@ final class InMemorySnapshotStore implements SnapshotStore
      *
      * @deprecated Use {@see purge()} instead. This alias will be removed in v3.0.
      */
+    #[\Deprecated(message: 'Use purge() instead.', since: '1.5.0')]
     public function clear(): void
     {
         $this->snapshots = [];
