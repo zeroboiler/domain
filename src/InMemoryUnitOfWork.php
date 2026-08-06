@@ -375,6 +375,13 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
 
     /**
      * Manually queue a domain event for dispatch after commit.
+     *
+     * Use this to inject events into the unit of work from outside
+     * the aggregate (e.g., cross-aggregate side effects).
+     *
+     * @param  DomainEvent  $event  The event to queue for dispatch.
+     *
+     * @throws RuntimeException When no unit of work is active.
      */
     public function queueEvent(DomainEvent $event): void
     {
@@ -550,6 +557,10 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
 
     /**
      * Clear all state including committed data.
+     *
+     * Resets the unit of work to its initial state, discarding all
+     * savepoints, snapshots, pending events, and committed/deleted aggregates.
+     * Useful for testing and between test cases.
      */
     public function clear(): void
     {
