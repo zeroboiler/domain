@@ -12,7 +12,11 @@ namespace ZeroBoiler\Domain\Contracts;
  * Contract for domain entities.
  *
  * Entities have identity and support equality comparisons based on
- * their identity rather than their properties.
+ * their identity rather than their properties. Two entities with
+ * the same ID but different property values are still considered equal.
+ *
+ * @see \ZeroBoiler\Domain\Entity Base implementation
+ * @see \ZeroBoiler\Domain\Contracts\AggregateRoot Extended contract with versioning and events
  */
 interface Entity
 {

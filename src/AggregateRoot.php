@@ -142,4 +142,109 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
         return static::class === $other::class
             && $this->aggregateId->toString() === $other->id();
     }
+
+    /**
+     * Reconstitute an aggregate root from a snapshot and optional post-snapshot events.
+     *
+     * This is a convenience factory that combines snapshot restoration with
+     * event replay, commonly used in event-sourced repositories.
+     *
+     * The aggregate must use the {@see Concerns\HasSnapshots} trait for
+     * `restoreFromSnapshot()` to work.
+     *
+     * @param  Snapshots\Snapshot  $snapshot  The snapshot to restore from.
+     * @param  array<int, Events\Domain\DomainEvent>  $postSnapshotEvents  Events after the snapshot version.
+     * @return static The reconstituted aggregate root.
+     *
+     * @throws \RuntimeException If the aggregate class does not extend AggregateRoot or uses HasSnapshots.
+     *
+     * @example
+     * ```php
+     * use ZeroBoiler\Domain\AggregateRoot;
+     * use ZeroBoiler\Domain\Concerns\HasSnapshots;
+     *
+     * class Order extends AggregateRoot
+     * {
+     *     use HasSnapshots;
+     *     use Concerns\EventSourced;
+     *
+     *     protected function applyOrderPlaced(DomainEvent $event): void { ... }
+     * }
+     *
+     * $order = Order::reconstituteFromSnapshot($snapshot, $postSnapshotEvents);
+     * ```
+     */
+    public static function reconstituteFromSnapshot(
+        Snapshots\Snapshot $snapshot,
+        array $postSnapshotEvents = [],
+    ): static {
+        $reflection = new \ReflectionClass(static::class);
+
+        if (! $reflection->isSubclassOf(self::class)) {
+            throw new \RuntimeException(sprintf(
+                'Class %s must extend %s to use reconstituteFromSnapshot.',
+                static::class,
+                self::class,
+            ));
+        }
+
+        /** @var static $instance */
+        $instance = $reflection->newInstanceWithoutConstructor();
+
+        // Restore the readonly AggregateRootId via reflection
+        $aggregateId = AggregateRootId::fromString($snapshot->aggregateId);
+        self::setReadOnlyProperty($instance, 'aggregateId', $aggregateId);
+        self::setReadOnlyProperty($instance, 'id', $aggregateId);
+
+        // Restore from snapshot state if the aggregate uses HasSnapshots
+        if (method_exists($instance, 'restoreFromSnapshot')) {
+            $instance->restoreFromSnapshot($snapshot);
+        } else {
+            throw new \RuntimeException(sprintf(
+                'Aggregate %s must use the HasSnapshots trait to use reconstituteFromSnapshot.',
+                static::class,
+            ));
+        }
+
+        // Replay post-snapshot events
+        foreach ($postSnapshotEvents as $event) {
+            if (method_exists($instance, 'applyEvent')) {
+                $instance->applyEvent($event, isReplay: true);
+            }
+        }
+
+        // Clear any events accumulated during reconstitution
+        if (method_exists($instance, 'clearDomainEvents')) {
+            $instance->clearDomainEvents();
+        }
+
+        return $instance;
+    }
+
+    /**
+     * Set a readonly property via reflection (used during reconstitution).
+     *
+     * Walks up the class hierarchy to find the property declaration.
+     */
+    private static function setReadOnlyProperty(object $instance, string $name, mixed $value): void
+    {
+        $class = new \ReflectionClass($instance);
+
+        while ($class !== false) {
+            if ($class->hasProperty($name)) {
+                $property = $class->getProperty($name);
+
+                // Unset readonly property first if it's initialized
+                if ($property->isReadOnly() && $property->isInitialized($instance)) {
+                    unset($instance->{$name});
+                }
+
+                $property->setValue($instance, $value);
+
+                return;
+            }
+
+            $class = $class->getParentClass();
+        }
+    }
 }

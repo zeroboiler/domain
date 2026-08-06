@@ -16,6 +16,9 @@ use ZeroBoiler\Domain\DomainEventCollection;
  * Aggregate roots are the top-level entities that serve as consistency
  * boundaries. They own domain events and expose versioning for
  * optimistic locking.
+ *
+ * @see \ZeroBoiler\Domain\AggregateRoot Base implementation
+ * @see \ZeroBoiler\Domain\Contracts\Entity Parent entity contract
  */
 interface AggregateRoot extends Entity
 {

@@ -106,4 +106,87 @@ final readonly class DomainEventCollection implements Countable, IteratorAggrega
             $this->events,
         );
     }
+
+    /**
+     * Apply a callback to each event and return a new collection with the results.
+     *
+     * @template T
+     *
+     * @param  callable(DomainEvent, int): T  $callback
+     * @return list<T>
+     */
+    public function map(callable $callback): array
+    {
+        $result = [];
+        $index = 0;
+
+        foreach ($this->events as $event) {
+            $result[] = $callback($event, $index++);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Filter events by a predicate, returning a new collection.
+     *
+     * @param  callable(DomainEvent, int): bool  $predicate
+     */
+    public function filter(callable $predicate): self
+    {
+        $filtered = [];
+        $index = 0;
+
+        foreach ($this->events as $event) {
+            if ($predicate($event, $index++)) {
+                $filtered[] = $event;
+            }
+        }
+
+        return new self($filtered);
+    }
+
+    /**
+     * Get the first event that matches a predicate, or null.
+     *
+     * @param  (callable(DomainEvent): bool)|null  $predicate  If null, returns the first event.
+     */
+    public function first(?callable $predicate = null): ?DomainEvent
+    {
+        foreach ($this->events as $event) {
+            if ($predicate === null || $predicate($event)) {
+                return $event;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the last event in the collection.
+     */
+    public function last(): ?DomainEvent
+    {
+        return $this->events !== [] ? $this->events[array_key_last($this->events)] : null;
+    }
+
+    /**
+     * Merge another event collection into this one, returning a new collection.
+     *
+     * @param  self|list<DomainEvent>  $other
+     */
+    public function merge(self|array $other): self
+    {
+        $events = $other instanceof self ? $other->all() : $other;
+
+        return new self([...$this->events, ...$events]);
+    }
+
+    /**
+     * Get an event at a specific index, or null if out of bounds.
+     */
+    public function get(int $index): ?DomainEvent
+    {
+        return $this->events[$index] ?? null;
+    }
 }
