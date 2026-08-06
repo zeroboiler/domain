@@ -549,6 +549,25 @@ $store->purge(Order::class);              // Purge all Order snapshots
 
 ### Domain Exceptions
 
+```
+Exception
+└── DomainException (abstract)
+    ├── InvalidStateDomainException       — entity/aggregate state violation
+    ├── InvalidArgumentDomainException    — domain argument validation failure
+    ├── NotFoundDomainException           — aggregate/entity not found
+    │   └── forAggregate(type, id)        — typed not-found helper
+    ├── ConflictDomainException          — concurrent write-write conflict
+    ├── OptimisticLockException          — stale aggregate version detected
+    │   └── for(id, expected, actual)     — typed lock failure helper
+    ├── AggregateNotFoundException         — repository lookup returned null
+    │   └── for(type, id)                 — typed not-found helper
+    └── InvalidAggregateRootException     — object is not an AggregateRoot
+        └── notAnAggregate(object)         — validation helper
+
+Exception (standalone, outside domain)
+└── InvalidStateException                — system-level invalid state (not domain)
+```
+
 ```php
 use ZeroBoiler\Domain\Exceptions\InvalidStateDomainException;
 use ZeroBoiler\Domain\Exceptions\InvalidArgumentDomainException;
@@ -557,31 +576,40 @@ use ZeroBoiler\Domain\Exceptions\ConflictDomainException;
 use ZeroBoiler\Domain\Exceptions\OptimisticLockException;
 use ZeroBoiler\Domain\Exceptions\AggregateNotFoundException;
 
-// State violations
+// State violations — entity is in wrong state for the requested operation
 throw InvalidStateDomainException::because('Order must be pending to pay.');
 
-// Argument violations
+// Argument violations — input fails domain validation
 throw InvalidArgumentDomainException::because('Quantity must be positive.');
 
 // Not found (generic)
 throw NotFoundDomainException::because('User not found with ID: ' . $id);
 
-// Not found (aggregate-specific)
+// Not found (aggregate-specific, standardized message)
 throw NotFoundDomainException::forAggregate('Order', $orderId);
 
-// Aggregate not found (alternative)
+// Aggregate not found (alternative, includes FQCN in message)
 throw AggregateNotFoundException::for('App\Domain\Order', $orderId);
 
-// Conflicts
+// Conflicts — concurrent write detected
 throw ConflictDomainException::because('Concurrent modification detected.');
 
-// Optimistic locking
+// Optimistic locking — version mismatch on save
 if ($persistedVersion !== $aggregate->version()) {
     throw OptimisticLockException::for(
         $aggregate->id(),
         expectedVersion: $aggregate->version(),
         actualVersion: $persistedVersion,
     );
+}
+
+// Custom domain exception — extend for business-specific violations
+final class OrderAlreadyShippedException extends DomainException
+{
+    public static function forOrder(string $orderId): self
+    {
+        return new self("Order {$orderId} has already been shipped.");
+    }
 }
 ```
 
@@ -792,6 +820,12 @@ composer quality           # Pint + PHPStan + Rector + Tests
 ```
 
 ## Changelog
+
+### v2.9.0 (2026-08-06)
+
+- Docs: Add Domain Exception hierarchy tree diagram with all factory methods
+- Docs: Add custom domain exception example (OrderAlreadyShippedException)
+- Docs: Enrich exception code examples with inline comments explaining usage context
 
 ### v2.8.0 (2026-08-06)
 
