@@ -2,7 +2,7 @@
     "name": "zeroboiler/domain",
     "description": "DDD building blocks for rich domain models with aggregate roots, entities, value objects, and repositories",
     "type": "library",
-    "license": "MIT",
+    "license": "proprietary",
     "keywords": [
         "ddd",
         "domain-driven-design",

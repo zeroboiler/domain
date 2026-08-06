@@ -847,7 +847,7 @@ composer quality           # Pint + PHPStan + Rector + Tests
 | Interface | Extends | Key Methods |
 |---|---|---|
 | `Contracts\Entity` | — | `id(): string`, `equals(Entity): bool` |
-| `Contracts.AggregateRoot` | `Entity` | `version(): int`, `pullDomainEvents()`, `incrementVersion()`, `clearDomainEvents()` |
+| `Contracts\AggregateRoot` | `Entity` | `version(): int`, `pullDomainEvents()`, `incrementVersion()`, `clearDomainEvents()` |
 | `Contracts.Identifier` | `Stringable` | `fromString()`, `toString()`, `equals()` |
 | `Contracts.Repository` | — | `find()`, `save()`, `delete()` |
 | `Contracts.UnitOfWork` | — | `begin()`, `commit()`, `rollback()`, `run()`, `track()`, `queueEvent()` |
