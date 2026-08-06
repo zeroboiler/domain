@@ -953,6 +953,11 @@ class SmallAggregate extends AggregateRoot { ... }
 
 ## Changelog
 
+### v1.8.0 (2026-08-06)
+
+- Feat: Add PHP 8.5 `#[Deprecated]` attribute to legacy `Identifiers\Identifier` class (was only `@deprecated` docblock)
+- Docs: Enrich `InvalidStateException::because()` with `@param`/`@return` docblock
+
 ### v1.7.0 (2026-08-06)
 
 - Fix: `DomainException` custom error code (`$code` parameter in `because()` / `for()` factories) was silently lost — passed as 4th arg to `Exception::__construct()` which only accepts 3 params. Added proper constructor with `$domainCode` parameter so custom codes like `'ORDER_NOT_PENDING'` now correctly flow through `errorCode()`.

@@ -26,6 +26,11 @@ use Exception;
  */
 final class InvalidStateException extends Exception
 {
+    /**
+     * Create an exception with the given reason.
+     *
+     * @param  string  $reason  Description of why the state is invalid.
+     */
     public static function because(string $reason): self
     {
         return new self($reason);
