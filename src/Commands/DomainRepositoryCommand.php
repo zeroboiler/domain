@@ -12,6 +12,12 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\GeneratorCommand;
 use Illuminate\Support\Str;
 
+/**
+ * Generate a new Domain Repository interface and Eloquent implementation.
+ *
+ * Creates both the repository interface in Domain/Repositories and
+ * a concrete Eloquent implementation in Domain/Repositories/Eloquent.
+ */
 #[Description('Generate a new Domain Repository interface and Eloquent implementation')]
 final class DomainRepositoryCommand extends GeneratorCommand
 {

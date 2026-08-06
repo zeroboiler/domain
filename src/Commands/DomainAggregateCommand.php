@@ -11,6 +11,12 @@ namespace ZeroBoiler\Domain\Commands;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\GeneratorCommand;
 
+/**
+ * Generate a new Domain AggregateRoot class.
+ *
+ * Creates a typed aggregate root stub with AggregateRootId identity,
+ * event sourcing support, and domain event application methods.
+ */
 #[Description('Generate a new Domain AggregateRoot class')]
 final class DomainAggregateCommand extends GeneratorCommand
 {
