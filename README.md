@@ -138,6 +138,20 @@ class Order extends AggregateRoot
         $this->total = $event->payload['amount'];
     }
 }
+
+// AggregateRootId usage
+$id = AggregateRootId::generate();                    // Random UUID v4
+$id = AggregateRootId::fromString('uuid-string');    // Parse existing
+$id->toString();                                     // '550e8400-e29b-41d4-...'
+$id->equals($otherId);                              // Type-safe equality
+echo json_encode(['order_id' => $id]);              // JSON serialization
+
+// Pull and inspect domain events
+$order = Order::create(AggregateRootId::generate());
+$events = $order->pullDomainEvents();               // Destructive pull
+$events->count();                                    // 1
+$events->isEmpty();                                   // false
+$order->hasUncommittedEvents();                       // false (already pulled)
 ```
 
 ### Entity
@@ -230,6 +244,61 @@ class OrderService
         });
         // Events dispatched automatically on commit
     }
+
+    // Nested transactions via savepoints
+    public function batchUpdate(array $orderIds, float $discount): void
+    {
+        $this->uow->run(function () use ($orderIds, $discount): void {
+            foreach ($orderIds as $id) {
+                // Each nested run() creates a savepoint
+                $this->uow->run(function () use ($id, $discount): void {
+                    $order = $this->orders->find($id);
+                    $order->applyDiscount($discount);
+                    $this->orders->save($order);
+                });
+                // Inner events dispatched only after outermost commit
+            }
+        });
+    }
+
+    // Manual transaction control
+    public function transfer(string $fromId, string $toId, float $amount): void
+    {
+        $this->uow->begin();
+        try {
+            $from = $this->orders->find($fromId);
+            $to = $this->orders->find($toId);
+
+            $this->uow->track($from);
+            $this->uow->track($to);
+
+            $from->debit($amount);
+            $to->credit($amount);
+
+            $this->uow->commit();
+        } catch (\Throwable $e) {
+            $this->uow->rollback();
+            throw $e;
+        }
+        // On commit: aggregates persisted (via callback), then events dispatched
+    }
+
+    // With persistence callback (for custom storage)
+    public function __construct(
+        private OrderRepository $orders,
+        private UnitOfWork $uow,
+    ) {
+        $this->uow->setPersistenceCallback(
+            function (array $committed, array $deleted): void {
+                foreach ($committed as $aggregate) {
+                    $this->orders->save($aggregate);
+                }
+                foreach ($deleted as $aggregate) {
+                    $this->orders->delete($aggregate->id());
+                }
+            }
+        );
+    }
 }
 ```
 
@@ -266,6 +335,145 @@ class Order extends AggregateRoot
     // Snapshots are automatically created every 50 events
     // by SnapshottingRepository::save()
 }
+
+// Direct snapshot usage
+$snapshot = Snapshot::create(Order::class, $orderId, 50, $state);
+$snapshot->toArray();                        // Serialize for storage
+$snapshot = Snapshot::fromArray($data);       // Restore from storage
+echo json_encode($snapshot);                 // JSON serialization
+```
+
+### SnapshotStore Interface
+
+Implement for custom storage backends (database, Redis, file system):
+
+```php
+use ZeroBoiler\Domain\Snapshots\{Snapshot, SnapshotStore};
+
+final class RedisSnapshotStore implements SnapshotStore
+{
+    public function __construct(private readonly \Redis $redis) {}
+
+    public function load(string $aggregateType, string $aggregateId): ?Snapshot
+    {
+        $data = $this->redis->get("snapshot:{$aggregateType}:{$aggregateId}");
+        if ($data === false) {
+            return null;
+        }
+
+        return Snapshot::fromArray(json_decode($data, true));
+    }
+
+    public function save(Snapshot $snapshot): void
+    {
+        $this->redis->set(
+            "snapshot:{$snapshot->aggregateType}:{$snapshot->aggregateId}",
+            json_encode($snapshot->toArray()),
+        );
+    }
+
+    public function has(string $aggregateType, string $aggregateId): bool
+    {
+        return (bool) $this->redis->exists("snapshot:{$aggregateType}:{$aggregateId}");
+    }
+
+    public function delete(string $aggregateType, string $aggregateId): void
+    {
+        $this->redis->del("snapshot:{$aggregateType}:{$aggregateId}");
+    }
+
+    public function deleteOlderThan(string $aggregateType, string $aggregateId, int $version): void
+    {
+        $snapshot = $this->load($aggregateType, $aggregateId);
+        if ($snapshot !== null && $snapshot->version < $version) {
+            $this->delete($aggregateType, $aggregateId);
+        }
+    }
+
+    public function count(?string $aggregateType = null): int
+    {
+        // Implement count logic
+        return 0;
+    }
+
+    public function stats(): array
+    {
+        // Implement stats logic
+        return ['total' => 0, 'by_type' => []];
+    }
+
+    public function purge(?string $aggregateType = null): int
+    {
+        // Implement purge logic
+        return 0;
+    }
+}
+```
+
+### Domain Events
+
+```php
+use ZeroBoiler\Domain\DomainEventCollection;
+use ZeroBoiler\Events\Domain\DomainEvent;
+
+// Create events
+$event = DomainEvent::occur('order.placed', [
+    'id' => $orderId->toString(),
+    'status' => 'pending',
+]);
+
+// Collect events in a type-safe wrapper
+$collection = new DomainEventCollection([$event1, $event2]);
+$collection->count();      // 2
+$collection->isEmpty();     // false
+$collection->all();         // [DomainEvent, DomainEvent]
+
+// Iterate and JSON-serialize
+foreach ($collection as $event) {
+    echo $event->eventType; // 'order.placed'
+}
+echo json_encode($collection);
+// [[...], [...]]
+```
+
+### SnapshottingRepository
+
+```php
+use ZeroBoiler\Domain\AggregateRoot;
+use ZeroBoiler\Domain\Contracts\Repository;
+use ZeroBoiler\Domain\Concerns\{EventSourced, HasSnapshots};
+use ZeroBoiler\Domain\Snapshots\{SnapshottingRepository, InMemorySnapshotStore, SnapshotPolicy};
+
+#[SnapshotPolicy(every: 50)]
+class Order extends AggregateRoot
+{
+    use EventSourced;
+    use HasSnapshots;
+
+    public string $status = 'pending';
+    public float $total = 0.0;
+
+    // ... event sourcing handlers
+}
+
+// Wrap any repository with snapshot support
+$orderRepo = new OrderEventSourcedRepository($db);
+$store = new InMemorySnapshotStore();
+$repo = new SnapshottingRepository($orderRepo, $store, Order::class);
+
+// find() automatically loads from snapshot + replays remaining events
+$order = $repo->find($orderId);
+
+// save() automatically creates a snapshot when version % 50 === 0
+$repo->save($order);
+
+// Inspect snapshot store
+$store->count();                          // Total snapshots
+$store->count(Order::class);              // Snapshots for Order type
+$store->has(Order::class, $orderId);       // Has specific snapshot
+$store->load(Order::class, $orderId);      // Load specific snapshot
+$store->stats();                          // ['total' => 5, 'by_type' => ['Order' => 3, ...]]
+$store->purge(Order::class);              // Purge all Order snapshots
 ```
 
 ### Domain Exceptions
@@ -275,6 +483,8 @@ use ZeroBoiler\Domain\Exceptions\InvalidStateDomainException;
 use ZeroBoiler\Domain\Exceptions\InvalidArgumentDomainException;
 use ZeroBoiler\Domain\Exceptions\NotFoundDomainException;
 use ZeroBoiler\Domain\Exceptions\ConflictDomainException;
+use ZeroBoiler\Domain\Exceptions\OptimisticLockException;
+use ZeroBoiler\Domain\Exceptions\AggregateNotFoundException;
 
 // State violations
 throw InvalidStateDomainException::because('Order must be pending to pay.');
@@ -282,11 +492,26 @@ throw InvalidStateDomainException::because('Order must be pending to pay.');
 // Argument violations
 throw InvalidArgumentDomainException::because('Quantity must be positive.');
 
-// Not found
+// Not found (generic)
+throw NotFoundDomainException::because('User not found with ID: ' . $id);
+
+// Not found (aggregate-specific)
 throw NotFoundDomainException::forAggregate('Order', $orderId);
+
+// Aggregate not found (alternative)
+throw AggregateNotFoundException::for('App\Domain\Order', $orderId);
 
 // Conflicts
 throw ConflictDomainException::because('Concurrent modification detected.');
+
+// Optimistic locking
+if ($persistedVersion !== $aggregate->version()) {
+    throw OptimisticLockException::for(
+        $aggregate->id(),
+        expectedVersion: $aggregate->version(),
+        actualVersion: $persistedVersion,
+    );
+}
 ```
 
 ### CLI Commands
