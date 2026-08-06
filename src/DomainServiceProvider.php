@@ -107,6 +107,7 @@ class DomainServiceProvider extends ServiceProvider
      * Domain event dispatching is optionally handled by the Events package's
      * DomainEventDispatcher, which may be auto-wired in EventsServiceProvider.
      */
+    #[\Override]
     public function boot(): void
     {
         $this->registerOctaneReset();

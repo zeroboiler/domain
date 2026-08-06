@@ -15,6 +15,11 @@ namespace ZeroBoiler\Domain\Snapshots;
  * Not suitable for production — use a persistent store (database, Redis)
  * in production environments.
  *
+ * @implements SnapshotStore
+ *
+ * @see Snapshot
+ * @see SnapshottingRepository
+ *
  * @example
  * ```php
  * $store = new InMemorySnapshotStore();

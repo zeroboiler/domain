@@ -37,7 +37,7 @@ use ZeroBoiler\Events\Domain\DomainEvent;
  * (outermost scope) BEFORE event dispatch so aggregates are durably
  * stored before consumers react to events.
  *
- * @implements UnitOfWork
+ * @implements UnitOfWorkContract
  *
  * @example
  * ```php
@@ -50,7 +50,6 @@ use ZeroBoiler\Events\Domain\DomainEvent;
  *     $repository->save($order);
  *     return $order;
  * });
- * // Events dispatched automatically on commit
  *
  * // Manual transaction control
  * $uow->begin();
@@ -65,7 +64,7 @@ use ZeroBoiler\Events\Domain\DomainEvent;
  * });
  * ```
  */
-class InMemoryUnitOfWork implements UnitOfWorkContract
+final class InMemoryUnitOfWork implements UnitOfWorkContract
 {
     /** @var array<int, array{active?: bool, tracked: array<string, AggregateRoot>, deleted: array<string, AggregateRoot>}> */
     private array $savepoints = [];
