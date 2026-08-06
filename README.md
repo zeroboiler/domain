@@ -309,7 +309,18 @@ class OrderService
     public function __construct(
         private OrderRepository $orders,
         private UnitOfWork $uow,
-    ) {}
+    ) {
+        $this->uow->setPersistenceCallback(
+            function (array $committed, array $deleted): void {
+                foreach ($committed as $aggregate) {
+                    $this->orders->save($aggregate);
+                }
+                foreach ($deleted as $aggregate) {
+                    $this->orders->delete($aggregate->id());
+                }
+            }
+        );
+    }
 
     public function placeOrder(array $data): Order
     {
@@ -358,23 +369,6 @@ class OrderService
             throw $e;
         }
         // On commit: aggregates persisted (via callback), then events dispatched
-    }
-
-    // With persistence callback (for custom storage)
-    public function __construct(
-        private OrderRepository $orders,
-        private UnitOfWork $uow,
-    ) {
-        $this->uow->setPersistenceCallback(
-            function (array $committed, array $deleted): void {
-                foreach ($committed as $aggregate) {
-                    $this->orders->save($aggregate);
-                }
-                foreach ($deleted as $aggregate) {
-                    $this->orders->delete($aggregate->id());
-                }
-            }
-        );
     }
 }
 ```
@@ -798,6 +792,11 @@ composer quality           # Pint + PHPStan + Rector + Tests
 ```
 
 ## Changelog
+
+### v2.8.0 (2026-08-06)
+
+- Fix: Remove duplicate constructor in UnitOfWork README example, merge persistence callback into primary constructor
+- Docs: Add `reconstituteFromSnapshot()` usage example to README
 
 ### v2.7.0 (2026-08-06)
 
