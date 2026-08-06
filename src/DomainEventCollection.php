@@ -38,14 +38,27 @@ final readonly class DomainEventCollection implements Countable, IteratorAggrega
 {
     /**
      * @param  list<DomainEvent>  $events
+     *
+     * @throws \InvalidArgumentException If $events is not a sequential list or contains non-DomainEvent items.
      */
     public function __construct(
         private readonly array $events = [],
     ) {
-        assert(
-            array_is_list($events),
-            'DomainEventCollection expects a list (sequential array) of DomainEvent objects.',
-        );
+        if (! array_is_list($events)) {
+            throw new \InvalidArgumentException(
+                'DomainEventCollection expects a sequential list (array_is_list) of DomainEvent objects.',
+            );
+        }
+
+        foreach ($events as $i => $event) {
+            if (! $event instanceof DomainEvent) {
+                throw new \InvalidArgumentException(sprintf(
+                    'DomainEventCollection item at index %d must be a DomainEvent, got %s.',
+                    $i,
+                    get_debug_type($event),
+                ));
+            }
+        }
     }
 
     /**

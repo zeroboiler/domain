@@ -957,6 +957,10 @@ class SmallAggregate extends AggregateRoot { ... }
 
 ## Changelog
 
+### v1.10.0 (2026-08-06)
+
+- Fix: Replace `assert()` with real `InvalidArgumentException` in `DomainEventCollection::__construct()` and `Snapshot::fromArray()` — assert statements are silently disabled in production (`zend.assertions = -1`), allowing invalid data to pass through undetected. Now throws `InvalidArgumentException` with descriptive messages in all environments.
+
 ### v1.9.0 (2026-08-06)
 
 - Feat: Add `UuidIdentifier::isValid()` static method — pre-validate UUID strings without throwing (parity with `UlidIdentifier::isValid()`, `StringIdentifier::isValid()`, `IntegerIdentifier::isValid()`)

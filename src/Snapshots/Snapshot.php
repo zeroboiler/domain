@@ -86,17 +86,23 @@ final readonly class Snapshot implements \JsonSerializable
      */
     public static function fromArray(array $data): self
     {
-        $aggregateType = $data['aggregate_type'];
-        $aggregateId = $data['aggregate_id'];
-        $version = $data['version'];
-        $state = $data['state'];
-        $createdAt = $data['created_at'];
+        $aggregateType = $data['aggregate_type'] ?? null;
+        $aggregateId = $data['aggregate_id'] ?? null;
+        $version = $data['version'] ?? null;
+        $state = $data['state'] ?? null;
+        $createdAt = $data['created_at'] ?? null;
 
-        assert(
-            is_string($aggregateType) && is_string($aggregateId) && is_int($version)
-            && is_array($state) && is_string($createdAt),
-            'Invalid snapshot data: expected string, string, int, array, string.',
-        );
+        if (! is_string($aggregateType) || ! is_string($aggregateId) || ! is_int($version)
+            || ! is_array($state) || ! is_string($createdAt)) {
+            throw new \InvalidArgumentException(sprintf(
+                'Invalid snapshot data: expected string, string, int, array, string; got %s, %s, %s, %s, %s.',
+                get_debug_type($aggregateType),
+                get_debug_type($aggregateId),
+                get_debug_type($version),
+                get_debug_type($state),
+                get_debug_type($createdAt),
+            ));
+        }
 
         /** @var array<string, mixed> $state */
         $state = $state;
