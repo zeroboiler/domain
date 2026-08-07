@@ -1064,6 +1064,10 @@ When using `zeroboiler/response` with this domain package:
 
 ## Changelog
 
+### v1.15.0 (2026-08-07)
+
+- Docs: Enrich cross-package integration section — document ViewModel contract enhancement (fromArray/fromJson/collection)
+
 ### v1.14.0 (2026-08-07)
 
 - Docs: Add Deprecation Roadmap & Migration Guide — v3.0 removal targets with migration examples
