@@ -1155,6 +1155,11 @@ When using `zeroboiler/response` with this domain package:
 
 ## Changelog
 
+### v1.19.0 (2026-08-07)
+
+- Refactor: Add `#[Override]` to `DomainListCommand::handle()` — PHP 8.5 best practice compliance
+- Bump: Version 1.18.0 → 1.19.0
+
 ### v1.18.0 (2026-08-07)
 
 - Docs: Add `Service Provider & Configuration` section — document registered singletons (UnitOfWork, SnapshotStore), console commands, optional configuration via `config('domain.snapshot_driver')`, and runtime event dispatching behavior
