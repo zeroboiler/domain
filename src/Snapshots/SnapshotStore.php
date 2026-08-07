@@ -59,16 +59,25 @@ interface SnapshotStore
 
     /**
      * Save a snapshot to the store.
+     *
+     * @param  Snapshot  $snapshot  The snapshot to persist.
      */
     public function save(Snapshot $snapshot): void;
 
     /**
      * Check if a snapshot exists for the given aggregate.
+     *
+     * @param  string  $aggregateType  The FQCN of the aggregate class.
+     * @param  string  $aggregateId  The aggregate's unique identifier.
+     * @return bool True if a snapshot exists.
      */
     public function has(string $aggregateType, string $aggregateId): bool;
 
     /**
      * Delete all snapshots for a given aggregate.
+     *
+     * @param  string  $aggregateType  The FQCN of the aggregate class.
+     * @param  string  $aggregateId  The aggregate's unique identifier.
      */
     public function delete(string $aggregateType, string $aggregateId): void;
 
@@ -76,6 +85,10 @@ interface SnapshotStore
      * Delete snapshots older than the given version.
      *
      * Useful for cleanup — keep only the latest snapshot per aggregate.
+     *
+     * @param  string  $aggregateType  The FQCN of the aggregate class.
+     * @param  string  $aggregateId  The aggregate's unique identifier.
+     * @param  int  $version  The minimum version to keep.
      */
     public function deleteOlderThan(string $aggregateType, string $aggregateId, int $version): void;
 

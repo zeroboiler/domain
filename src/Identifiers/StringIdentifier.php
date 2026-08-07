@@ -27,7 +27,7 @@ use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
  * $slug->isValid('');  // false
  * ```
  */
-readonly class StringIdentifier implements IdentifierContract, JsonSerializable
+final readonly class StringIdentifier implements IdentifierContract, JsonSerializable
 {
     /**
      * Create a validated non-empty string identifier.
@@ -48,13 +48,13 @@ readonly class StringIdentifier implements IdentifierContract, JsonSerializable
      * Create an identifier from a non-empty string.
      *
      * @param  string  $value  A non-empty string.
-     * @return static
+     * @return self
      *
      * @throws ValueError If the value is an empty string.
      */
-    public static function from(string $value): static
+    public static function from(string $value): self
     {
-        return new static($value);
+        return new self($value);
     }
 
     /**
@@ -72,13 +72,13 @@ readonly class StringIdentifier implements IdentifierContract, JsonSerializable
      * Create an identifier from a string (IdentifierContract interface).
      *
      * @param  string  $value  A non-empty string.
-     * @return static
+     * @return self
      *
      * @throws ValueError If the value is an empty string.
      */
-    public static function fromString(string $value): static
+    public static function fromString(string $value): self
     {
-        return static::from($value);
+        return self::from($value);
     }
 
     /**
