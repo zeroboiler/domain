@@ -1159,6 +1159,10 @@ When using `zeroboiler/response` with this domain package:
 
 ## Changelog
 
+### v1.25.0 (2026-08-07)
+
+- Refactor: Add `@internal` annotations to `InMemoryUnitOfWork` private implementation methods — `collectEventsFromAggregate()`, `collectNewEventsFromAggregate()`, `appendEvents()`, `dispatchPendingEvents()`, `invokePersistenceCallback()`, `restoreAggregateState()`, `requireActiveScope()`, `exitScope()`, `resetTransactionState()` — marking them as internal implementation details not part of the public API contract
+
 ### v1.24.0 (2026-08-07)
 
 - Feat: Add `DomainEventCollection::toArray()` — explicit method for API consistency, delegates to `jsonSerialize()`. Provides `toArray()` as the canonical serialization method across the ZeroBoiler ecosystem (ValueObject, Snapshot, ApiResponse, Entity, DomainEventCollection all support `toArray()`)
