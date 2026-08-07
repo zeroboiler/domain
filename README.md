@@ -1159,6 +1159,12 @@ When using `zeroboiler/response` with this domain package:
 
 ## Changelog
 
+### v1.24.0 (2026-08-07)
+
+- Feat: Add `DomainEventCollection::toArray()` — explicit method for API consistency, delegates to `jsonSerialize()`. Provides `toArray()` as the canonical serialization method across the ZeroBoiler ecosystem (ValueObject, Snapshot, ApiResponse, Entity, DomainEventCollection all support `toArray()`)
+- Test: Add `DomainEventCollection` toArray tests — verify toArray/jsonSerialize consistency, empty collection behavior, and array-type output
+- Bump: Version 1.23.0 → 1.24.0
+
 ### v1.23.0 (2026-08-07)
 
 - Test: Add `DomainExceptionResponseBridgeTest` — comprehensive acceptance tests for DomainException → API response bridging covering toErrorArray() RFC 9457 structure (title/detail/code), jsonSerialize consistency, unique default error codes per exception type, custom error code override via because()/for()/forAggregate() factories, class basename title, exception message in detail, toArray structure (error_code/message/file/line), Throwable compliance, and DomainResponseFactory::error() bridge compatibility

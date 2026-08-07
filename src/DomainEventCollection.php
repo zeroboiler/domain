@@ -212,4 +212,24 @@ final readonly class DomainEventCollection implements Countable, IteratorAggrega
     {
         return $this->events[$index] ?? null;
     }
+
+    /**
+     * Convert the collection to a plain array representation.
+     *
+     * Alias for {@see jsonSerialize()} — provides explicit `toArray()` method
+     * for API consistency across the ZeroBoiler ecosystem.
+     *
+     * @return list<array<string, mixed>> Each event serialized to array.
+     *
+     * @example
+     * ```php
+     * $collection = new DomainEventCollection([$event1, $event2]);
+     * $collection->toArray();  // [[...], [...]]
+     * $collection->jsonSerialize(); // Same result
+     * ```
+     */
+    public function toArray(): array
+    {
+        return $this->jsonSerialize();
+    }
 }

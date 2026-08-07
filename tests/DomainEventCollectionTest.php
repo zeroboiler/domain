@@ -133,4 +133,28 @@ describe('DomainEventCollection', function (): void {
         expect($all1)->toBe($all2)
             ->and($all1)->toHaveCount(1);
     });
+
+    it('toArray returns same result as jsonSerialize for API consistency', function (): void {
+        $event1 = DomainEvent::occur('order.placed', ['id' => 'uuid-1', 'status' => 'pending']);
+        $event2 = DomainEvent::occur('order.paid', ['id' => 'uuid-1', 'amount' => 99.99]);
+        $collection = new DomainEventCollection([$event1, $event2]);
+
+        $toArray = $collection->toArray();
+        $jsonSerialize = $collection->jsonSerialize();
+
+        expect($toArray)->toBe($jsonSerialize)
+            ->and($toArray)->toHaveCount(2)
+            ->and($toArray)->toBeArray();
+
+        // Each event should be serialized to an array, not a DomainEvent object
+        expect($toArray[0])->toBeArray()
+            ->and($toArray[1])->toBeArray();
+    });
+
+    it('toArray returns empty array for empty collection', function (): void {
+        $collection = new DomainEventCollection;
+
+        expect($collection->toArray())->toBe([])
+            ->and($collection->toArray())->toEqual($collection->jsonSerialize());
+    });
 });
