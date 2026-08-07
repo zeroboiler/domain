@@ -140,7 +140,7 @@ use Illuminate\Database\Eloquent\Collection;
  * Handles persistence and reconstitution of {$aggregateName} aggregates.
  * Add custom query methods as needed.
  */
-class {$className} implements {$aggregateName}Repository
+final class {$className} implements {$aggregateName}Repository
 {
     public function __construct(
         private readonly Model \${$aggregateVar}Model,

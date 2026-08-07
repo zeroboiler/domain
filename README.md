@@ -882,6 +882,51 @@ optimistic concurrency control:
 // Response includes: {"_meta": {"version": 5}}
 ```
 
+### Service Provider & Configuration
+
+The `DomainServiceProvider` is auto-discovered by Laravel and registers:
+
+- **`UnitOfWork`** singleton — bound to `ZeroBoiler\Domain\Contracts\UnitOfWork`
+  - Includes optional event dispatching via `zeroboiler/events`'s `DomainEventDispatcher`
+  - If the events package is not installed, events are silently discarded
+- **`SnapshotStore`** singleton — bound to `ZeroBoiler\Domain\Snapshots\SnapshotStore`
+  - Defaults to `InMemorySnapshotStore`; override via `config('domain.snapshot_driver')`
+- **Console commands** — registered when running in console mode
+
+```php
+// config/domain.php (optional)
+return [
+    // Override the default in-memory snapshot store
+    'snapshot_driver' => env('DOMAIN_SNAPSHOT_DRIVER', 'memory'),
+    // Available: 'memory' (default), or a custom driver registered in your service provider
+];
+```
+
+### Octane & Long-Running Process Safety
+
+The domain package is designed for safe operation in long-running processes (Octane, Swoole, RoadRunner).
+
+The `DomainServiceProvider` registers an `octane.request.terminate` listener that clears the `DomainEventDispatcher`'s listeners between requests, preventing memory leaks and cross-request contamination when using event-sourced aggregates.
+
+| Component | Octane Safety | Mechanism |
+|---|---|---|
+| `InMemoryUnitOfWork` | ✅ Safe | `clear()` resets all state; `begin()` clears committed/deleted |
+| `InMemorySnapshotStore` | ✅ Safe | Stateless singleton, no cross-request caching |
+| `AggregateRoot` | ✅ Safe | No static mutable state; ID and version are per-instance |
+| `DomainEventCollection` | ✅ Safe | `final readonly class` — fully immutable |
+| `DomainEventDispatcher` | ✅ Safe | Listeners cleared on `octane.request.terminate` |
+
+```php
+// Safe in Octane: each request gets a clean UnitOfWork
+$uow = app(UnitOfWork::class);
+$uow->run(fn () => $service->process($order));
+// After response: UoW is reset, event dispatcher listeners are cleared
+```
+
+> **Note**: `InMemorySnapshotStore` loses all data between requests in Octane.
+> For production, implement a persistent `SnapshotStore` (Redis, database) and
+> bind it in your service provider to replace the default.
+
 ## Testing
 
 ```bash
@@ -1109,6 +1154,13 @@ When using `zeroboiler/response` with this domain package:
 | < 8.4 | ❌ Not supported | Requires union types, readonly classes, named arguments |
 
 ## Changelog
+
+### v1.18.0 (2026-08-07)
+
+- Docs: Add `Service Provider & Configuration` section — document registered singletons (UnitOfWork, SnapshotStore), console commands, optional configuration via `config('domain.snapshot_driver')`, and runtime event dispatching behavior
+- Docs: Add `Octane & Long-Running Process Safety` section — per-component safety matrix, `octane.request.terminate` listener documentation, and production snapshot store guidance
+- Fix: Generated repository stub now uses `final class` instead of `class` for production-ready code generation
+- Bump: Version 1.17.0 → 1.18.0
 
 ### v1.17.0 (2026-08-07)
 
