@@ -150,6 +150,43 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
     }
 
     /**
+     * Convert the aggregate root to an array representation.
+     *
+     * Provides a base array with identity and version information.
+     * Subclasses should override to add domain-specific fields.
+     * Useful for DomainTransformer integration and response serialization.
+     *
+     * @return array{id: string, version: int, type: string}
+     *
+     * @example
+     * ```php
+     * $order->toArray();
+     * // ['id' => '550e8400-...', 'version' => 3, 'type' => 'Order']
+     *
+     * // Subclass override:
+     * class Order extends AggregateRoot
+     * {
+     *     public function toArray(): array
+     *     {
+     *         return [
+     *             ...parent::toArray(),
+     *             'status' => $this->status,
+     *             'total' => $this->total,
+     *         ];
+     *     }
+     * }
+     * ```
+     */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->id(),
+            'version' => $this->version,
+            'type' => (new \ReflectionClass($this))->getShortName(),
+        ];
+    }
+
+    /**
      * Reconstitute an aggregate root from a snapshot and optional post-snapshot events.
      *
      * This is a convenience factory that combines snapshot restoration with

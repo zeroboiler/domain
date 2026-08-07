@@ -109,4 +109,51 @@ abstract class DomainException extends Exception
     {
         return 'DOMAIN_ERROR';
     }
+
+    /**
+     * Convert the exception to a structured array for API responses.
+     *
+     * Returns an RFC 9457-compatible error object with title, detail,
+     * and a machine-readable code. Useful for mapping domain exceptions
+     * to response DTOs via DomainResponseFactory::error().
+     *
+     * @return array{title: string, detail: string, code: string}
+     *
+     * @example
+     * ```php
+     * try {
+     *     $order->pay($amount);
+     * } catch (DomainException $e) {
+     *     $error = $e->toErrorArray();
+     *     // ['title' => '...', 'detail' => '...', 'code' => 'INVALID_STATE']
+     *     return DomainResponseFactory::error($error)->send();
+     * }
+     * ```
+     */
+    public function toErrorArray(): array
+    {
+        return [
+            'title' => class_basename(static::class),
+            'detail' => $this->getMessage(),
+            'code' => $this->errorCode(),
+        ];
+    }
+
+    /**
+     * Convert the exception to an array representation.
+     *
+     * Includes the error code, message, and file/line information
+     * for debugging and logging purposes.
+     *
+     * @return array{error_code: string, message: string, file: string, line: int}
+     */
+    public function toArray(): array
+    {
+        return [
+            'error_code' => $this->errorCode(),
+            'message' => $this->getMessage(),
+            'file' => $this->getFile(),
+            'line' => $this->getLine(),
+        ];
+    }
 }
