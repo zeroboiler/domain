@@ -1155,6 +1155,11 @@ When using `zeroboiler/response` with this domain package:
 
 ## Changelog
 
+### v1.20.0 (2026-08-07)
+
+- Test: Add `DomainFinalProductionTest` — comprehensive production verification covering AggregateRootId (generate/fromString/equals/JSON serialization/readonly+final), UuidIdentifier (generate/fromString/isValid/toUuid/equals/JSON), UlidIdentifier (generate/fromString/toUlid/isValid/JSON), StringIdentifier (from/empty validation/isValid/equals/JSON), IntegerIdentifier (from/fromString/isValid/equals/JSON/final+readonly), Entity (string/int/Stringable ID/equals/domain events), AggregateRoot (version/id/aggregateId/apply increment/pullDomainEvents/clearDomainEvents/setVersion/incrementVersion/toArray/equals), DomainEventCollection (constructor validation/filter/map/first/last/merge/get/JSON/Countable+IteratorAggregate+JsonSerializable/readonly+final), Snapshot (create/toArray/fromArray/equals/JSON/final+readonly), InMemorySnapshotStore (save+load/has/delete/deleteOlderThan/count/stats/purge/SnapshotStore interface), InMemoryUnitOfWork (begin/rollback/run+auto-commit/run+auto-rollback/nested savepoints/track requires active/isTracking/queueEvent requires active/clear/isActive/final/UnitOfWork interface), Domain Exceptions (all 7 concrete types: default+custom errorCode, factory methods, RFC 9457 JSON serialization, toErrorArray, all final), Contracts (AggregateRootId Stringable+JsonSerializable, Identifier implementations, AggregateRoot extends Entity)
+- Bump: Version 1.19.0 → 1.20.0
+
 ### v1.19.0 (2026-08-07)
 
 - Refactor: Add `#[Override]` to `DomainListCommand::handle()` — PHP 8.5 best practice compliance
