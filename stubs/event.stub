@@ -4,13 +4,34 @@ declare(strict_types=1);
 
 namespace {{ namespace }};
 
-use ZeroBoiler\Domain\Contracts\DomainEvent;
+use ZeroBoiler\Events\Domain\DomainEvent;
 
-readonly class {{ class }} extends DomainEvent
+/**
+ * Domain event representing a {{ variable }} change in the {{ class }} context.
+ *
+ * @see DomainEvent
+ */
+final class {{ class }} extends DomainEvent
 {
     public function __construct(
-        public {{ class }}Id ${{ variable }},
+        public readonly string $aggregateId,
+        public readonly array $payload = [],
     ) {
-        parent::__construct();
+        parent::__construct(
+            eventType: '{{ eventType }}',
+            payload: $payload,
+        );
+    }
+
+    /**
+     * Create a new event with the given aggregate ID and payload.
+     *
+     * @param  string  $aggregateId  The aggregate root's identity.
+     * @param  array<string, mixed>  $payload  Event-specific data.
+     * @return self
+     */
+    public static function occur(string $aggregateId, array $payload = []): self
+    {
+        return new self($aggregateId, $payload);
     }
 }

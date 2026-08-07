@@ -714,17 +714,17 @@ $uow->clear();                             // Resets everything to initial state
 
 ```bash
 # Generate aggregate root
-php artisan domain:aggregate Order
+php artisan zeroboiler:domain:aggregate Order
 
-# Generate repository interface
-php artisan domain:repository Order
+# Generate repository interface + Eloquent implementation
+php artisan zeroboiler:domain:repository Order
 
-# List all domain aggregates
-php artisan domain:list
+# List all domain classes
+php artisan zeroboiler:domain:list
 
-# Manage snapshots
-php artisan domain:snapshot list
-php artisan domain:snapshot purge --type=Order
+# Inspect snapshot store
+php artisan domain:snapshot --class=App\Domain\Aggregates\Order
+php artisan domain:snapshot --class=App\Domain\Aggregates\Order --id=order-123
 ```
 
 ## Cross-Package Integration: Domain → Response
@@ -1063,6 +1063,14 @@ When using `zeroboiler/response` with this domain package:
 | < 8.4 | ❌ Not supported | Requires union types, readonly classes, named arguments |
 
 ## Changelog
+
+### v1.16.0 (2026-08-07)
+
+- Fix: Correct aggregate stub imports — use `ZeroBoiler\Domain\AggregateRoot` and `ZeroBoiler\Events\Domain\DomainEvent` instead of non-existent classes
+- Fix: Correct repository stub — add proper type annotations (`list<AggregateRoot>`) and fix imports
+- Fix: Rewrite event stub — use proper `DomainEvent::occur()` factory pattern with `readonly` and typed constructor
+- Docs: Fix CLI command names in README to match actual command signatures (`zeroboiler:domain:*`)
+- Docs: Add accurate CLI usage examples for snapshot inspection command
 
 ### v1.15.0 (2026-08-07)
 

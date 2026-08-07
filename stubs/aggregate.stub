@@ -4,30 +4,28 @@ declare(strict_types=1);
 
 namespace {{ namespace }};
 
-use ZeroBoiler\Domain\Base\AggregateRoot;
-use ZeroBoiler\Domain\Contracts\DomainEvent;
-use ZeroBoiler\Domain\Identifiers\UuidIdentifier;
+use ZeroBoiler\Domain\AggregateRoot;
+use ZeroBoiler\Domain\AggregateRootId;
+use ZeroBoiler\Events\Domain\DomainEvent;
 
 readonly class {{ class }} extends AggregateRoot
 {
-    use \ZeroBoiler\Domain\Concerns\HasDomainEvents;
-
     public function __construct(
-        public {{ class }}Id $id,
-    ) {}
+        public readonly {{ class }}Id $id,
+    ) {
+        parent::__construct($id);
+    }
 
-    public static function create(): static
+    public static function create({{ class }}Id $id = null): static
     {
-        $id = {{ class }}Id::generate();
+        $id = $id ?? {{ class }}Id::generate();
         $aggregate = new self($id);
-
-        $aggregate->raise(new {{ class }}Created($id));
 
         return $aggregate;
     }
 
-    public function id(): string|int
+    public function id(): string
     {
-        return $this->id->value;
+        return $this->id->toString();
     }
 }

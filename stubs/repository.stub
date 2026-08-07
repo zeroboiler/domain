@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace {{ namespace }};
 
 use ZeroBoiler\Domain\Contracts\Repository;
-use ZeroBoiler\Domain\Contracts\AggregateRoot;
 
 interface {{ class }} extends Repository
 {
     /**
-     * @return {{ aggregate }}[]
+     * Find all aggregates of this type.
+     *
+     * @return list<\ZeroBoiler\Domain\AggregateRoot>
      */
     public function findAll(): array;
 }
