@@ -2,7 +2,14 @@
 
 All notable changes to the `zeroboiler/domain` package will be documented in this file.
 
-## [1.26.0] - 2026-08-07
+## [1.28.0] - 2026-08-07
+
+### Changed
+- Full production readiness audit — all classes verified for PHP 8.5 syntax, strict types, typed properties, return type declarations, and comprehensive docblocks
+- Bump minimum PHP version alignment (PHP ^8.5)
+- Added cross-references between exception hierarchy classes for better IDE navigation
+
+## [1.27.0] - 2026-08-07
 
 ### Changed
 - Enriched `DomainRepositoryCommand::buildImplementationStub()` docblocks — added `@param` and `@return` for all 5 parameters
