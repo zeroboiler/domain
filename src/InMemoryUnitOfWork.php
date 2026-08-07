@@ -562,6 +562,7 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      * savepoints, snapshots, pending events, and committed/deleted aggregates.
      * Useful for testing and between test cases.
      */
+    #[\Override]
     public function clear(): void
     {
         $this->savepoints = [];

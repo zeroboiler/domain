@@ -855,7 +855,7 @@ composer quality           # Pint + PHPStan + Rector + Tests
 | `Entity` | abstract | Base domain entity with flexible ID | `id()`, `equals()`, constructor accepts `int\|string\|Stringable` |
 | `ValueObject` | abstract | Domain value object base | `equals()`, `toArray()` (from value-objects package) |
 | `DomainEventCollection` | final readonly | Type-safe event collection | `all()`, `count()`, `isEmpty()`, `filter()`, `map()`, `first()`, `last()`, `merge()` |
-| `InMemoryUnitOfWork` | final | Transactional event queuing | `begin()`, `commit()`, `rollback()`, `run()`, `track()`, `queueEvent()` |
+| `InMemoryUnitOfWork` | final | Transactional event queuing | `begin()`, `commit()`, `rollback()`, `run()`, `track()`, `queueEvent()`, `clear()` |
 | `SnapshottingRepository` | final readonly | Repository decorator with snapshots | `find()`, `save()`, `delete()`, `findWithSnapshot()` |
 
 ### Identifiers
@@ -875,7 +875,7 @@ composer quality           # Pint + PHPStan + Rector + Tests
 | `Contracts\AggregateRoot` | `Entity` | `version(): int`, `pullDomainEvents()`, `incrementVersion()`, `clearDomainEvents()` |
 | `Contracts.Identifier` | `Stringable` | `fromString()`, `toString()`, `equals()` |
 | `Contracts.Repository` | — | `find()`, `save()`, `delete()` |
-| `Contracts.UnitOfWork` | — | `begin()`, `commit()`, `rollback()`, `run()`, `track()`, `queueEvent()` |
+| `Contracts.UnitOfWork` | — | `begin()`, `commit()`, `rollback()`, `run()`, `track()`, `queueEvent()`, `clear()` |
 
 ### Traits
 

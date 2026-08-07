@@ -111,4 +111,13 @@ interface UnitOfWork
      * Get the count of pending domain events.
      */
     public function getPendingEventCount(): int;
+
+    /**
+     * Clear all state including committed/deleted aggregates and pending events.
+     *
+     * Resets the unit of work to its initial state, discarding all
+     * savepoints, snapshots, pending events, and committed/deleted aggregates.
+     * Intended for testing — use rollback() for transactional resets.
+     */
+    public function clear(): void;
 }
