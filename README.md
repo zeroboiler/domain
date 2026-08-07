@@ -1017,7 +1017,57 @@ The domain package targets PHPStan level 9 strict analysis:
 - Generic annotations (`@template`, `@implements`, `@param`) are complete
 - `#[\Override]` attribute on all interface/parent method implementations
 
+## Deprecation Roadmap & Migration Guide
+
+### v3.0 Removal Targets
+
+The following APIs are deprecated and will be removed in v3.0:
+
+| API | Replacement | Since | Action |
+|---|---|---|---|
+| `Identifiers\Identifier` (abstract class) | `UuidIdentifier` | 2.5.0 | Extend `UuidIdentifier` instead |
+| `AggregateRoot::getVersion()` | `AggregateRoot::version()` | 1.5.0 | Rename calls to `version()` |
+| `InMemorySnapshotStore::clear()` | `InMemorySnapshotStore::purge()` | 1.5.0 | Rename calls to `purge()` |
+
+### Migration Examples
+
+```php
+// ❌ Deprecated (removed in v3.0)
+class OrderId extends ZeroBoiler\Domain\Identifiers\Identifier {}
+$id = $aggregate->getVersion();
+$store->clear();
+
+// ✅ Replacement
+class OrderId extends ZeroBoiler\Domain\Identifiers\UuidIdentifier {}
+$id = $aggregate->version();
+$store->purge();
+```
+
+### Response Package Deprecation (v3.0)
+
+When using `zeroboiler/response` with this domain package:
+
+| API | Replacement | Notes |
+|---|---|---|
+| `Contracts\Transformable` | `Transformers\TransformerInterface` | Extend canonical interface directly |
+| `TransformerContract` | `Transformers\TransformerInterface` | Implement interface instead of extending abstract class |
+| `TransformerContract::collection()` | `Transformer` pipeline | Use `Response::transform()->through()->collection()` |
+| `TransformerContract::item()` | `Transformer` pipeline | Use `Response::transform()->through()->item()` |
+
+### PHP Version Compatibility
+
+| PHP Version | Status | Notes |
+|---|---|---|
+| 8.5 | ✅ Supported | Current minimum |
+| 8.4 | ⚠️ Partial | `#[Deprecated]` attribute not available; docblock `@deprecated` retained |
+| < 8.4 | ❌ Not supported | Requires union types, readonly classes, named arguments |
+
 ## Changelog
+
+### v1.14.0 (2026-08-07)
+
+- Docs: Add Deprecation Roadmap & Migration Guide — v3.0 removal targets with migration examples
+- Docs: Add PHP Version Compatibility matrix
 
 ### v1.13.0 (2026-08-07)
 
