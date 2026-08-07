@@ -84,12 +84,16 @@ readonly class StringIdentifier implements IdentifierContract, JsonSerializable
     /**
      * Check equality with another identifier.
      *
+     * Two string identifiers are equal if and only if they are of the same
+     * concrete class and their string values are identical. Subclass instances
+     * are never equal, even with the same value.
+     *
      * @param  IdentifierContract  $other  The identifier to compare against.
-     * @return bool True if both identifiers are StringIdentifiers with the same value.
+     * @return bool True if both are the same concrete class with identical values.
      */
     public function equals(IdentifierContract $other): bool
     {
-        return $other instanceof StringIdentifier && $this->value === $other->value;
+        return $other instanceof StringIdentifier && $other::class === static::class && $this->value === $other->value;
     }
 
     /**

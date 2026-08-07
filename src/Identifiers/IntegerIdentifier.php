@@ -96,12 +96,15 @@ final readonly class IntegerIdentifier implements IdentifierContract, JsonSerial
     /**
      * Check equality with another identifier.
      *
+     * Two integer identifiers are equal if and only if they are of the same
+     * concrete class and their integer values are identical.
+     *
      * @param  IdentifierContract  $other  The identifier to compare against.
-     * @return bool True if both identifiers are IntegerIdentifiers with the same value.
+     * @return bool True if both are the same concrete class with identical values.
      */
     public function equals(IdentifierContract $other): bool
     {
-        return $other instanceof IntegerIdentifier && $this->value === $other->value;
+        return $other instanceof IntegerIdentifier && $other::class === static::class && $this->value === $other->value;
     }
 
     /**

@@ -99,12 +99,16 @@ abstract readonly class UlidIdentifier implements IdentifierContract, JsonSerial
     /**
      * Check equality with another identifier.
      *
+     * Two ULID identifiers are equal if and only if they are of the same
+     * concrete class and their ULID string values are identical. Subclass
+     * instances (e.g., ProductId vs CategoryId) are never equal.
+     *
      * @param  IdentifierContract  $other  The identifier to compare against.
-     * @return bool True if both identifiers are ULIDs with the same value.
+     * @return bool True if both are the same concrete class with identical ULID values.
      */
     public function equals(IdentifierContract $other): bool
     {
-        return $other instanceof UlidIdentifier && $this->value === $other->value;
+        return $other instanceof UlidIdentifier && $other::class === static::class && $this->value === $other->value;
     }
 
     /**
