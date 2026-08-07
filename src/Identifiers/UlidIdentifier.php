@@ -128,6 +128,7 @@ abstract readonly class UlidIdentifier implements IdentifierContract, JsonSerial
      *
      * @return string The ULID string.
      */
+    #[\Override]
     public function jsonSerialize(): string
     {
         return $this->value;

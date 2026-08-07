@@ -104,6 +104,7 @@ final readonly class DomainEventCollection implements Countable, IteratorAggrega
      *
      * @return list<array<string, mixed>>
      */
+    #[\Override]
     public function jsonSerialize(): array
     {
         return array_map(

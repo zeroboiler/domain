@@ -114,6 +114,7 @@ final readonly class IntegerIdentifier implements IdentifierContract, JsonSerial
      *
      * @return int The integer value.
      */
+    #[\Override]
     public function jsonSerialize(): int
     {
         return $this->value;

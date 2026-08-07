@@ -127,6 +127,7 @@ abstract readonly class UuidIdentifier implements IdentifierContract, JsonSerial
      *
      * @return string The UUID string.
      */
+    #[\Override]
     public function jsonSerialize(): string
     {
         return $this->value;

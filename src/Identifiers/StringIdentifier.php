@@ -111,6 +111,7 @@ readonly class StringIdentifier implements IdentifierContract, JsonSerializable
      *
      * @return string The identifier string.
      */
+    #[\Override]
     public function jsonSerialize(): string
     {
         return $this->value;
