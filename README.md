@@ -955,7 +955,74 @@ class AuditLog extends AggregateRoot { ... }
 class SmallAggregate extends AggregateRoot { ... }
 ```
 
+## Security & Production Guarantees
+
+### Input Validation at Construction Time
+
+All domain identifiers and value objects perform validation at construction time:
+
+```php
+// ✅ Invalid input throws immediately — never propagates invalid state
+UuidIdentifier::fromString('not-a-uuid');  // throws InvalidUuidStringException
+UlidIdentifier::fromString('not-a-ulid');   // throws InvalidArgumentException
+StringIdentifier::from('');                  // throws ValueError
+IntegerIdentifier::from('abc');             // handled gracefully via fromString()
+
+AggregateRootId::fromString('not-a-uuid');  // throws InvalidUuidStringException
+```
+
+### Immutability Guarantees
+
+| Class | Immutability | Mechanism |
+|---|---|---|
+| `AggregateRootId` | ✅ Fully immutable | `final readonly class` |
+| `UuidIdentifier` | ✅ Immutable value | `abstract readonly class` |
+| `UlidIdentifier` | ✅ Immutable value | `abstract readonly class` |
+| `StringIdentifier` | ✅ Immutable value | `readonly class` |
+| `IntegerIdentifier` | ✅ Immutable value | `final readonly class` |
+| `Snapshot` | ✅ Fully immutable | `final readonly class` |
+| `SnapshotPolicy` | ✅ Fully immutable | `final readonly class` attribute |
+| `DomainEventCollection` | ✅ Immutable collection | `final readonly class` (returns new self on filter/merge) |
+| `AggregateRoot` | ⚠️ Mutable state | `protected` constructor, version mutable for event replay |
+| `Entity` | ⚠️ Mutable state | `public readonly $id` (identity immutable, properties mutable) |
+| `ValueObject` | ⚠️ Subclass-dependent | Immutable when all properties are `public readonly` |
+
+### Error Code Contract
+
+All domain exceptions provide a stable, machine-readable error code via `errorCode()`:
+
+```php
+use ZeroBoiler\Domain\Exceptions\InvalidStateDomainException;
+use ZeroBoiler\Domain\Exceptions\OptimisticLockException;
+
+// Default error codes:
+InvalidStateDomainException::because('...')->errorCode();      // 'INVALID_STATE'
+InvalidArgumentDomainException::because('...')->errorCode();   // 'INVALID_ARGUMENT'
+NotFoundDomainException::because('...')->errorCode();           // 'NOT_FOUND'
+AggregateNotFoundException::for('...', '...')->errorCode();     // 'AGGREGATE_NOT_FOUND'
+ConflictDomainException::because('...')->errorCode();           // 'CONFLICT'
+OptimisticLockException::for('...', 1, 2)->errorCode();        // 'OPTIMISTIC_LOCK'
+InvalidAggregateRootException::notAnAggregate($obj)->errorCode(); // 'INVALID_AGGREGATE_ROOT'
+
+// Custom error codes override defaults:
+InvalidStateDomainException::because('...', code: 'ORDER_NOT_PENDING')->errorCode();
+// → 'ORDER_NOT_PENDING' (custom takes precedence)
+```
+
+### PHPStan Level 9 Compatibility
+
+The domain package targets PHPStan level 9 strict analysis:
+- All methods have explicit return types
+- All properties use typed declarations
+- Generic annotations (`@template`, `@implements`, `@param`) are complete
+- `#[\Override]` attribute on all interface/parent method implementations
+
 ## Changelog
+
+### v1.12.0 (2026-08-07)
+
+- Docs: Add Security & Production Guarantees section — immutability matrix, error code contract, input validation guarantees
+- Docs: Add PHPStan level 9 compatibility note
 
 ### v1.10.0 (2026-08-06)
 
