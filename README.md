@@ -1159,6 +1159,11 @@ When using `zeroboiler/response` with this domain package:
 
 ## Changelog
 
+### v1.23.0 (2026-08-07)
+
+- Test: Add `DomainExceptionResponseBridgeTest` — comprehensive acceptance tests for DomainException → API response bridging covering toErrorArray() RFC 9457 structure (title/detail/code), jsonSerialize consistency, unique default error codes per exception type, custom error code override via because()/for()/forAggregate() factories, class basename title, exception message in detail, toArray structure (error_code/message/file/line), Throwable compliance, and DomainResponseFactory::error() bridge compatibility
+- Bump: Version 1.22.0 → 1.23.0
+
 ### v1.22.0 (2026-08-07)
 
 - Feat: Add `MakeValueObjectCommand` — Artisan generator for Domain Value Object classes using the existing `value-object.stub`
