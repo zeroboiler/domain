@@ -1019,6 +1019,11 @@ The domain package targets PHPStan level 9 strict analysis:
 
 ## Changelog
 
+### v1.13.0 (2026-08-07)
+
+- Fix: `InMemoryUnitOfWork::begin()` now clears `committed` and `deleted` arrays from previous transaction cycles, preventing stale data from leaking into new transactions
+- Test: Add `DomainProductionVerificationTest` — comprehensive production verification covering AggregateRootId immutability/JSON serialization, Entity identity equality/flexible ID types, ValueObject equality, Identifier types (UUID/ULID/String/Integer) validation/serialization, DomainEventCollection type safety/JSON serialization, DomainException error codes/custom codes/factory methods, Snapshot round-trip/JSON serialization/type validation, InMemorySnapshotStore CRUD/purge/stats, Unit of Work declarative/rollback/clear lifecycle, Identifier cross-type inequality, and contract compliance
+
 ### v1.12.0 (2026-08-07)
 
 - Docs: Add Security & Production Guarantees section — immutability matrix, error code contract, input validation guarantees

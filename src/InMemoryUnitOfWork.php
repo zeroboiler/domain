@@ -157,6 +157,10 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
         if ($this->nestingDepth === 0) {
             $this->savepoints = [];
             $this->currentScope = -1;
+            // Clear committed/deleted from previous transaction cycle
+            // to prevent stale data from leaking into new transactions.
+            $this->committed = [];
+            $this->deleted = [];
         }
 
         $this->nestingDepth++;
@@ -544,6 +548,10 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
 
     /**
      * Reset all transactional state after the outermost scope completes.
+     *
+     * Clears savepoints, snapshots, pending events, and scope counters.
+     * Does NOT clear committed/deleted — those are accessible via
+     * getCommitted()/getDeleted() until the next begin() or clear().
      */
     private function resetTransactionState(): void
     {
