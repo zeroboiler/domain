@@ -294,6 +294,8 @@ $id->isValid('abc');                         // false
 
 ### Repository
 
+The `Repository` contract defines the standard CRUD operations for aggregate roots with built-in optimistic locking support.
+
 ```php
 use ZeroBoiler\Domain\Contracts\Repository;
 
@@ -301,6 +303,50 @@ interface OrderRepository extends Repository
 {
     public function findById(UuidIdentifier $id): ?Order;
 }
+
+// Eloquent implementation with optimistic locking:
+final class EloquentOrderRepository implements OrderRepository
+{
+    public function find(string|int $id): ?Order
+    {
+        return Order::where('id', $id)->first();
+    }
+
+    public function save(AggregateRoot $aggregate): void
+    {
+        $persisted = $this->find($aggregate->id());
+
+        if ($persisted !== null && $persisted->version() !== $aggregate->version()) {
+            throw OptimisticLockException::for(
+                $aggregate->id(),
+                expectedVersion: $aggregate->version(),
+                actualVersion: $persisted->version(),
+            );
+        }
+
+        DB::table('orders')->upsert([
+            'id' => $aggregate->id(),
+            'version' => $aggregate->version() + 1,
+            'state' => json_encode($aggregate->toArray()),
+        ], 'id');
+
+        $aggregate->incrementVersion();
+    }
+
+    public function delete(string|int $id): void
+    {
+        DB::table('orders')->delete($id);
+    }
+}
+
+// Wrap with snapshot support:
+$repo = new SnapshottingRepository(
+    inner: new EloquentOrderRepository(),
+    snapshotStore: new InMemorySnapshotStore(),
+    aggregateType: Order::class,
+);
+$repo->find($orderId);  // Loads from snapshot + replays remaining events
+$repo->save($order);    // Saves + auto-snapshots when version % 50 === 0
 ```
 
 ### Unit of Work
@@ -873,8 +919,8 @@ composer quality           # Pint + PHPStan + Rector + Tests
 |---|---|---|
 | `Contracts\Entity` | — | `id(): string`, `equals(Entity): bool` |
 | `Contracts\AggregateRoot` | `Entity` | `version(): int`, `pullDomainEvents()`, `incrementVersion()`, `clearDomainEvents()` |
-| `Contracts.Identifier` | `Stringable` | `fromString()`, `toString()`, `equals()` |
-| `Contracts.Repository` | — | `find()`, `save()`, `delete()` |
+| `Contracts\Identifier` | `Stringable` | `fromString()`, `toString()`, `equals()` |
+| `Contracts\Repository` | — | `find(id): ?AggregateRoot`, `save(aggregate): void`, `delete(id): void` |
 | `Contracts.UnitOfWork` | — | `begin()`, `commit()`, `rollback()`, `run()`, `track()`, `queueEvent()`, `clear()` |
 
 ### Traits
@@ -1063,6 +1109,14 @@ When using `zeroboiler/response` with this domain package:
 | < 8.4 | ❌ Not supported | Requires union types, readonly classes, named arguments |
 
 ## Changelog
+
+### v1.17.0 (2026-08-07)
+
+- Docs: Enrich `Contracts\Repository` interface — add `@see` references, `@example` with full Eloquent implementation, `@param`/`@return` annotations, and version check guidance
+- Docs: Enrich Repository section in README — add Eloquent implementation with optimistic locking and SnapshottingRepository integration examples
+- Docs: Update Contracts Quick Reference with detailed Repository method signatures
+- Test: Add `AggregateRootLifecycleTest` — comprehensive lifecycle tests covering creation, events, versioning, identity, equality, toArray serialization, fromHistory reconstitution, state mutation with invariants, AggregateRootId round-trip, identifier cross-type inequality, JSON serialization consistency, and DomainException error code uniqueness
+- Bump: Version 1.16.0 → 1.17.0
 
 ### v1.16.0 (2026-08-07)
 
