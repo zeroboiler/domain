@@ -12,6 +12,7 @@ use Illuminate\Support\ServiceProvider;
 use ZeroBoiler\Domain\Commands\DomainAggregateCommand;
 use ZeroBoiler\Domain\Commands\DomainListCommand;
 use ZeroBoiler\Domain\Commands\DomainRepositoryCommand;
+use ZeroBoiler\Domain\Commands\MakeValueObjectCommand;
 use ZeroBoiler\Domain\Console\Commands\SnapshotCommand;
 use ZeroBoiler\Domain\Contracts\UnitOfWork as UnitOfWorkContract;
 use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
@@ -117,6 +118,7 @@ final class DomainServiceProvider extends ServiceProvider
                 DomainAggregateCommand::class,
                 DomainRepositoryCommand::class,
                 DomainListCommand::class,
+                MakeValueObjectCommand::class,
                 SnapshotCommand::class,
             ]);
         }

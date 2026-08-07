@@ -52,7 +52,7 @@ installed, ensuring `SnapshottingRepository` works without it.
 - **Snapshots** — `SnapshottingRepository` decorator with configurable `#[SnapshotPolicy]`
 - **Identifier Types** — `UuidIdentifier`, `UlidIdentifier`, `StringIdentifier`, `IntegerIdentifier`
 - **DomainException** hierarchy — typed exceptions for domain violations
-- **CLI Generators** — `domain:aggregate`, `domain:repository`, `domain:list`, `domain:snapshot`
+- **CLI Generators** — `domain:aggregate`, `domain:repository`, `domain:value-object`, `domain:list`, `domain:snapshot`
 
 ## Architecture
 
@@ -765,6 +765,10 @@ php artisan zeroboiler:domain:aggregate Order
 # Generate repository interface + Eloquent implementation
 php artisan zeroboiler:domain:repository Order
 
+# Generate value object
+php artisan zeroboiler:domain:value-object Email
+php artisan zeroboiler:domain:value-object Money
+
 # List all domain classes
 php artisan zeroboiler:domain:list
 
@@ -1154,6 +1158,12 @@ When using `zeroboiler/response` with this domain package:
 | < 8.4 | ❌ Not supported | Requires union types, readonly classes, named arguments |
 
 ## Changelog
+
+### v1.22.0 (2026-08-07)
+
+- Feat: Add `MakeValueObjectCommand` — Artisan generator for Domain Value Object classes using the existing `value-object.stub`
+- Register `MakeValueObjectCommand` in `DomainServiceProvider`
+- Docs: Add `zeroboiler:domain:value-object` to Features, CLI Commands sections
 
 ### v1.21.0 (2026-08-07)
 
