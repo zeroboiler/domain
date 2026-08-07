@@ -1159,6 +1159,11 @@ When using `zeroboiler/response` with this domain package:
 
 ## Changelog
 
+### v1.27.0 (2026-08-07)
+
+- Docs: Enrich `HasDomainEvents` trait — add comprehensive `@param`/`@return` docblocks for `recordThat()`, `releaseEvents()`, `clearEvents()`, `hasUncommittedEvents()` with usage guidance and AggregateRoot override notes
+- Docs: Enrich README cross-package integration — document `HasDomainEvents::releaseEvents()` vs `AggregateRoot::pullDomainEvents()` distinction
+
 ### v1.26.0 (2026-08-07)
 
 - Docs: Enrich `DomainRepositoryCommand::buildImplementationStub()` docblocks — `@param`/`@return` for all 5 parameters

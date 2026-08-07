@@ -48,6 +48,12 @@ trait HasDomainEvents
 
     /**
      * Record a domain event for later dispatch.
+     *
+     * Appends the event to the internal buffer. Events are not dispatched
+     * immediately — they are queued for later dispatch via the Unit of Work
+     * or manual `releaseEvents()` call.
+     *
+     * @param  DomainEvent  $event  The domain event to record.
      */
     protected function recordThat(DomainEvent $event): void
     {
@@ -57,7 +63,13 @@ trait HasDomainEvents
     /**
      * Pull (destructive) all recorded domain events.
      *
-     * @return array<int, DomainEvent>
+     * Removes all events from the entity's internal buffer and returns them.
+     * After this call, `hasUncommittedEvents()` returns false.
+     *
+     * Note: AggregateRoot overrides this via `pullDomainEvents()` which
+     * returns a typed `DomainEventCollection` instead of a plain array.
+     *
+     * @return array<int, DomainEvent> All recorded events, in order of recording.
      */
     public function releaseEvents(): array
     {
@@ -69,6 +81,10 @@ trait HasDomainEvents
 
     /**
      * Clear all recorded domain events without dispatching.
+     *
+     * Discards all uncommitted events from the entity's buffer.
+     * Use this when events should be silently dropped (e.g., after
+     * a clone or reconstitution).
      */
     public function clearEvents(): void
     {
@@ -77,6 +93,11 @@ trait HasDomainEvents
 
     /**
      * Check if there are any uncommitted domain events.
+     *
+     * Returns true when the entity has recorded events that have not yet
+     * been pulled via `releaseEvents()` or cleared via `clearEvents()`.
+     *
+     * @return bool True if there are pending events, false otherwise.
      */
     public function hasUncommittedEvents(): bool
     {
