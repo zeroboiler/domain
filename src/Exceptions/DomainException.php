@@ -55,7 +55,7 @@ use Exception;
  * }
  * ```
  */
-abstract class DomainException extends Exception
+abstract class DomainException extends Exception implements \JsonSerializable
 {
     /**
      * Custom machine-readable error code, separate from PHP's int $code.
@@ -155,5 +155,18 @@ abstract class DomainException extends Exception
             'file' => $this->getFile(),
             'line' => $this->getLine(),
         ];
+    }
+
+    /**
+     * Serialize the exception for `json_encode()` support.
+     *
+     * Uses the RFC 9457-compatible error array format, suitable for
+     * direct JSON serialization in API error responses.
+     *
+     * @return array{title: string, detail: string, code: string}
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->toErrorArray();
     }
 }
