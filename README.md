@@ -1159,6 +1159,11 @@ When using `zeroboiler/response` with this domain package:
 
 ## Changelog
 
+### v1.26.0 (2026-08-07)
+
+- Docs: Enrich `DomainRepositoryCommand::buildImplementationStub()` docblocks — `@param`/`@return` for all 5 parameters
+- Docs: Enrich `DomainListCommand::listDirectory()` docblock — `@param`/`@return`
+
 ### v1.25.0 (2026-08-07)
 
 - Refactor: Add `@internal` annotations to `InMemoryUnitOfWork` private implementation methods — `collectEventsFromAggregate()`, `collectNewEventsFromAggregate()`, `appendEvents()`, `dispatchPendingEvents()`, `invokePersistenceCallback()`, `restoreAggregateState()`, `requireActiveScope()`, `exitScope()`, `resetTransactionState()` — marking them as internal implementation details not part of the public API contract

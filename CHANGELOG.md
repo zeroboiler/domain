@@ -2,6 +2,12 @@
 
 All notable changes to the `zeroboiler/domain` package will be documented in this file.
 
+## [1.26.0] - 2026-08-07
+
+### Changed
+- Enriched `DomainRepositoryCommand::buildImplementationStub()` docblocks — added `@param` and `@return` for all 5 parameters
+- Enriched `DomainListCommand::listDirectory()` docblock — added `@param` and `@return`
+
 ## [1.25.0] - 2026-08-07
 
 ### Added

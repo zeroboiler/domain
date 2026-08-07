@@ -45,6 +45,13 @@ final class DomainListCommand extends Command
         return Command::SUCCESS;
     }
 
+    /**
+     * List PHP files in a directory, grouped under a label.
+     *
+     * @param  string  $path  The absolute directory path to scan.
+     * @param  string  $label  The display label for the group (e.g. 'Aggregates').
+     * @return void
+     */
     private function listDirectory(string $path, string $label): void
     {
         if (! is_dir($path)) {

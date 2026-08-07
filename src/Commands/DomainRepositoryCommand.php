@@ -112,6 +112,13 @@ final class DomainRepositoryCommand extends GeneratorCommand
 
     /**
      * Build the Eloquent repository implementation from a stub.
+     *
+     * @param  string  $namespace  The implementation namespace (FQCN).
+     * @param  string  $className  The implementation class name.
+     * @param  string  $interfaceFqcn  The repository interface FQCN.
+     * @param  string  $aggregateFqcn  The aggregate root FQCN.
+     * @param  string  $aggregateName  The aggregate root short name.
+     * @return string The generated PHP source code.
      */
     private function buildImplementationStub(
         string $namespace,
