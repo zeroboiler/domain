@@ -83,4 +83,49 @@ abstract class Entity implements EntityContract
             return false;
         }
     }
+
+    /**
+     * Convert the entity to an array representation.
+     *
+     * Provides a base array with identity and type information.
+     * Subclasses should override to add domain-specific fields.
+     * Useful for DomainTransformer integration and response serialization.
+     *
+     * @return array{id: string, type: string}
+     *
+     * @example
+     * ```php
+     * // Base entity
+     * $item->toArray();
+     * // ['id' => '42', 'type' => 'OrderItem']
+     *
+     * // Subclass override:
+     * class OrderItem extends Entity
+     * {
+     *     public function __construct(
+     *         int|string|\Stringable $id,
+     *         public readonly string $productId,
+     *         public int $quantity,
+     *     ) {
+     *         parent::__construct($id);
+     *     }
+     *
+     *     public function toArray(): array
+     *     {
+     *         return [
+     *             ...parent::toArray(),
+     *             'product_id' => $this->productId,
+     *             'quantity' => $this->quantity,
+     *         ];
+     *     }
+     * }
+     * ```
+     */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->id(),
+            'type' => class_basename(static::class),
+        ];
+    }
 }

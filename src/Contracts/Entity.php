@@ -35,4 +35,15 @@ interface Entity
      * and have the same identity.
      */
     public function equals(Entity $other): bool;
+
+    /**
+     * Convert the entity to an array representation.
+     *
+     * Returns a base array with at least `id` and `type` keys.
+     * Subclasses may include additional domain-specific fields.
+     * Useful for DomainTransformer integration and response serialization.
+     *
+     * @return array{id: string, type: string, ...}
+     */
+    public function toArray(): array;
 }

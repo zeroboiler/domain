@@ -65,7 +65,7 @@ AggregateRoot (extends Entity)
 
 Entity (abstract)
 ├── HasDomainEvents trait
-└── id(): string / equals(): bool
+└── id(): string / equals(): bool / toArray(): array
 
 ValueObject (extends zeroboiler/value-objects BaseValueObject)
 
@@ -947,7 +947,7 @@ composer quality           # Pint + PHPStan + Rector + Tests
 |---|---|---|---|
 | `AggregateRoot` | abstract | Top-level DDD entity with events, versioning | `apply()`, `pullDomainEvents()`, `id()`, `version()`, `reconstituteFromSnapshot()` |
 | `AggregateRootId` | final readonly | UUID v4 identity for aggregates | `generate()`, `fromString()`, `toString()`, `equals()`, `jsonSerialize()` |
-| `Entity` | abstract | Base domain entity with flexible ID | `id()`, `equals()`, constructor accepts `int\|string\|Stringable` |
+| `Entity` | abstract | Base domain entity with flexible ID | `id()`, `equals()`, `toArray()`, constructor accepts `int\|string\|Stringable` |
 | `ValueObject` | abstract | Domain value object base | `equals()`, `toArray()` (from value-objects package) |
 | `DomainEventCollection` | final readonly | Type-safe event collection | `all()`, `count()`, `isEmpty()`, `filter()`, `map()`, `first()`, `last()`, `merge()` |
 | `InMemoryUnitOfWork` | final | Transactional event queuing | `begin()`, `commit()`, `rollback()`, `run()`, `track()`, `queueEvent()`, `clear()` |
@@ -966,7 +966,7 @@ composer quality           # Pint + PHPStan + Rector + Tests
 
 | Interface | Extends | Key Methods |
 |---|---|---|
-| `Contracts\Entity` | — | `id(): string`, `equals(Entity): bool` |
+| `Contracts\Entity` | — | `id(): string`, `equals(Entity): bool`, `toArray(): array` |
 | `Contracts\AggregateRoot` | `Entity` | `version(): int`, `pullDomainEvents()`, `incrementVersion()`, `clearDomainEvents()` |
 | `Contracts\Identifier` | `Stringable` | `fromString()`, `toString()`, `equals()` |
 | `Contracts\Repository` | — | `find(id): ?AggregateRoot`, `save(aggregate): void`, `delete(id): void` |
@@ -1079,7 +1079,7 @@ AggregateRootId::fromString('not-a-uuid');  // throws InvalidUuidStringException
 | `SnapshotPolicy` | ✅ Fully immutable | `final readonly class` attribute |
 | `DomainEventCollection` | ✅ Immutable collection | `final readonly class` (returns new self on filter/merge) |
 | `AggregateRoot` | ⚠️ Mutable state | `protected` constructor, version mutable for event replay |
-| `Entity` | ⚠️ Mutable state | `public readonly $id` (identity immutable, properties mutable) |
+| `Entity` | ⚠️ Mutable state | `public readonly $id` (identity immutable, properties mutable), `toArray()` |
 | `ValueObject` | ⚠️ Subclass-dependent | Immutable when all properties are `public readonly` |
 
 ### Error Code Contract
@@ -1158,6 +1158,13 @@ When using `zeroboiler/response` with this domain package:
 | < 8.4 | ❌ Not supported | Requires union types, readonly classes, named arguments |
 
 ## Changelog
+
+### v1.31.0 (2026-08-08)
+
+- Feat: Add `Entity::toArray()` — provides base serialization with `id` and `type` keys for consistent domain → response mapping across all entity types
+- Feat: Add `toArray()` to `Contracts\Entity` interface — contract now requires array serialization, matching AggregateRoot behavior
+- Docs: Update Quick Reference and Architecture sections to document `Entity::toArray()`
+- Test: Add `EntityToArrayTest` — 7 tests covering string/int/Stringable IDs, subclass override with spread, contract compliance, and independent type correctness
 
 ### v1.30.0 (2026-08-08)
 
