@@ -121,6 +121,8 @@ final readonly class SnapshottingRepository implements Repository
 
     /**
      * Get the underlying snapshot store.
+     *
+     * @return SnapshotStore The snapshot store used by this repository.
      */
     public function snapshotStore(): SnapshotStore
     {
@@ -180,6 +182,9 @@ final readonly class SnapshottingRepository implements Repository
 
     /**
      * Check if the aggregate uses the HasSnapshots trait.
+     *
+     * @param  AggregateRoot  $aggregate  The aggregate root to check.
+     * @return bool True if the aggregate uses the HasSnapshots trait.
      */
     private function usesSnapshots(AggregateRoot $aggregate): bool
     {
@@ -188,6 +193,9 @@ final readonly class SnapshottingRepository implements Repository
 
     /**
      * Instantiate an aggregate from a snapshot.
+     *
+     * @param  Snapshot  $snapshot  The snapshot to reconstitute from.
+     * @return AggregateRoot|null The reconstituted aggregate, or null if instantiation fails.
      */
     private function instantiateFromSnapshot(Snapshot $snapshot): ?AggregateRoot
     {

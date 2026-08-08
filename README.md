@@ -1159,6 +1159,10 @@ When using `zeroboiler/response` with this domain package:
 
 ## Changelog
 
+### v1.32.0 (2026-08-08)
+
+- Docs: Add missing `@return` annotations to `SnapshottingRepository` methods (`snapshotStore()`, `usesSnapshots()`, `instantiateFromSnapshot()`) — PHPStan level 9 compliance
+
 ### v1.31.0 (2026-08-08)
 
 - Feat: Add `Entity::toArray()` — provides base serialization with `id` and `type` keys for consistent domain → response mapping across all entity types
