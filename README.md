@@ -597,6 +597,71 @@ $store->stats();                          // ['total' => 5, 'by_type' => ['Order
 $store->purge(Order::class);              // Purge all Order snapshots
 ```
 
+### InMemorySnapshotStore
+
+The built-in `InMemorySnapshotStore` provides a fully functional in-memory
+implementation for testing and development. It supports all `SnapshotStore`
+interface operations:
+
+```php
+use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
+use ZeroBoiler\Domain\Snapshots\Snapshot;
+
+$store = new InMemorySnapshotStore();
+
+// Save a snapshot
+$snapshot = Snapshot::create(Order::class, $orderId, 50, ['status' => 'paid', 'total' => 100.0]);
+$store->save($snapshot);
+
+// Check existence
+$store->has(Order::class, $orderId);           // true
+
+// Load a snapshot
+$loaded = $store->load(Order::class, $orderId);
+$loaded->version;                              // 50
+$loaded->aggregateType;                         // 'Order'
+$loaded->aggregateId;                          // 'uuid-string'
+$loaded->equals($snapshot);                    // true (structural equality)
+
+// Count snapshots
+$store->count();                               // Total snapshots across all types
+$store->count(Order::class);                   // Snapshots for Order type only
+
+// Get statistics
+$stats = $store->stats();
+// ['total' => 3, 'by_type' => ['Order' => 2, 'Product' => 1]]
+
+// Delete old snapshots (e.g., after creating a new one)
+$store->deleteOlderThan(Order::class, $orderId, 51);
+// Deletes snapshots with version < 51
+
+// Delete specific snapshot
+$store->delete(Order::class, $orderId);
+
+// Purge all snapshots (optionally filtered by type)
+$store->purge();                               // Purge ALL snapshots
+$store->purge(Order::class);                   // Purge only Order snapshots
+// Returns int — number of deleted snapshots
+```
+
+### Advanced Snapshot Loading
+
+For custom event replay strategies, use `findWithSnapshot()` with a replay callback:
+
+```php
+use ZeroBoiler\Domain\Snapshots\SnapshottingRepository;
+
+// findWithSnapshot() with custom replay callback
+// Loads from snapshot, then replays only post-snapshot events
+$order = $repo->findWithSnapshot(
+    $orderId,
+    fn (int $snapshotVersion) => $eventStore->getEventsAfter($orderId, $snapshotVersion),
+);
+
+// Without callback — falls back to inner repository's full replay
+$order = $repo->findWithSnapshot($orderId);
+```
+
 ### Domain Exceptions
 
 ```
@@ -1158,6 +1223,12 @@ When using `zeroboiler/response` with this domain package:
 | < 8.4 | ❌ Not supported | Requires union types, readonly classes, named arguments |
 
 ## Changelog
+
+### v1.34.0 (2026-08-08)
+
+- Docs: Add `InMemorySnapshotStore` usage section — comprehensive examples for save, load, has, count, stats, deleteOlderThan, delete, and purge operations
+- Docs: Add `Advanced Snapshot Loading` section — `findWithSnapshot()` with custom replay callback example
+- Bump: Version 1.33.0 → 1.34.0
 
 ### v1.33.0 (2026-08-08)
 
