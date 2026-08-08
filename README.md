@@ -1159,6 +1159,11 @@ When using `zeroboiler/response` with this domain package:
 
 ## Changelog
 
+### v1.33.0 (2026-08-08)
+
+- Docs: Enrich `HasSnapshots` trait method docblocks — add comprehensive `@param`, `@return`, and `@see` annotations to `shouldSnapshot()`, `createSnapshot()`, `restoreFromSnapshot()`, and `getSnapshotPolicy()` for PHPStan level 9 compliance
+- Docs: Add `@param`, `@return`, and `@internal` annotations to `InMemorySnapshotStore::key()` private method
+
 ### v1.32.0 (2026-08-08)
 
 - Docs: Add missing `@return` annotations to `SnapshottingRepository` methods (`snapshotStore()`, `usesSnapshots()`, `instantiateFromSnapshot()`) — PHPStan level 9 compliance

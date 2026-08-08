@@ -205,9 +205,13 @@ trait HasSnapshots
     /**
      * Check if a snapshot should be taken at the current version.
      *
-     * Reads the #[SnapshotPolicy] attribute from the class. If the
-     * current version is a multiple of the configured interval,
-     * returns true.
+     * Reads the {@see SnapshotPolicy} attribute from the class. If the
+     * current version is a positive multiple of the configured interval,
+     * returns true. Returns false when version is 0 or policy is disabled.
+     *
+     * @return bool True if a snapshot is due at the current version.
+     *
+     * @see SnapshottingRepository::save() Automatically checks this after persisting.
      */
     public function shouldSnapshot(): bool
     {
@@ -222,6 +226,14 @@ trait HasSnapshots
 
     /**
      * Create and store a snapshot of the current state.
+     *
+     * Serializes the aggregate via {@see toSnapshotState()}, creates a
+     * {@see Snapshot} record, and persists it to the given store.
+     *
+     * @param  SnapshotStore  $store  The snapshot store to persist into.
+     * @return Snapshot The newly created and persisted snapshot.
+     *
+     * @see SnapshottingRepository::save() Automatically calls this when policy triggers.
      */
     public function createSnapshot(SnapshotStore $store): Snapshot
     {
@@ -238,9 +250,15 @@ trait HasSnapshots
     }
 
     /**
-     * Restore from a snapshot and return the version to resume from.
+     * Restore aggregate state from a snapshot.
      *
-     * After calling this, replay events starting from version + 1.
+     * Restores all properties from the snapshot's state array and sets
+     * the aggregate version to match. After this call, only post-snapshot
+     * events need to be replayed.
+     *
+     * @param  Snapshot  $snapshot  The snapshot to restore from.
+     *
+     * @see SnapshottingRepository::find() Calls this during aggregate reconstitution.
      */
     public function restoreFromSnapshot(Snapshot $snapshot): void
     {
@@ -249,7 +267,14 @@ trait HasSnapshots
     }
 
     /**
-     * Get the snapshot policy for this aggregate class, if configured.
+     * Get the snapshot policy attribute for this aggregate class.
+     *
+     * Reads the {@see SnapshotPolicy} PHP attribute from the aggregate's
+     * reflection class. Returns null if no attribute is configured.
+     *
+     * @return SnapshotPolicy|null The configured policy, or null if not set.
+     *
+     * @see SnapshottingRepository::save() Uses this to determine if snapshot is due.
      */
     public function getSnapshotPolicy(): ?SnapshotPolicy
     {

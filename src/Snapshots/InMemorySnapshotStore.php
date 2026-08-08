@@ -143,6 +143,15 @@ final class InMemorySnapshotStore implements SnapshotStore
         return $removed;
     }
 
+    /**
+     * Build a composite storage key from aggregate type and ID.
+     *
+     * @param  string  $aggregateType  The FQCN of the aggregate class.
+     * @param  string  $aggregateId  The aggregate's unique identifier.
+     * @return string The composite key in "{type}:{id}" format.
+     *
+     * @internal Internal storage key format — not part of the public API.
+     */
     private function key(string $aggregateType, string $aggregateId): string
     {
         return sprintf('%s:%s', $aggregateType, $aggregateId);
