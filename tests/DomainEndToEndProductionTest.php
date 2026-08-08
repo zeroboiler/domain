@@ -760,3 +760,62 @@ final class DomainEndToEndProductionTest extends TestCase
         }
     }
 }
+
+// ─── Test Fixtures ────────────────────────────────────────────────────
+
+/** @extends UuidIdentifier */
+final readonly class TestUuidIdentifier extends UuidIdentifier {}
+
+/** @extends UlidIdentifier */
+final readonly class TestUlidIdentifier extends UlidIdentifier {}
+
+/** Test entity with public constructor for equality tests. */
+final class TestEntity extends Entity
+{
+    public string $name = 'test';
+}
+
+/**
+ * Test aggregate root with public constructor for lifecycle tests.
+ *
+ * Auto-generates an AggregateRootId so tests can instantiate without arguments.
+ *
+ * @extends AggregateRoot<AggregateRootId>
+ */
+final class TestAggregate extends AggregateRoot
+{
+    public string $status = 'pending';
+
+    public function __construct(?AggregateRootId $id = null)
+    {
+        parent::__construct($id ?? AggregateRootId::generate());
+    }
+
+    public static function create(?AggregateRootId $id = null): self
+    {
+        return new self($id);
+    }
+}
+
+/** Test value object with fromArray/toArray for equality tests. */
+final class TestValueObject extends ValueObject
+{
+    public function __construct(
+        public string $value,
+    ) {}
+
+    public static function fromArray(array $data): static
+    {
+        return new static($data['value'] ?? '');
+    }
+
+    public function toArray(): array
+    {
+        return ['value' => $this->value];
+    }
+
+    public function __toString(): string
+    {
+        return $this->value;
+    }
+}
