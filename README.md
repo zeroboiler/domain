@@ -1159,6 +1159,11 @@ When using `zeroboiler/response` with this domain package:
 
 ## Changelog
 
+### v1.30.0 (2026-08-08)
+
+- Docs: Enrich `InMemoryUnitOfWork` public method docblocks — add comprehensive `@param`, `@return`, `@throws` annotations to `begin()`, `commit()`, `rollback()`, `track()`, `markForDeletion()`, `isTracking()`, `isActive()`, `hasPendingEvents()`, `getPendingEventCount()`, `getCommitted()`, `getDeleted()`
+- Test: Add `UnitOfWorkDocblockContractTest` — 15 tests verifying documented `@throws` behavior, nested savepoint semantics, persistence callback ordering, queueEvent injection, clear() lifecycle, and run() auto-commit/rollback
+
 ### v1.27.0 (2026-08-07)
 
 - Docs: Enrich `HasDomainEvents` trait — add comprehensive `@param`/`@return` docblocks for `recordThat()`, `releaseEvents()`, `clearEvents()`, `hasUncommittedEvents()` with usage guidance and AggregateRoot override notes

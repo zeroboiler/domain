@@ -151,6 +151,15 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
         $this->persistenceCallback = $callback;
     }
 
+    /**
+     * Begin a new transactional unit of work.
+     *
+     * At the outermost level, clears any committed/deleted data from
+     * previous transaction cycles to prevent stale data from leaking.
+     * Nested calls create savepoints for scoped rollback support.
+     *
+     * Safe to call multiple times — nesting depth is tracked internally.
+     */
     #[\Override]
     public function begin(): void
     {
@@ -175,6 +184,17 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
         $this->scopeEventCounts[$this->currentScope] = count($this->pendingEvents);
     }
 
+    /**
+     * Commit the current transactional scope.
+     *
+     * Collects any events raised after track(), merges tracked/deleted
+     * aggregates into their respective sets, and at the outermost scope:
+     * 1. Invokes the persistence callback (if set) for durable storage
+     * 2. Dispatches all pending domain events in chronological order
+     * 3. Resets transactional state for the next cycle
+     *
+     * @throws RuntimeException When no unit of work is active.
+     */
     #[\Override]
     public function commit(): void
     {
@@ -207,6 +227,18 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
         }
     }
 
+    /**
+     * Rollback the current transactional scope.
+     *
+     * Restores aggregate state from snapshots taken at track() time,
+     * discards pending events raised in this scope, and at the outermost
+     * scope resets all transactional state.
+     *
+     * After rollback, tracked aggregates are restored to their pre-transaction
+     * state and any events they raised are discarded.
+     *
+     * @throws RuntimeException When no unit of work is active.
+     */
     #[\Override]
     public function rollback(): void
     {
@@ -282,12 +314,31 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
         }
     }
 
+    /**
+     * Check if any transactional scope is currently active.
+     *
+     * @return bool True when at least one begin() has been called without a matching commit/rollback.
+     */
     #[\Override]
     public function isActive(): bool
     {
         return $this->nestingDepth > 0;
     }
 
+    /**
+     * Track an aggregate root within the current transactional scope.
+     *
+     * Takes a snapshot of the aggregate's state for rollback support,
+     * registers it in the current savepoint, and collects any pending
+     * domain events it has already raised.
+     *
+     * Events raised between track() and commit() are automatically
+     * collected at commit time — no manual queueEvent() needed.
+     *
+     * @param  AggregateRoot  $aggregate  The aggregate to track.
+     *
+     * @throws RuntimeException When no unit of work is active.
+     */
     #[\Override]
     public function track(AggregateRoot $aggregate): void
     {
@@ -317,6 +368,14 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
         $this->collectEventsFromAggregate($aggregate);
     }
 
+    /**
+     * Check if an aggregate is currently being tracked in any active scope.
+     *
+     * Searches all savepoints (including nested scopes) for the aggregate.
+     *
+     * @param  AggregateRoot  $aggregate  The aggregate to check.
+     * @return bool True if the aggregate is tracked in any scope.
+     */
     #[\Override]
     public function isTracking(AggregateRoot $aggregate): bool
     {
@@ -325,6 +384,17 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
         return array_any($this->savepoints, fn (array $scope): bool => isset($scope['tracked'][$id]));
     }
 
+    /**
+     * Mark an aggregate for deletion at commit time.
+     *
+     * The aggregate will be removed from the committed set and added to
+     * the deleted set when the outermost transaction commits. This is
+     * used by repositories to handle aggregate deletion within transactions.
+     *
+     * @param  AggregateRoot  $aggregate  The aggregate to mark for deletion.
+     *
+     * @throws RuntimeException When no unit of work is active.
+     */
     #[\Override]
     public function markForDeletion(AggregateRoot $aggregate): void
     {
@@ -396,12 +466,22 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
         $this->pendingEvents[] = $event;
     }
 
+    /**
+     * Check if there are pending events waiting for dispatch.
+     *
+     * @return bool True when at least one event is queued across all active scopes.
+     */
     #[\Override]
     public function hasPendingEvents(): bool
     {
         return $this->pendingEvents !== [];
     }
 
+    /**
+     * Get the number of pending events across all active scopes.
+     *
+     * @return int The count of events queued for dispatch.
+     */
     #[\Override]
     public function getPendingEventCount(): int
     {
@@ -434,12 +514,22 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
         return $this->idMap[$aggregate];
     }
 
+    /**
+     * Get all aggregates committed in the current transaction cycle.
+     *
+     * @return array<string, AggregateRoot> Committed aggregates keyed by identity.
+     */
     #[\Override]
     public function getCommitted(): array
     {
         return $this->committed;
     }
 
+    /**
+     * Get all aggregates marked for deletion in the current transaction cycle.
+     *
+     * @return array<string, AggregateRoot> Deleted aggregates keyed by identity.
+     */
     #[\Override]
     public function getDeleted(): array
     {
