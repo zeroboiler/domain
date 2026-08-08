@@ -2,6 +2,16 @@
 
 All notable changes to the `zeroboiler/domain` package will be documented in this file.
 
+## [1.29.0] - 2026-08-08
+
+### Changed
+- Enriched `AggregateRoot::apply()` docblock with handler resolution semantics and cross-reference to `EventSourced::applyEvent()`
+- Fixed `EventSourced::applyEvent()` defensive null-safe handling for `preg_split()` return value (using `?: []` instead of `?? []` on map result)
+- Added `@see AggregateRoot::apply()` cross-reference to `EventSourced::applyEvent()` docblock
+
+### Added
+- Added `DomainResponseBridgeProductionTest` — comprehensive test suite validating domain→response bridge contract including identifier JSON serialization, exception error arrays, aggregate toArray() contract, and duck-typing interface satisfaction
+
 ## [1.28.0] - 2026-08-07
 
 ### Changed

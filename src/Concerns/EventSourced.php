@@ -93,13 +93,17 @@ trait EventSourced
      *
      * @param  DomainEvent  $event  The event to apply.
      * @param  bool  $isReplay  When true, event is replayed without recording.
+     *
+     * @see AggregateRoot::apply() For normal (non-replay) event application.
      */
     public function applyEvent(DomainEvent $event, bool $isReplay = false): void
     {
         if ($isReplay) {
-            // Resolve handler method name from event type
-            $parts = preg_split('/[._-]/', $event->eventType);
-            $method = 'apply' . implode('', array_map(ucfirst(...), $parts ?? []));
+            // Resolve handler method name from event type.
+            // preg_split may return false on error, but the regex is a
+            // constant valid pattern — defensively cast to array.
+            $parts = preg_split('/[._-]/', $event->eventType) ?: [];
+            $method = 'apply' . implode('', array_map(ucfirst(...), $parts));
 
             // Replay mode: invoke handler only (if exists).
             // Version increments only for handled events — events without

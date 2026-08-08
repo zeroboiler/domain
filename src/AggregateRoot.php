@@ -39,6 +39,25 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
         parent::__construct($aggregateId);
     }
 
+    /**
+     * Record and apply a new domain event to this aggregate.
+     *
+     * In normal (non-replay) mode, this method:
+     * 1. Records the event via `recordThat()` for later dispatch
+     * 2. Dispatches to the specific `apply*` handler if present
+     * 3. Increments the aggregate version
+     *
+     * Handler method resolution supports dot-separated event types:
+     *   'order.item_added' → applyOrderItemAdded()
+     *   'order-item-added' → applyOrderItemAdded()
+     *
+     * For replay mode (event sourcing), use `EventSourced::applyEvent()` instead,
+     * which skips recording and only invokes handlers.
+     *
+     * @param  DomainEvent  $event  The domain event to apply.
+     *
+     * @see EventSourced::applyEvent() For replay-mode event application.
+     */
     protected function apply(DomainEvent $event): void
     {
         $this->recordThat($event);
