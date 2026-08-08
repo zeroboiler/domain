@@ -22,7 +22,7 @@ use ZeroBoiler\Events\Domain\DomainEvent;
  * for DomainEvent objects.
  *
  * @implements IteratorAggregate<int, DomainEvent>
- * @implements JsonSerializable
+ * @implements \JsonSerializable
  *
  * @example
  * ```php

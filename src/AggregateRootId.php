@@ -20,7 +20,7 @@ use Ramsey\Uuid\UuidInterface;
  * interoperability with the broader UUID ecosystem.
  *
  * @implements \Stringable
- * @implements JsonSerializable
+ * @implements \JsonSerializable
  *
  * @example
  * ```php
