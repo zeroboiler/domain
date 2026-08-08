@@ -1177,7 +1177,7 @@ composer quality           # Pint + PHPStan + Rector + Tests
 | `Contracts\AggregateRoot` | `Entity` | `version(): int`, `pullDomainEvents()`, `peekDomainEvents()`, `incrementVersion()`, `clearDomainEvents()` |
 | `Contracts\Identifier` | `Stringable` | `fromString()`, `toString()`, `equals()` |
 | `Contracts\Repository` | — | `find(id): ?AggregateRoot`, `save(aggregate): void`, `delete(id): void` |
-| `Contracts.UnitOfWork` | — | `begin()`, `commit()`, `rollback()`, `run()`, `track()`, `queueEvent()`, `clear()` |
+| `Contracts\UnitOfWork` | — | `begin()`, `commit()`, `rollback()`, `run()`, `track()`, `queueEvent()`, `clear()` |
 
 ### Traits
 
@@ -1365,6 +1365,10 @@ When using `zeroboiler/response` with this domain package:
 | < 8.4 | ❌ Not supported | Requires union types, readonly classes, named arguments |
 
 ## Changelog
+
+### v1.35.0 (2026-08-08)
+
+- Fix: Correct README typo `Contracts.UnitOfWork` → `Contracts\UnitOfWork` in Quick Reference table
 
 ### v1.34.0 (2026-08-08)
 
