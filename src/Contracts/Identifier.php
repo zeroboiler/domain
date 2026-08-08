@@ -9,9 +9,6 @@ declare(strict_types=1);
 namespace ZeroBoiler\Domain\Contracts;
 
 use Stringable;
-use ZeroBoiler\Domain\Identifiers\IntegerIdentifier;
-use ZeroBoiler\Domain\Identifiers\StringIdentifier;
-use ZeroBoiler\Domain\Identifiers\UuidIdentifier;
 
 /**
  * Shared identifier contract for cross-package interoperability.
