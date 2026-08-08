@@ -2,6 +2,15 @@
 
 All notable changes to the `zeroboiler/domain` package will be documented in this file.
 
+## [1.36.0] - 2026-08-08
+
+### Added
+- `AggregateRootId::toArray()` — array serialization with `uuid` key for consistent round-trip
+- `AggregateRootId::fromArray()` — reconstruction from `toArray()` output, accepts `uuid` or `id` key
+- `InMemoryUnitOfWork::getPendingEvents()` — non-destructive inspection of pending events as `DomainEventCollection`
+- `AggregateRootIdRoundTripTest` — comprehensive round-trip serialization tests
+- `UnitOfWorkGetPendingEventsTest` — UoW pending event inspection tests
+
 ## [1.29.0] - 2026-08-08
 
 ### Changed

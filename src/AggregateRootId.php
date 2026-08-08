@@ -98,4 +98,57 @@ final readonly class AggregateRootId implements \Stringable, JsonSerializable
     {
         return $this->toString();
     }
+
+    /**
+     * Convert the aggregate root ID to an array representation.
+     *
+     * Provides a consistent serialization format for caching, persistence,
+     * and cross-package data exchange. The UUID is stored under the
+     * `uuid` key for clarity and to avoid ambiguity with generic `id`.
+     *
+     * @return array{uuid: string}
+     *
+     * @example
+     * ```php
+     * $id = AggregateRootId::generate();
+     * $id->toArray();
+     * // ['uuid' => '550e8400-e29b-41d4-a716-446655440000']
+     * ```
+     */
+    public function toArray(): array
+    {
+        return ['uuid' => $this->toString()];
+    }
+
+    /**
+     * Reconstruct an aggregate root ID from an array representation.
+     *
+     * Accepts the output of {@see toArray()} for full round-trip support.
+     * Also accepts a plain UUID string under the `uuid` or `id` key
+     * for maximum deserialization flexibility.
+     *
+     * @param  array{uuid?: string, id?: string}  $array  The array from `toArray()`.
+     * @return self A new AggregateRootId instance.
+     *
+     * @throws \InvalidArgumentException If neither `uuid` nor `id` key is present or valid.
+     *
+     * @example
+     * ```php
+     * $id = AggregateRootId::generate();
+     * $restored = AggregateRootId::fromArray($id->toArray());
+     * $id->equals($restored); // true
+     * ```
+     */
+    public static function fromArray(array $array): self
+    {
+        $uuid = $array['uuid'] ?? $array['id'] ?? null;
+
+        if (! is_string($uuid)) {
+            throw new \InvalidArgumentException(
+                sprintf('AggregateRootId::fromArray() expects a "uuid" or "id" string key, got %s.', get_debug_type($uuid)),
+            );
+        }
+
+        return self::fromString($uuid);
+    }
 }

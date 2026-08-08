@@ -489,6 +489,35 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
     }
 
     /**
+     * Peek at pending events without removing them.
+     *
+     * Returns a typed DomainEventCollection for inspection, logging, or debugging
+     * without affecting the pending event queue. The events remain queued for
+     * dispatch on commit.
+     *
+     * @return DomainEventCollection A copy of all pending events across all active scopes.
+     *
+     * @example
+     * ```php
+     * $uow->begin();
+     * $uow->track($order);
+     * $order->addItem('SKU-001', 2);
+     *
+     * // Inspect without consuming
+     * $peeked = $uow->getPendingEvents();
+     * foreach ($peeked as $event) {
+     *     logger()->debug('Pending', ['type' => $event->eventType]);
+     * }
+     *
+     * $uow->commit(); // Events are dispatched normally
+     * ```
+     */
+    public function getPendingEvents(): DomainEventCollection
+    {
+        return new DomainEventCollection($this->pendingEvents);
+    }
+
+    /**
      * Resolve a stable string identifier for an aggregate.
      */
     private function resolveId(AggregateRoot $aggregate): string
