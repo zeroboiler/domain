@@ -93,15 +93,20 @@ abstract class Identifier implements IdentifierContract, JsonSerializable
     /**
      * Check equality with another identifier.
      *
-     * Two identifiers are equal if they are of the same concrete class
-     * and their UUID values are identical.
+     * Two identifiers are equal if and only if they are of the same
+     * concrete class and their UUID values are identical. Subclass
+     * instances (e.g., OrderId vs ProductId) are never equal, even with
+     * the same UUID value. This matches the semantics of UuidIdentifier,
+     * UlidIdentifier, StringIdentifier, and IntegerIdentifier.
      *
      * @param  IdentifierContract  $other  The identifier to compare against.
-     * @return bool True if both identifiers have the same UUID value.
+     * @return bool True if both are the same concrete class with identical UUID values.
      */
     public function equals(IdentifierContract $other): bool
     {
-        return $other instanceof Identifier && $this->value->equals($other->value);
+        return $other instanceof Identifier
+            && $other::class === static::class
+            && $this->value->equals($other->value);
     }
 
     /**
