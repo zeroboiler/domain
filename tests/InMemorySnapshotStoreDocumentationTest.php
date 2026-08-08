@@ -8,16 +8,10 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Domain\Tests;
 
-use ZeroBoiler\Domain\AggregateRoot;
 use ZeroBoiler\Domain\AggregateRootId;
-use ZeroBoiler\Domain\Concerns\EventSourced;
-use ZeroBoiler\Domain\Concerns\HasSnapshots;
-use ZeroBoiler\Domain\Identifiers\UuidIdentifier;
 use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
 use ZeroBoiler\Domain\Snapshots\Snapshot;
-use ZeroBoiler\Domain\Snapshots\SnapshotPolicy;
 use ZeroBoiler\Domain\Snapshots\SnapshotStore;
-use ZeroBoiler\Domain\Snapshots\SnapshottingRepository;
 
 /**
  * Tests validating the InMemorySnapshotStore documentation examples

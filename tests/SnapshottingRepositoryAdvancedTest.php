@@ -14,7 +14,6 @@ use ZeroBoiler\Domain\Contracts\Repository;
 use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
 use ZeroBoiler\Domain\Snapshots\Snapshot;
 use ZeroBoiler\Domain\Snapshots\SnapshottingRepository;
-use ZeroBoiler\Events\Domain\DomainEvent;
 
 /**
  * Tests validating the Advanced Snapshot Loading documentation examples
