@@ -25,6 +25,7 @@ use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
  * $id->toString();     // '42'
  * $id->toInt();        // 42
  * $id->isValid('abc'); // false
+ * $id->toArray();       // ['integer' => 42]
  * echo json_encode(['order_id' => $id]);
  * // → {"order_id": 42}
  * ```
@@ -118,6 +119,62 @@ final readonly class IntegerIdentifier implements IdentifierContract, JsonSerial
     public function jsonSerialize(): int
     {
         return $this->value;
+    }
+
+    /**
+     * Convert the identifier to an array representation.
+     *
+     * Provides consistent serialization for caching, persistence,
+     * and cross-package data exchange. The integer is stored under the
+     * `integer` key for clarity and to avoid ambiguity with generic `id`.
+     *
+     * @return array{integer: int}
+     *
+     * @example
+     * ```php
+     * $id = IntegerIdentifier::from(42);
+     * $id->toArray();       // ['integer' => 42]
+     * ```
+     */
+    public function toArray(): array
+    {
+        return ['integer' => $this->value];
+    }
+
+    /**
+     * Reconstruct an identifier from an array representation.
+     *
+     * Accepts the output of {@see toArray()} for full round-trip support.
+     * Also accepts an integer under the `integer` or `id` key
+     * for maximum deserialization flexibility.
+     *
+     * @param  array{integer?: int, id?: int|string}  $array  The array from `toArray()`.
+     * @return self A new IntegerIdentifier instance.
+     *
+     * @throws \InvalidArgumentException If neither `integer` nor `id` key is present or valid.
+     *
+     * @example
+     * ```php
+     * $id = IntegerIdentifier::fromArray(['integer' => 42]);
+     * $restored = IntegerIdentifier::fromArray($id->toArray());
+     * $id->equals($restored); // true
+     * ```
+     */
+    public static function fromArray(array $array): self
+    {
+        $value = $array['integer'] ?? $array['id'] ?? null;
+
+        if (is_int($value)) {
+            return self::from($value);
+        }
+
+        if (is_string($value) && self::isValid($value)) {
+            return self::from((int) $value);
+        }
+
+        throw new \InvalidArgumentException(
+            sprintf('IntegerIdentifier::fromArray() expects an "integer" or "id" int key, got %s.', get_debug_type($value)),
+        );
     }
 
     /**

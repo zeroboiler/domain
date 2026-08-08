@@ -25,6 +25,7 @@ use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
  * $slug = StringIdentifier::from('my-blog-post');
  * $slug->toString();   // 'my-blog-post'
  * $slug->isValid('');  // false
+ * $slug->toArray();     // ['string' => 'my-blog-post']
  * ```
  */
 final readonly class StringIdentifier implements IdentifierContract, JsonSerializable
@@ -115,6 +116,59 @@ final readonly class StringIdentifier implements IdentifierContract, JsonSeriali
     public function jsonSerialize(): string
     {
         return $this->value;
+    }
+
+    /**
+     * Convert the identifier to an array representation.
+     *
+     * Provides consistent serialization for caching, persistence,
+     * and cross-package data exchange. The string is stored under the
+     * `string` key for clarity and to avoid ambiguity with generic `id`.
+     *
+     * @return array{string: string}
+     *
+     * @example
+     * ```php
+     * $slug = StringIdentifier::from('my-blog-post');
+     * $slug->toArray();       // ['string' => 'my-blog-post']
+     * ```
+     */
+    public function toArray(): array
+    {
+        return ['string' => $this->value];
+    }
+
+    /**
+     * Reconstruct an identifier from an array representation.
+     *
+     * Accepts the output of {@see toArray()} for full round-trip support.
+     * Also accepts a plain string under the `string` or `id` key
+     * for maximum deserialization flexibility.
+     *
+     * @param  array{string?: string, id?: string}  $array  The array from `toArray()`.
+     * @return self A new StringIdentifier instance.
+     *
+     * @throws \InvalidArgumentException If neither `string` nor `id` key is present.
+     * @throws ValueError If the value is an empty string.
+     *
+     * @example
+     * ```php
+     * $slug = StringIdentifier::fromArray(['string' => 'my-blog-post']);
+     * $restored = StringIdentifier::fromArray($slug->toArray());
+     * $slug->equals($restored); // true
+     * ```
+     */
+    public static function fromArray(array $array): self
+    {
+        $value = $array['string'] ?? $array['id'] ?? null;
+
+        if (! is_string($value)) {
+            throw new \InvalidArgumentException(
+                sprintf('StringIdentifier::fromArray() expects a "string" or "id" string key, got %s.', get_debug_type($value)),
+            );
+        }
+
+        return self::from($value);
     }
 
     /**

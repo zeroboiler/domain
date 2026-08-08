@@ -28,6 +28,7 @@ use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
  * $id = ProductId::fromString('...');  // Parse existing ULID
  * $id->toUlid();                        // Symfony Ulid object
  * $id->isValid('...');                  // Pre-validate without throwing
+ * $id->toArray();                        // ['ulid' => '01H...']
  * ```
  */
 abstract readonly class UlidIdentifier implements IdentifierContract, JsonSerializable
@@ -132,6 +133,58 @@ abstract readonly class UlidIdentifier implements IdentifierContract, JsonSerial
     public function jsonSerialize(): string
     {
         return $this->value;
+    }
+
+    /**
+     * Convert the identifier to an array representation.
+     *
+     * Provides consistent serialization for caching, persistence,
+     * and cross-package data exchange. The ULID is stored under the
+     * `ulid` key for clarity and to avoid ambiguity with generic `id`.
+     *
+     * @return array{ulid: string}
+     *
+     * @example
+     * ```php
+     * $id = ProductId::generate();
+     * $id->toArray();       // ['ulid' => '01H...']
+     * ```
+     */
+    public function toArray(): array
+    {
+        return ['ulid' => $this->value];
+    }
+
+    /**
+     * Reconstruct an identifier from an array representation.
+     *
+     * Accepts the output of {@see toArray()} for full round-trip support.
+     * Also accepts a plain ULID string under the `ulid` or `id` key
+     * for maximum deserialization flexibility.
+     *
+     * @param  array{ulid?: string, id?: string}  $array  The array from `toArray()`.
+     * @return static A new identifier instance.
+     *
+     * @throws \InvalidArgumentException If neither `ulid` nor `id` key is present or valid.
+     *
+     * @example
+     * ```php
+     * $id = ProductId::fromArray(['ulid' => '01H...']);
+     * $restored = ProductId::fromArray($id->toArray());
+     * $id->equals($restored); // true
+     * ```
+     */
+    public static function fromArray(array $array): static
+    {
+        $ulid = $array['ulid'] ?? $array['id'] ?? null;
+
+        if (! is_string($ulid)) {
+            throw new \InvalidArgumentException(
+                sprintf('%s::fromArray() expects an "ulid" or "id" string key, got %s.', static::class, get_debug_type($ulid)),
+            );
+        }
+
+        return static::fromString($ulid);
     }
 
     /**

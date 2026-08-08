@@ -32,6 +32,7 @@ use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
  * $id->equals($otherId);             // Type-safe equality
  * $id->toUuid();                      // Ramsey UuidInterface
  * $id->isValid('not-a-uuid');         // false
+ * $id->toArray();                     // ['uuid' => '550e8400-...']
  * ```
  */
 abstract readonly class UuidIdentifier implements IdentifierContract, JsonSerializable
@@ -131,6 +132,58 @@ abstract readonly class UuidIdentifier implements IdentifierContract, JsonSerial
     public function jsonSerialize(): string
     {
         return $this->value;
+    }
+
+    /**
+     * Convert the identifier to an array representation.
+     *
+     * Provides consistent serialization for caching, persistence,
+     * and cross-package data exchange. The UUID is stored under the
+     * `uuid` key for clarity and to avoid ambiguity with generic `id`.
+     *
+     * @return array{uuid: string}
+     *
+     * @example
+     * ```php
+     * $id = OrderId::generate();
+     * $id->toArray();       // ['uuid' => '550e8400-...']
+     * ```
+     */
+    public function toArray(): array
+    {
+        return ['uuid' => $this->value];
+    }
+
+    /**
+     * Reconstruct an identifier from an array representation.
+     *
+     * Accepts the output of {@see toArray()} for full round-trip support.
+     * Also accepts a plain UUID string under the `uuid` or `id` key
+     * for maximum deserialization flexibility.
+     *
+     * @param  array{uuid?: string, id?: string}  $array  The array from `toArray()`.
+     * @return static A new identifier instance.
+     *
+     * @throws \InvalidArgumentException If neither `uuid` nor `id` key is present or valid.
+     *
+     * @example
+     * ```php
+     * $id = OrderId::fromArray(['uuid' => '550e8400-...']);
+     * $restored = OrderId::fromArray($id->toArray());
+     * $id->equals($restored); // true
+     * ```
+     */
+    public static function fromArray(array $array): static
+    {
+        $uuid = $array['uuid'] ?? $array['id'] ?? null;
+
+        if (! is_string($uuid)) {
+            throw new \InvalidArgumentException(
+                sprintf('%s::fromArray() expects a "uuid" or "id" string key, got %s.', static::class, get_debug_type($uuid)),
+            );
+        }
+
+        return static::fromString($uuid);
     }
 
     /**
