@@ -2,6 +2,11 @@
 
 All notable changes to the `zeroboiler/domain` package will be documented in this file.
 
+## [1.37.0] - 2026-08-08
+
+### Added
+- `DomainContractIntegrityTest` — 35 comprehensive contract integrity tests covering AggregateRootId (final readonly, UUID v4, equality, JSON serialization, round-trip), DomainEventCollection (final readonly, immutable operations, toArray/jsonSerialize consistency, input validation), Entity (abstract, readonly id, toArray contract), AggregateRoot (abstract, versioning, event lifecycle, pull/peek), ValueObject (abstract), InMemoryUnitOfWork (final, run auto-commit/rollback, nested savepoints, clear, track requires active, rollback restores state), strict types verification across all source files, domain → response duck-typing contract validation, and return type declaration verification for all public methods
+
 ## [1.36.0] - 2026-08-08
 
 ### Added
