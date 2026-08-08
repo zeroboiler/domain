@@ -54,6 +54,134 @@ installed, ensuring `SnapshottingRepository` works without it.
 - **DomainException** hierarchy — typed exceptions for domain violations
 - **CLI Generators** — `domain:aggregate`, `domain:repository`, `domain:value-object`, `domain:list`, `domain:snapshot`
 
+## One-Liner Quick Start
+
+Copy-paste ready examples for every domain class:
+
+### Core
+
+```php
+use ZeroBoiler\Domain\AggregateRoot;
+use ZeroBoiler\Domain\AggregateRootId;
+use ZeroBoiler\Domain\Entity;
+use ZeroBoiler\Domain\ValueObject;
+use ZeroBoiler\Domain\DomainEventCollection;
+use ZeroBoiler\Domain\InMemoryUnitOfWork;
+
+$id    = AggregateRootId::generate();                        // UUID v4
+$id    = AggregateRootId::fromString('uuid-string-here');
+$id->toString();                                             // → 'uuid-string-here'
+$id->equals($otherId);                                       // bool
+json_encode($id);                                            // → 'uuid-string-here'
+
+$order = new Order($id);                                     // extends AggregateRoot
+$order->id();                                               // → AggregateRootId
+$order->version();                                           // → 0
+$order->pullDomainEvents();                                  // → DomainEventCollection
+$order->clearDomainEvents();                                 // void
+$order->toArray();                                           // ['id' => '...', 'version' => 0, 'type' => 'Order']
+
+$entity = new MyEntity($stringId);                          // extends Entity
+$entity->id();                                               // → 'string-id'
+$entity->equals($other);                                     // bool
+
+$vo = MyValueObject::fromArray(['key' => 'val']);            // extends ValueObject
+$vo->equals($otherVo);                                       // bool
+$vo->toArray();                                              // ['key' => 'val']
+
+$events = new DomainEventCollection([$e1, $e2]);
+$events->count();                                            // → 2
+$events->isEmpty();                                          // → bool
+$events->all();                                              // → [DomainEvent, ...]
+$events->filter(fn($e) => ...);                             // → new DomainEventCollection
+$events->merge($other);                                      // → new DomainEventCollection
+$events->toArray();                                          // → [[...], [...]]
+
+$uow = app(\ZeroBoiler\Domain\Contracts\UnitOfWork::class);
+$uow->begin();
+$uow->track($aggregate);
+$uow->commit();                                             // persist + dispatch
+$uow->rollback();                                            // restore state
+$result = $uow->run(fn () => $service->process($order));    // auto begin/commit/rollback
+$uow->queueEvent(DomainEvent::occur('side.effect', []));
+$uow->clear();                                               // reset all state
+```
+
+### Identifiers
+
+```php
+use ZeroBoiler\Domain\Identifiers\UuidIdentifier;
+use ZeroBoiler\Domain\Identifiers\UlidIdentifier;
+use ZeroBoiler\Domain\Identifiers\StringIdentifier;
+use ZeroBoiler\Domain\Identifiers\IntegerIdentifier;
+
+// UUID v4 — aggregate roots
+class OrderId extends UuidIdentifier {}
+$id = OrderId::generate();                                   // random UUID v4
+$id = OrderId::fromString('550e8400-e29b-41d4-a716-446655440000');
+$id->isValid('not-a-uuid');                                   // → false
+$id->equals($other);                                         // bool
+
+// ULID — high-throughput, ordered
+class ProductId extends UlidIdentifier {}
+$id = ProductId::generate();                                  // monotonic ULID
+$id->toUlid();                                               // → Symfony Ulid
+
+// String — natural keys, slugs
+$slug = StringIdentifier::from('my-blog-post');              // non-empty string
+$slug->isValid('my-blog-post');                               // → true
+
+// Integer — auto-increment IDs
+$num = IntegerIdentifier::from(42);
+$num = IntegerIdentifier::fromString('42');                   // parsed
+$num->toInt();                                               // → 42
+```
+
+### Snapshots
+
+```php
+use ZeroBoiler\Domain\Snapshots\{Snapshot, InMemorySnapshotStore, SnapshottingRepository};
+
+$snapshot = Snapshot::create(Order::class, $id, 50, ['status' => 'paid']);
+$snapshot->toArray();                                         // round-trip
+$snapshot->equals($other);                                    // structural equality
+
+$store = new InMemorySnapshotStore();
+$store->save($snapshot);
+$store->has(Order::class, $id);                               // → true
+$store->load(Order::class, $id);                              // → Snapshot
+$store->count(Order::class);                                  // → int
+$store->stats();                                             // → ['total' => N, 'by_type' => [...]]
+$store->delete(Order::class, $id);
+$store->purge(Order::class);                                 // → removed count
+
+$repo = new SnapshottingRepository($innerRepo, $store, Order::class);
+$order = $repo->find($id);                                   // snapshot + replay
+$repo->save($order);                                         // auto-snapshot
+```
+
+### Exceptions
+
+```php
+use ZeroBoiler\Domain\Exceptions\{
+    DomainException, InvalidStateDomainException, InvalidArgumentDomainException,
+    NotFoundDomainException, ConflictDomainException, OptimisticLockException,
+    AggregateNotFoundException, InvalidAggregateRootException,
+};
+
+throw InvalidStateDomainException::because('Order must be pending.');
+throw InvalidArgumentDomainException::because('Qty must be > 0.');
+throw NotFoundDomainException::forAggregate('Order', $id);
+throw AggregateNotFoundException::for('App\Domain\Order', $id);
+throw ConflictDomainException::because('Concurrent modification.');
+throw OptimisticLockException::for($id, expected: 5, actual: 3);
+throw InvalidAggregateRootException::notAnAggregate($obj);
+
+$e->errorCode();                                              // → 'INVALID_STATE'
+$e->toErrorArray();                                           // → ['title' => '...', 'detail' => '...', 'code' => '...']
+json_encode($e);                                             // → RFC 9457
+```
+
 ## Architecture
 
 ```
