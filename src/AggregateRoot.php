@@ -133,6 +133,32 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
     }
 
     /**
+     * Peek at recorded domain events without removing them.
+     *
+     * Returns a typed collection for inspection, logging, or debugging
+     * without affecting the event state. The events remain available
+     * for subsequent `pullDomainEvents()` calls.
+     *
+     * @return DomainEventCollection A copy of all recorded events.
+     *
+     * @example
+     * ```php
+     * // Inspect events without consuming them
+     * $peeked = $order->peekDomainEvents();
+     * foreach ($peeked as $event) {
+     *     logger()->debug('Pending event', ['type' => $event->eventType]);
+     * }
+     *
+     * // Events are still available for pulling
+     * $pulled = $order->pullDomainEvents(); // Same events, now consumed
+     * ```
+     */
+    public function peekDomainEvents(): DomainEventCollection
+    {
+        return new DomainEventCollection(array_values($this->domainEvents));
+    }
+
+    /**
      * Return the aggregate's domain identity as a string.
      *
      * Overrides Entity::id() which returns mixed. AggregateRoot narrows

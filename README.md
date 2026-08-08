@@ -156,6 +156,20 @@ $events = $order->pullDomainEvents();               // Destructive pull
 $events->count();                                    // 1
 $events->isEmpty();                                   // false
 $order->hasUncommittedEvents();                       // false (already pulled)
+
+// Non-destructive peek — inspect events without consuming them
+$order = Order::create(AggregateRootId::generate());
+$peeked = $order->peekDomainEvents();                 // Returns DomainEventCollection copy
+$peeked->count();                                     // 1
+$peeked->first()->eventType;                          // 'order.placed'
+$order->hasUncommittedEvents();                       // true — events NOT consumed
+$pulled = $order->pullDomainEvents();                 // Still returns all events
+
+// Entity-level peek (returns plain array, not DomainEventCollection)
+$item = new OrderItem('1', 'prod-1', 2, 9.99);
+$item->recordThat(DomainEvent::occur('item.added', []));
+$peekedEvents = $item->peekEvents();                  // [DomainEvent]
+$item->hasUncommittedEvents();                         // true — events NOT consumed
 ```
 
 ### Entity
@@ -1010,7 +1024,7 @@ composer quality           # Pint + PHPStan + Rector + Tests
 
 | Class | Type | Description | Key Methods |
 |---|---|---|---|
-| `AggregateRoot` | abstract | Top-level DDD entity with events, versioning | `apply()`, `pullDomainEvents()`, `id()`, `version()`, `reconstituteFromSnapshot()` |
+| `AggregateRoot` | abstract | Top-level DDD entity with events, versioning | `apply()`, `pullDomainEvents()`, `peekDomainEvents()`, `id()`, `version()`, `reconstituteFromSnapshot()` |
 | `AggregateRootId` | final readonly | UUID v4 identity for aggregates | `generate()`, `fromString()`, `toString()`, `equals()`, `jsonSerialize()` |
 | `Entity` | abstract | Base domain entity with flexible ID | `id()`, `equals()`, `toArray()`, constructor accepts `int\|string\|Stringable` |
 | `ValueObject` | abstract | Domain value object base | `equals()`, `toArray()` (from value-objects package) |
@@ -1032,7 +1046,7 @@ composer quality           # Pint + PHPStan + Rector + Tests
 | Interface | Extends | Key Methods |
 |---|---|---|
 | `Contracts\Entity` | — | `id(): string`, `equals(Entity): bool`, `toArray(): array` |
-| `Contracts\AggregateRoot` | `Entity` | `version(): int`, `pullDomainEvents()`, `incrementVersion()`, `clearDomainEvents()` |
+| `Contracts\AggregateRoot` | `Entity` | `version(): int`, `pullDomainEvents()`, `peekDomainEvents()`, `incrementVersion()`, `clearDomainEvents()` |
 | `Contracts\Identifier` | `Stringable` | `fromString()`, `toString()`, `equals()` |
 | `Contracts\Repository` | — | `find(id): ?AggregateRoot`, `save(aggregate): void`, `delete(id): void` |
 | `Contracts.UnitOfWork` | — | `begin()`, `commit()`, `rollback()`, `run()`, `track()`, `queueEvent()`, `clear()` |
@@ -1042,7 +1056,7 @@ composer quality           # Pint + PHPStan + Rector + Tests
 | Trait | Applied To | Purpose |
 |---|---|---|
 | `EventSourced` | `AggregateRoot` | `fromHistory()`, `applyEvent()` — replay/reconstitute from events |
-| `HasDomainEvents` | `Entity` | `recordThat()`, `releaseEvents()`, `hasUncommittedEvents()` |
+| `HasDomainEvents` | `Entity` | `recordThat()`, `releaseEvents()`, `hasUncommittedEvents()`, `peekEvents()` |
 | `HasSnapshots` | `AggregateRoot` | `shouldSnapshot()`, `createSnapshot()`, `restoreFromSnapshot()`, `toSnapshotState()` |
 
 ### Exceptions

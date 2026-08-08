@@ -103,4 +103,32 @@ trait HasDomainEvents
     {
         return $this->domainEvents !== [];
     }
+
+    /**
+     * Peek at recorded domain events without removing them.
+     *
+     * Returns a copy of the internal event buffer for inspection,
+     * logging, or debugging without affecting the event state.
+     * The events remain available for subsequent `releaseEvents()` calls.
+     *
+     * Note: AggregateRoot overrides this via `peekDomainEvents()` which
+     * returns a typed `DomainEventCollection` instead of a plain array.
+     *
+     * @return array<int, DomainEvent> A copy of all recorded events, in order of recording.
+     *
+     * @example
+     * ```php
+     * // Inspect events without consuming them
+     * foreach ($aggregate->peekEvents() as $event) {
+     *     logger()->debug('Pending event', ['type' => $event->eventType]);
+     * }
+     *
+     * // Events are still available for pulling
+     * $events = $aggregate->releaseEvents(); // Still returns all events
+     * ```
+     */
+    public function peekEvents(): array
+    {
+        return $this->domainEvents;
+    }
 }
