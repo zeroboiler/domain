@@ -647,7 +647,7 @@ final class DomainProductionHardeningTest extends TestCase
             ->and($id)->toBeInstanceOf(IdentifierContract::class);
     }
 
-    public function test_domain_exception_json_serializable(): void
+    public function test_conflict_domain_exception_json_serializable(): void
     {
         $e = ConflictDomainException::because('concurrent modification');
 
