@@ -114,6 +114,8 @@ abstract class Identifier implements IdentifierContract, JsonSerializable
      *
      * Use this when you need access to the UUID methods
      * (e.g., getVariant(), getVersion(), toDateTime()).
+     *
+     * @return UuidInterface The underlying Ramsey UUID object.
      */
     public function toUuid(): UuidInterface
     {
@@ -137,5 +139,34 @@ abstract class Identifier implements IdentifierContract, JsonSerializable
     public function jsonSerialize(): string
     {
         return $this->toString();
+    }
+
+    /**
+     * Convert the identifier to an array for serialization.
+     *
+     * @return array{value: string}
+     */
+    public function toArray(): array
+    {
+        return ['value' => $this->toString()];
+    }
+
+    /**
+     * Restore an identifier from an array (round-trip with toArray()).
+     *
+     * @param  array{value: string}  $data  The serialized identifier data.
+     * @return static
+     *
+     * @throws \InvalidArgumentException If the data is missing the 'value' key or contains an invalid UUID.
+     */
+    public static function fromArray(array $data): static
+    {
+        if (! isset($data['value']) || ! is_string($data['value'])) {
+            throw new \InvalidArgumentException(
+                sprintf('Invalid identifier data: expected "value" string key, got %s.', json_encode(array_keys($data))),
+            );
+        }
+
+        return self::fromString($data['value']);
     }
 }
