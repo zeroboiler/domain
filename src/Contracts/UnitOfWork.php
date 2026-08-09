@@ -113,6 +113,17 @@ interface UnitOfWork
     public function getPendingEventCount(): int;
 
     /**
+     * Peek at pending domain events without removing them.
+     *
+     * Returns a typed DomainEventCollection for inspection, logging, or debugging
+     * without affecting the pending event queue. The events remain queued for
+     * dispatch on commit.
+     *
+     * @return DomainEventCollection A copy of all pending events across all active scopes.
+     */
+    public function getPendingEvents(): DomainEventCollection;
+
+    /**
      * Clear all state including committed/deleted aggregates and pending events.
      *
      * Resets the unit of work to its initial state, discarding all
