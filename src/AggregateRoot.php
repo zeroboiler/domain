@@ -26,6 +26,8 @@ use ZeroBoiler\Events\Domain\DomainEvent;
  * @method void restoreFromSnapshot(Snapshot $snapshot) Restore from a snapshot (from HasSnapshots trait)
  *
  * @extends Entity<AggregateRootId>
+ *
+ * @since 1.0.0
  */
 abstract class AggregateRoot extends Entity implements AggregateRootContract
 {

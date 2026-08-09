@@ -19,6 +19,8 @@ use ZeroBoiler\Domain\DomainEventCollection;
  *
  * @see \ZeroBoiler\Domain\AggregateRoot Base implementation
  * @see \ZeroBoiler\Domain\Contracts\Entity Parent entity contract
+ *
+ * @since 1.0.0
  */
 interface AggregateRoot extends Entity
 {

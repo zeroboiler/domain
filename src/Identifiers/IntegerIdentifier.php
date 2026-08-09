@@ -18,6 +18,9 @@ use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
  * numeric natural keys.
  *
  * @implements IdentifierContract
+ * @implements JsonSerializable
+ *
+ * @since 1.0.0
  *
  * @example
  * ```php

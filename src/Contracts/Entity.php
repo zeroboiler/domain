@@ -17,6 +17,8 @@ namespace ZeroBoiler\Domain\Contracts;
  *
  * @see \ZeroBoiler\Domain\Entity Base implementation
  * @see \ZeroBoiler\Domain\Contracts\AggregateRoot Extended contract with versioning and events
+ *
+ * @since 1.0.0
  */
 interface Entity
 {

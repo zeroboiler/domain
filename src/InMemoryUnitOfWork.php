@@ -39,6 +39,8 @@ use ZeroBoiler\Events\Domain\DomainEvent;
  *
  * @implements UnitOfWorkContract
  *
+ * @since 1.0.0
+ *
  * @example
  * ```php
  * $uow = app(UnitOfWork::class);

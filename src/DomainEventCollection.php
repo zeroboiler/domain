@@ -23,7 +23,9 @@ use ZeroBoiler\Events\Domain\DomainEvent;
  * via toArray()/fromArray() for caching, queue jobs, and event replay.
  *
  * @implements IteratorAggregate<int, DomainEvent>
- * @implements \\JsonSerializable
+ * @implements JsonSerializable
+ *
+ * @since 1.0.0
  *
  * @example
  * ```php

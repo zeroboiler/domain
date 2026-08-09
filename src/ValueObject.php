@@ -23,6 +23,8 @@ use ZeroBoiler\ValueObjects\ValueObject as BaseValueObject;
  * `fromArray()`/`toArray()` round-trip serialization and domain-level
  * equality comparison based on `toArray()` output.
  *
+ * @since 1.0.0
+ *
  * @implements ValueObjectContract
  *
  * @see BaseValueObject For the parent class with Eloquent casting support.

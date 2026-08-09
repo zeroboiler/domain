@@ -23,6 +23,9 @@ use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
  * an exception at construction time, ensuring identifiers are always valid.
  *
  * @implements IdentifierContract
+ * @implements JsonSerializable
+ *
+ * @since 1.0.0
  *
  * @example
  * ```php

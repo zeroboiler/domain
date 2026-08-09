@@ -22,6 +22,8 @@ use ZeroBoiler\Domain\Exceptions\OptimisticLockException;
  * @see SnapshottingRepository A decorator that adds snapshot support.
  * @see OptimisticLockException Thrown on version mismatch during save.
  *
+ * @since 1.0.0
+ *
  * @example
  * ```php
  * use ZeroBoiler\Domain\Contracts\Repository;

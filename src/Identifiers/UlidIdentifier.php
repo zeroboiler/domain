@@ -20,6 +20,9 @@ use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
  * high-throughput systems where insertion order matters.
  *
  * @implements IdentifierContract
+ * @implements JsonSerializable
+ *
+ * @since 1.0.0
  *
  * @example
  * ```php

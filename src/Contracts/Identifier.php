@@ -23,6 +23,8 @@ use Stringable;
  * @see \ZeroBoiler\Domain\Identifiers\IntegerIdentifier Final readonly integer identifier
  * @see \ZeroBoiler\Domain\Identifiers\Identifier        Legacy base (deprecated)
  * @see \ZeroBoiler\Domain\AggregateRootId              Final readonly UUID v4 for aggregate roots
+ *
+ * @since 1.0.0
  */
 interface Identifier extends Stringable
 {

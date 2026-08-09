@@ -32,6 +32,8 @@ use ZeroBoiler\Domain\Identifiers\UuidIdentifier;
  * For aggregate roots, extend {@see AggregateRoot} instead of Entity directly.
  *
  * @template TId of int|string|\Stringable
+ *
+ * @since 1.0.0
  */
 abstract class Entity implements EntityContract
 {

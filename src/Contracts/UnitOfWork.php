@@ -16,6 +16,8 @@ use ZeroBoiler\Domain\AggregateRoot;
  *
  * Manages transactional consistency boundaries. Domain events raised
  * within a unit of work are queued and dispatched atomically upon commit.
+ *
+ * @since 1.0.0
  */
 interface UnitOfWork
 {

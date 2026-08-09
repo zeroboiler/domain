@@ -22,6 +22,8 @@ use Ramsey\Uuid\UuidInterface;
  * @implements \Stringable
  * @implements \JsonSerializable
  *
+ * @since 1.0.0
+ *
  * @example
  * ```php
  * $id = AggregateRootId::generate();          // Random UUID v4

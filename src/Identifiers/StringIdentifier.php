@@ -19,6 +19,9 @@ use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
  * are always meaningful. Ideal for slugs, codes, and natural keys.
  *
  * @implements IdentifierContract
+ * @implements JsonSerializable
+ *
+ * @since 1.0.0
  *
  * @example
  * ```php
