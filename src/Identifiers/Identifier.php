@@ -31,6 +31,7 @@ use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
  *
  * @deprecated Use {@see UuidIdentifier} for new code. This class will be removed in v3.0.
  */
+#[Deprecated(message: 'Use UuidIdentifier for new code. This class will be removed in v3.0.', since: '2.5.0')]
 abstract class Identifier implements IdentifierContract, JsonSerializable
 {
     /**
