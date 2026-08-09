@@ -105,6 +105,14 @@ $uow->rollback();                                            // restore state
 $result = $uow->run(fn () => $service->process($order));    // auto begin/commit/rollback
 $uow->queueEvent(DomainEvent::occur('side.effect', []));
 $uow->clear();                                               // reset all state
+$uow->isActive();                                            // → bool
+$uow->isTracking($aggregate);                                // → bool
+$uow->hasPendingEvents();                                     // → bool
+$uow->getPendingEventCount();                                // → int
+$uow->getPendingEvents();                                     // → DomainEventCollection (peek, non-destructive)
+$uow->markForDeletion($aggregate);                            // queue for deletion on commit
+$uow->getCommitted();                                         // → AggregateRoot[] (after commit)
+$uow->getDeleted();                                           // → AggregateRoot[] (after commit)
 ```
 
 ### Identifiers
@@ -1157,7 +1165,7 @@ composer quality           # Pint + PHPStan + Rector + Tests
 | `Entity` | abstract | Base domain entity with flexible ID | `id()`, `equals()`, `toArray()`, constructor accepts `int\|string\|Stringable` |
 | `ValueObject` | abstract | Domain value object base | `equals()`, `toArray()` (from value-objects package) |
 | `DomainEventCollection` | final readonly | Type-safe event collection | `all()`, `count()`, `isEmpty()`, `filter()`, `map()`, `first()`, `last()`, `merge()` |
-| `InMemoryUnitOfWork` | final | Transactional event queuing | `begin()`, `commit()`, `rollback()`, `run()`, `track()`, `queueEvent()`, `clear()` |
+| `InMemoryUnitOfWork` | final | Transactional event queuing | `begin()`, `commit()`, `rollback()`, `run()`, `track()`, `queueEvent()`, `clear()`, `getCommitted()`, `getDeleted()`, `getPendingEvents()`, `markForDeletion()`, `isActive()`, `isTracking()` |
 | `SnapshottingRepository` | final readonly | Repository decorator with snapshots | `find()`, `save()`, `delete()`, `findWithSnapshot()` |
 
 ### Identifiers
@@ -1177,7 +1185,7 @@ composer quality           # Pint + PHPStan + Rector + Tests
 | `Contracts\AggregateRoot` | `Entity` | `version(): int`, `pullDomainEvents()`, `peekDomainEvents()`, `incrementVersion()`, `clearDomainEvents()` |
 | `Contracts\Identifier` | `Stringable` | `fromString()`, `toString()`, `equals()` |
 | `Contracts\Repository` | — | `find(id): ?AggregateRoot`, `save(aggregate): void`, `delete(id): void` |
-| `Contracts\UnitOfWork` | — | `begin()`, `commit()`, `rollback()`, `run()`, `track()`, `queueEvent()`, `clear()` |
+| `Contracts\UnitOfWork` | — | `begin()`, `commit()`, `rollback()`, `run()`, `track()`, `queueEvent()`, `clear()`, `getCommitted()`, `getDeleted()`, `getPendingEvents()`, `markForDeletion()`, `isActive()`, `isTracking()` |
 
 ### Traits
 
@@ -1233,6 +1241,38 @@ $uow->begin();
 $uow->track($order);
 $uow->track($payment);
 $uow->commit();
+
+// ✅ Inspect results after commit
+$committed = $uow->getCommitted();      // → AggregateRoot[]
+$deleted = $uow->getDeleted();           // → AggregateRoot[]
+
+// ✅ Peek at pending events without consuming them
+$uow->begin();
+$uow->track($order);
+$pending = $uow->getPendingEvents();     // → DomainEventCollection (non-destructive)
+$uow->hasPendingEvents();                // → true
+$uow->getPendingEventCount();            // → 3
+$uow->commit();                          // events dispatched
+
+// ✅ Delete an aggregate within a transaction
+$uow->begin();
+$uow->track($order);
+$uow->markForDeletion($order);
+$uow->commit();                         // order deleted + events dispatched
+
+// ✅ With persistence callback (infrastructure integration)
+$uow->setPersistenceCallback(function (array $committed, array $deleted): void {
+    foreach ($committed as $aggregate) {
+        DB::table('aggregates')->upsert([...]);
+    }
+    foreach ($deleted as $id => $aggregate) {
+        DB::table('aggregates')->delete($id);
+    }
+});
+$uow->run(fn () => $service->process($order));
+
+// ✅ Custom event dispatcher
+$uow->setEventDispatcher(fn (DomainEvent $e) => Event::dispatch($e));
 
 // ❌ AVOID: Forgetting to track aggregates (events won't be collected)
 $uow->begin();
@@ -1365,6 +1405,12 @@ When using `zeroboiler/response` with this domain package:
 | < 8.4 | ❌ Not supported | Requires union types, readonly classes, named arguments |
 
 ## Changelog
+
+### v1.39.0 (2026-08-09)
+
+- Docs: Enrich `InMemoryUnitOfWork` one-liner examples — add `isActive()`, `isTracking()`, `hasPendingEvents()`, `getPendingEventCount()`, `getPendingEvents()`, `markForDeletion()`, `getCommitted()`, `getDeleted()` usage
+- Docs: Expand Unit of Work Patterns section — add post-commit inspection, pending event peeking, deletion within transactions, persistence callback integration, custom event dispatcher examples
+- Docs: Update InMemoryUnitOfWork and UnitOfWork Quick Reference tables with full method listing
 
 ### v1.35.0 (2026-08-08)
 
