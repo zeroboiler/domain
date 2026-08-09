@@ -1154,6 +1154,32 @@ composer test:coverage     # With coverage
 composer quality           # Pint + PHPStan + Rector + Tests
 ```
 
+### Test Categories
+
+The domain package includes a comprehensive test suite covering:
+
+| Category | Test Classes | What They Verify |
+|---|---|---|
+| **Core** | `DomainCoreTest`, `EntityTest`, `AggregateRootTest` | Base class behavior, identity, equality |
+| **Lifecycle** | `AggregateRootLifecycleTest` | Creation → events → versioning → state mutation |
+| **Identifiers** | `IdentifierTest`, `IdentifierComprehensiveTest`, `IdentifierRoundTripTest` | UUID/ULID/String/Integer: generation, validation, equality, serde |
+| **Serialization** | `DomainSerializationTest`, `DomainProductionSerdeTest` | `toArray()`/`fromArray()` round-trip for all types |
+| **Exceptions** | `DomainExceptionsTest`, `DomainExceptionHierarchyTest`, `DomainErrorCodeTest` | Error codes, factory methods, RFC 9457 JSON, hierarchy |
+| **Events** | `DomainEventCollectionTest`, `PeekDomainEventsTest` | Collection operations, filtering, merging, peek vs pull |
+| **Snapshots** | `SnapshotTest`, `SnapshottingRepositoryProductionTest` | Snapshot creation, restoration, policy, round-trip |
+| **UnitOfWork** | `UnitOfWorkTest`, `UnitOfWorkGetPendingEventsTest` | Begin/commit/rollback, nested savepoints, event queuing |
+| **Production** | `DomainFinalProductionTest`, `DomainProductionReadinessChecklistTest` | Structural contract compliance, type safety |
+| **Cross-Package** | `DomainCrossPackageProductionAuditTest`, `DomainResponseFinalBridgeTest` | Domain → Response bridge, DomainTransformer integration |
+
+### Running Tests in CI
+
+```yaml
+# .github/workflows/ci.yml (PHPStan level 9, Pest)
+- name: Quality
+  run: composer quality
+# Runs: pint --test && phpstan analyse && rector process --dry-run && pest
+```
+
 ## Quick Reference
 
 ### Core Classes
@@ -1405,6 +1431,11 @@ When using `zeroboiler/response` with this domain package:
 | < 8.4 | ❌ Not supported | Requires union types, readonly classes, named arguments |
 
 ## Changelog
+
+### v1.40.0 (2026-08-09)
+
+- Docs: Add Test Categories section — comprehensive test suite overview table covering Core, Lifecycle, Identifiers, Serialization, Exceptions, Events, Snapshots, UnitOfWork, Production, and Cross-Package test categories with descriptions
+- Docs: Add Running Tests in CI section — GitHub Actions quality workflow reference
 
 ### v1.39.0 (2026-08-09)
 
