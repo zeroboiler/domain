@@ -54,6 +54,8 @@ use Exception;
  *         ->send();
  * }
  * ```
+
+ * @implements \JsonSerializable<array{title: string, detail: string, code: string}>
  */
 abstract class DomainException extends Exception implements \JsonSerializable
 {
