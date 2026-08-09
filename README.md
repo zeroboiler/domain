@@ -1121,6 +1121,42 @@ return [
 ];
 ```
 
+### Observability Integration (Optional)
+
+The domain package integrates with `zeroboiler/observability` for auto-instrumentation
+via the `#[Trace]` attribute. When the observability package is not installed, a no-op
+stub is provided automatically — no configuration needed.
+
+```php
+use ZeroBoiler\Observability\Trace;
+
+// The #[Trace] attribute works in SnapshottingRepository out of the box:
+// All find()/save()/delete() calls are automatically instrumented.
+// You can also use it on your own domain service methods:
+
+class OrderService
+{
+    #[Trace(operation: 'domain.order.place')]
+    public function placeOrder(array $data): Order
+    {
+        return $this->uow->run(fn () => $this->handler->handle($data));
+    }
+
+    #[Trace(operation: 'domain.order.cancel')]
+    public function cancelOrder(string $orderId): void
+    {
+        // Automatically traced with timing and metadata
+    }
+}
+
+// When zeroboiler/observability is installed, #[Trace] records:
+// - Operation name, timing, and duration
+// - Aggregate type and ID (when available)
+// - Domain events dispatched during the traced operation
+//
+// Without zeroboiler/observability, the attribute is a no-op — zero overhead.
+```
+
 ### Octane & Long-Running Process Safety
 
 The domain package is designed for safe operation in long-running processes (Octane, Swoole, RoadRunner).
@@ -1431,6 +1467,11 @@ When using `zeroboiler/response` with this domain package:
 | < 8.4 | ❌ Not supported | Requires union types, readonly classes, named arguments |
 
 ## Changelog
+
+### v1.44.0 (2026-08-09)
+
+- Docs: Add Observability Integration section — `#[Trace]` attribute usage examples for domain service methods, explanation of no-op stub behavior when zeroboiler/observability is not installed
+- Bump: Version 1.43.0 → 1.44.0
 
 ### v1.43.0 (2026-08-09)
 
