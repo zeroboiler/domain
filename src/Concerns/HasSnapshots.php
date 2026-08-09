@@ -36,6 +36,8 @@ use ZeroBoiler\Domain\Snapshots\SnapshotStore;
  * @see SnapshottingRepository
  * @see InMemorySnapshotStore
  *
+ * @since 1.0.0
+ *
  * @example
  * ```php
  * use ZeroBoiler\Domain\AggregateRoot;

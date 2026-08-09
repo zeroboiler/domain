@@ -39,6 +39,8 @@ use ZeroBoiler\Observability\Trace;
  *
  * The aggregate root must use the {@see HasSnapshots} trait for snapshot
  * operations (shouldSnapshot, createSnapshot, restoreFromSnapshot).
+ *
+ * @since 1.0.0
  */
 final readonly class SnapshottingRepository implements Repository
 {

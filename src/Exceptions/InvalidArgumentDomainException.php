@@ -26,6 +26,8 @@ namespace ZeroBoiler\Domain\Exceptions;
  *     ->withMeta(['code' => $e->errorCode()])
  *     ->send();
  * ```
+ *
+ * @since 1.0.0
  */
 final class InvalidArgumentDomainException extends DomainException
 {

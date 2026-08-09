@@ -28,6 +28,8 @@ namespace ZeroBoiler\Domain\Exceptions;
  * // With error code:
  * $e->errorCode(); // 'OPTIMISTIC_LOCK'
  * ```
+ *
+ * @since 1.0.0
  */
 final class OptimisticLockException extends DomainException
 {

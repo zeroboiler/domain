@@ -22,6 +22,8 @@ use ZeroBoiler\Events\Domain\DomainEvent;
  * The trait resolves handler methods using dot/hyphen/underscore convention:
  *   'aggregate.created' → applyAggregateCreated()
  *   'order-shipped'     → applyOrderShipped()
+ *
+ * @since 1.0.0
  */
 trait EventSourced
 {

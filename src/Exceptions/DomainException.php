@@ -56,6 +56,8 @@ use Exception;
  * ```
 
  * @implements \JsonSerializable<array{title: string, detail: string, code: string}>
+ *
+ * @since 1.0.0
  */
 abstract class DomainException extends Exception implements \JsonSerializable
 {

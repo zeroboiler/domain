@@ -15,6 +15,8 @@ namespace ZeroBoiler\Domain\Snapshots;
  *
  * @implements \JsonSerializable
  *
+ * @since 1.0.0
+ *
  * @example
  * ```php
  * $snapshot = Snapshot::create(Order::class, $id, 50, $state);

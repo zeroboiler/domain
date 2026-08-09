@@ -23,6 +23,8 @@ use Exception;
  *     throw InvalidStateException::because('Application configuration is invalid.');
  * }
  * ```
+ *
+ * @since 1.0.0
  */
 final class InvalidStateException extends Exception
 {

@@ -27,6 +27,8 @@ use function sprintf;
  * // With error code:
  * $e->errorCode(); // 'INVALID_AGGREGATE_ROOT'
  * ```
+ *
+ * @since 1.0.0
  */
 final class InvalidAggregateRootException extends DomainException
 {

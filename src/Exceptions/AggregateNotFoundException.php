@@ -24,6 +24,8 @@ namespace ZeroBoiler\Domain\Exceptions;
  * // With error code:
  * $e->errorCode(); // 'AGGREGATE_NOT_FOUND'
  * ```
+ *
+ * @since 1.0.0
  */
 final class AggregateNotFoundException extends DomainException
 {

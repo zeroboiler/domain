@@ -19,6 +19,8 @@ use ZeroBoiler\Events\Domain\DomainEvent;
  * @see HasSnapshots For snapshot support on event-sourced aggregates.
  * @see EventSourced For reconstituting aggregates from event history.
  *
+ * @since 1.0.0
+ *
  * @example
  * ```php
  * class Order extends AggregateRoot

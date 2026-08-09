@@ -19,7 +19,9 @@ namespace ZeroBoiler\Domain\Snapshots;
  *
  * @see Snapshot
  * @see SnapshottingRepository
- * @see InMemorySnapshotStore Default in-memory implementation for testing
+ * @see InMemorySnapshotStore
+ *
+ * @since 1.0.0
  *
  * @example
  * ```php

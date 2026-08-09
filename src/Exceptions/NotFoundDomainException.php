@@ -22,6 +22,8 @@ namespace ZeroBoiler\Domain\Exceptions;
  * // With error code:
  * $e->errorCode(); // 'NOT_FOUND'
  * ```
+ *
+ * @since 1.0.0
  */
 final class NotFoundDomainException extends DomainException
 {

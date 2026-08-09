@@ -20,6 +20,8 @@ namespace ZeroBoiler\Domain\Snapshots;
  * @see Snapshot
  * @see SnapshottingRepository
  *
+ * @since 1.0.0
+ *
  * @example
  * ```php
  * $store = new InMemorySnapshotStore();

@@ -23,6 +23,8 @@ namespace ZeroBoiler\Domain\Exceptions;
  * // With error code:
  * $e->errorCode(); // 'CONFLICT'
  * ```
+ *
+ * @since 1.0.0
  */
 final class ConflictDomainException extends DomainException
 {
