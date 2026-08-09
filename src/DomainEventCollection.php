@@ -19,10 +19,11 @@ use ZeroBoiler\Events\Domain\DomainEvent;
  * Type-safe collection for domain events.
  *
  * Provides iteration, counting, array access, and JSON serialization
- * for DomainEvent objects.
+ * for DomainEvent objects. Supports full round-trip serialization
+ * via toArray()/fromArray() for caching, queue jobs, and event replay.
  *
  * @implements IteratorAggregate<int, DomainEvent>
- * @implements \JsonSerializable
+ * @implements \\JsonSerializable
  *
  * @example
  * ```php
@@ -32,6 +33,11 @@ use ZeroBoiler\Events\Domain\DomainEvent;
  * $collection->all();         // [DomainEvent, DomainEvent]
  * json_encode($collection);  // [[...], [...]]
  * foreach ($collection as $event) { ... }
+ *
+ * // Round-trip serialization
+ * $serialized = $collection->toArray();
+ * $restored = DomainEventCollection::fromArray($serialized);
+ * $restored->count(); // 2
  * ```
  */
 final readonly class DomainEventCollection implements Countable, IteratorAggregate, JsonSerializable
@@ -231,5 +237,51 @@ final readonly class DomainEventCollection implements Countable, IteratorAggrega
     public function toArray(): array
     {
         return $this->jsonSerialize();
+    }
+
+    /**
+     * Reconstruct a DomainEventCollection from an array of serialized events.
+     *
+     * Accepts the output of {@see toArray()} or any list of arrays that
+     * {@see DomainEvent::fromArray()} can consume. Enables round-trip
+     * serialization for caching, queue jobs, and event replay from storage.
+     *
+     * @param  list<array<string, mixed>>  $arrays  Array of serialized event data.
+     * @return self A new DomainEventCollection with reconstructed events.
+     *
+     * @throws \InvalidArgumentException If any element is not an array.
+     *
+     * @example
+     * ```php
+     * $collection = new DomainEventCollection([$event1, $event2]);
+     * $serialized = $collection->toArray();
+     * // Cache or persist $serialized...
+     * $restored = DomainEventCollection::fromArray($serialized);
+     * $restored->count();  // 2
+     * ```
+     */
+    public static function fromArray(array $arrays): self
+    {
+        if (! array_is_list($arrays)) {
+            throw new \InvalidArgumentException(
+                'DomainEventCollection::fromArray() expects a sequential list of event arrays.',
+            );
+        }
+
+        $events = [];
+
+        foreach ($arrays as $i => $item) {
+            if (! is_array($item)) {
+                throw new \InvalidArgumentException(sprintf(
+                    'DomainEventCollection::fromArray() item at index %d must be an array, got %s.',
+                    $i,
+                    get_debug_type($item),
+                ));
+            }
+
+            $events[] = DomainEvent::fromArray($item);
+        }
+
+        return new self($events);
     }
 }
