@@ -2,7 +2,14 @@
 
 All notable changes to the `zeroboiler/domain` package will be documented in this file.
 
-## [1.42.0] - 2026-08-09
+## [1.45.0] - 2026-08-09
+
+### Fixed
+- Entity docblock example: `quantity` property now uses `public readonly int` for immutability consistency
+
+### Added
+- `DomainProductionRoundTripAuditTest` — comprehensive round-trip serialization audit covering AggregateRootId, all identifier types, DomainEventCollection, DomainException hierarchy, Snapshot, and contract return types
+- Custom domain exception example (`TestOrderShippedException`) for testing pattern documentation
 
 ### Added
 - `hasUncommittedEvents()` to HasDomainEvents trait

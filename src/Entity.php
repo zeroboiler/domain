@@ -107,7 +107,7 @@ abstract class Entity implements EntityContract
      *     public function __construct(
      *         int|string|\Stringable $id,
      *         public readonly string $productId,
-     *         public int $quantity,
+     *         public readonly int $quantity,
      *     ) {
      *         parent::__construct($id);
      *     }
