@@ -2,6 +2,14 @@
 
 All notable changes to the `zeroboiler/domain` package will be documented in this file.
 
+## [1.43.0] - 2026-08-09
+
+### Changed
+- `AggregateRoot::toArray()` now uses `class_basename()` instead of `ReflectionClass::getShortName()` for consistency with `Entity::toArray()` and improved performance (avoids ReflectionClass instantiation on every serialization)
+
+### Added
+- `ArraySerializationConsistencyTest` — verifies toArray() consistency across AggregateRoot and Entity hierarchies, class_basename usage, subclass overrides, and type naming
+
 ## [1.37.0] - 2026-08-08
 
 ### Added

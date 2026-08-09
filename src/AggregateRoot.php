@@ -227,7 +227,7 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
         return [
             'id' => $this->id(),
             'version' => $this->version,
-            'type' => (new \ReflectionClass($this))->getShortName(),
+            'type' => class_basename(static::class),
         ];
     }
 
