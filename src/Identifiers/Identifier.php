@@ -43,6 +43,7 @@ abstract class Identifier implements IdentifierContract, JsonSerializable
      *
      * @deprecated Use {@see UuidIdentifier::value} instead.
      */
+    #[Deprecated(message: 'Use UuidIdentifier::value instead.', since: '2.5.0')]
     public UuidInterface $value;
 
     /**
