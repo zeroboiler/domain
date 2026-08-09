@@ -1186,7 +1186,7 @@ The domain package includes a comprehensive test suite covering:
 
 | Class | Type | Description | Key Methods |
 |---|---|---|---|
-| `AggregateRoot` | abstract | Top-level DDD entity with events, versioning | `apply()`, `pullDomainEvents()`, `peekDomainEvents()`, `id()`, `version()`, `reconstituteFromSnapshot()` |
+| `AggregateRoot` | abstract | Top-level DDD entity with events, versioning | `apply()`, `pullDomainEvents()`, `peekDomainEvents()`, `hasUncommittedEvents()`, `id()`, `version()`, `reconstituteFromSnapshot()` |
 | `AggregateRootId` | final readonly | UUID v4 identity for aggregates | `generate()`, `fromString()`, `toString()`, `equals()`, `jsonSerialize()` |
 | `Entity` | abstract | Base domain entity with flexible ID | `id()`, `equals()`, `toArray()`, constructor accepts `int\|string\|Stringable` |
 | `ValueObject` | abstract | Domain value object base | `equals()`, `toArray()` (from value-objects package) |
@@ -1208,7 +1208,7 @@ The domain package includes a comprehensive test suite covering:
 | Interface | Extends | Key Methods |
 |---|---|---|
 | `Contracts\Entity` | — | `id(): string`, `equals(Entity): bool`, `toArray(): array` |
-| `Contracts\AggregateRoot` | `Entity` | `version(): int`, `pullDomainEvents()`, `peekDomainEvents()`, `incrementVersion()`, `clearDomainEvents()` |
+| `Contracts\AggregateRoot` | `Entity` | `version(): int`, `pullDomainEvents()`, `peekDomainEvents()`, `hasUncommittedEvents()`, `incrementVersion()`, `clearDomainEvents()` |
 | `Contracts\Identifier` | `Stringable` | `fromString()`, `toString()`, `equals()` |
 | `Contracts\Repository` | — | `find(id): ?AggregateRoot`, `save(aggregate): void`, `delete(id): void` |
 | `Contracts\UnitOfWork` | — | `begin()`, `commit()`, `rollback()`, `run()`, `track()`, `queueEvent()`, `clear()`, `getCommitted()`, `getDeleted()`, `getPendingEvents()`, `markForDeletion()`, `isActive()`, `isTracking()` |
@@ -1431,6 +1431,11 @@ When using `zeroboiler/response` with this domain package:
 | < 8.4 | ❌ Not supported | Requires union types, readonly classes, named arguments |
 
 ## Changelog
+
+### v1.42.0 (2026-08-09)
+
+- Docs: Add `hasUncommittedEvents()` to AggregateRoot Quick Reference and Contracts AggregateRoot table
+- Bump: Version 1.41.0 → 1.42.0
 
 ### v1.40.0 (2026-08-09)
 
