@@ -75,7 +75,7 @@ trait EventSourced
         }
 
         // Clear any events recorded during reconstitution
-        $aggregate->clearEvents();
+        $aggregate->clearDomainEvents();
 
         return $aggregate;
     }

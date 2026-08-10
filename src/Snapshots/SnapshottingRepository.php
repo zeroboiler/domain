@@ -173,7 +173,7 @@ final readonly class SnapshottingRepository implements Repository
                     }
                 }
 
-                $aggregate->clearEvents();
+                $aggregate->clearDomainEvents();
 
                 return $aggregate;
             }
