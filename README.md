@@ -1528,6 +1528,10 @@ When using `zeroboiler/response` with this domain package:
 
 ## Changelog
 
+### v1.48.0 (2026-08-10)
+
+- Refactor: Fix `InvalidStateException` hierarchy — standalone exception (outside DomainException) with correct inheritance, preventing `is_subclass_of(DomainException::class)` false negatives in cross-package error bridges
+
 ### v1.47.0 (2026-08-10)
 
 - Refactor: Add `#[Override]` to `HasDomainEvents::hasUncommittedEvents()` — PHP 8.5 best practice compliance with `Contracts\Entity::hasUncommittedEvents()`
