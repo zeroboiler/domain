@@ -2,6 +2,11 @@
 
 All notable changes to the `zeroboiler/domain` package will be documented in this file.
 
+## [1.49.0] - 2026-08-10
+
+### Changed
+- Add `@since 1.0.0` tag to `DomainServiceProvider`
+
 ## [1.48.0] - 2026-08-10
 
 ### Changed

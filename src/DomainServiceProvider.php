@@ -28,6 +28,8 @@ use ZeroBoiler\Domain\Snapshots\SnapshotStore;
  * - **Observability package** (`zeroboiler/observability`): #[Trace] auto-instrumentation (stubbed when absent)
  * - **DTO package** (`zeroboiler/dto`): DataTransferObject base class (used by domain commands)
  * - **Enums package** (`zeroboiler/enums`): Enum metadata (used by domain commands)
+ *
+ * @since 1.0.0
  */
 final class DomainServiceProvider extends ServiceProvider
 {
