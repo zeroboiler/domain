@@ -13,10 +13,11 @@ use ZeroBoiler\Domain\AggregateRootId;
 use ZeroBoiler\Domain\Contracts\Identifier;
 use ZeroBoiler\Domain\Identifiers\IntegerIdentifier;
 use ZeroBoiler\Domain\Identifiers\StringIdentifier;
-use ZeroBoiler\Domain\Identifiers\UuidIdentifier;
-use ZeroBoiler\Domain\Identifiers\UlidIdentifier;
+use ZeroBoiler\Domain\Tests\Fixtures\TestEntity;
+use ZeroBoiler\Domain\Tests\Fixtures\TestUlidIdentifier;
+use ZeroBoiler\Domain\Tests\Fixtures\TestUuidIdentifier;
+use ZeroBoiler\Domain\Tests\Fixtures\TestValueObject;
 use ZeroBoiler\Domain\Exceptions\ConflictDomainException;
-use ZeroBoiler\Domain\Exceptions\DomainException;
 use ZeroBoiler\Domain\Exceptions\InvalidArgumentDomainException;
 use ZeroBoiler\Domain\Exceptions\InvalidStateDomainException;
 use ZeroBoiler\Domain\Exceptions\NotFoundDomainException;
@@ -36,7 +37,6 @@ use ZeroBoiler\Domain\Exceptions\OptimisticLockException;
  * - Identifier::toArray()/fromArray() round-trip for all types
  * - DomainException::toErrorArray() produces RFC 9457-compatible structure
  * - Entity::toArray() produces id, type
- * - DomainEventCollection serialization
  * - Snapshot::toArray()/fromArray() round-trip
  * - All identifiers implement JsonSerializable
  * - All identifiers implement Identifier contract
@@ -268,20 +268,30 @@ test('Entity equals compares class and identity', function (): void {
 // ── ValueObject toArray/equals ──
 
 test('ValueObject equality is structural via toArray()', function (): void {
-    $vo1 = TestValueObject::fromArray(['street' => '123 Main', 'city' => 'NYC', 'country' => 'US']);
-    $vo2 = TestValueObject::fromArray(['street' => '123 Main', 'city' => 'NYC', 'country' => 'US']);
-    $vo3 = TestValueObject::fromArray(['street' => '456 Oak', 'city' => 'LA', 'country' => 'US']);
+    $vo1 = TestValueObject::from('123 Main');
+    $vo2 = TestValueObject::from('123 Main');
+    $vo3 = TestValueObject::from('456 Oak');
 
     expect($vo1->equals($vo2))->toBeTrue();
     expect($vo1->equals($vo3))->toBeFalse();
 });
 
-test('ValueObject fromArray/toArray round-trip', function (): void {
-    $original = TestValueObject::fromArray(['street' => '123 Main', 'city' => 'NYC', 'country' => 'US']);
-    $array = $original->toArray();
-    $restored = TestValueObject::fromArray($array);
+test('ValueObject toArray serialization', function (): void {
+    $vo = TestValueObject::from('test-value');
+    $array = $vo->toArray();
+    expect($array)->toBe(['value' => 'test-value']);
+});
 
-    expect($original->equals($restored))->toBeTrue();
+test('ValueObject implements Stringable', function (): void {
+    $vo = TestValueObject::from('my-value');
+    expect((string) $vo)->toBe('my-value');
+});
+
+test('ValueObject jsonSerialize returns toArray result', function (): void {
+    $vo = TestValueObject::from('serde-test');
+    $json = json_encode($vo);
+    $decoded = json_decode($json, true);
+    expect($decoded['value'])->toBe('serde-test');
 });
 
 // ── Identifier contract compliance ──
@@ -320,7 +330,7 @@ test('All identifiers implement JsonSerializable', function (): void {
 
 test('Snapshot toArray/fromArray round-trip', function (): void {
     $snapshot = \ZeroBoiler\Domain\Snapshots\Snapshot::create(
-        aggregateType: 'App\\Domain\\Order',
+        aggregateType: 'App\Domain\Order',
         aggregateId: 'order-42',
         version: 10,
         state: ['status' => 'paid', 'total' => 99.99],
