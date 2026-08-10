@@ -2,6 +2,14 @@
 
 All notable changes to the `zeroboiler/domain` package will be documented in this file.
 
+## [1.48.0] - 2026-08-10
+
+### Changed
+- Bump package version to 1.48.0
+
+### Added
+- README: Domain Identifier Round-Trip (`fromArray`/`toArray`) section — covers UUID, ULID, String, and Integer identifier serialization with cache/queue job usage examples
+
 ## [1.47.0] - 2026-08-10
 
 ### Changed

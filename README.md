@@ -1089,6 +1089,66 @@ echo json_encode(['seq' => IntegerIdentifier::from(42)]);
 // → {"seq":42}
 ```
 
+### Domain Identifier Round-Trip (fromArray/toArray)
+
+All identifiers support `toArray()`/`fromArray()` round-trip serialization
+for caching, queue payloads, and database storage:
+
+```php
+use ZeroBoiler\Domain\Identifiers\UuidIdentifier;
+use ZeroBoiler\Domain\Identifiers\UlidIdentifier;
+use ZeroBoiler\Domain\Identifiers\StringIdentifier;
+use ZeroBoiler\Domain\Identifiers\IntegerIdentifier;
+
+// UUID round-trip
+$id = OrderId::generate();
+$serialized = $id->toArray();            // ['uuid' => '550e8400-...']
+$restored = OrderId::fromArray($serialized);
+$restored->equals($id);                   // true
+
+// ULID round-trip
+$productId = ProductId::generate();
+$serialized = $productId->toArray();     // ['ulid' => '01JF5K2R...']
+$restored = ProductId::fromArray($serialized);
+$restored->equals($productId);            // true
+
+// String round-trip
+$slug = StringIdentifier::from('my-post');
+$serialized = $slug->toArray();           // ['string' => 'my-post']
+$restored = StringIdentifier::fromArray($serialized);
+$restored->equals($slug);                // true
+
+// Integer round-trip
+$num = IntegerIdentifier::from(42);
+$serialized = $num->toArray();           // ['integer' => 42]
+$restored = IntegerIdentifier::fromArray($serialized);
+$restored->equals($num);                 // true
+
+// Use in cache/queue payloads
+$cacheKey = 'order:' . $id->toString();
+cache()->put($cacheKey, $id->toArray(), 3600);
+$cachedId = OrderId::fromArray(cache()->get($cacheKey));
+
+// Use in queue jobs
+class ProcessOrderJob implements ShouldQueue
+{
+    public function __construct(
+        public readonly string $orderIdJson,
+    ) {}
+
+    public static function fromId(UuidIdentifier $id): self
+    {
+        return new self(json_encode($id->toArray()));
+    }
+
+    public function handle(): void
+    {
+        $orderId = OrderId::fromArray(json_decode($this->orderIdJson, true));
+        // ... process order
+    }
+}
+```
+
 ### Event Sourcing → Response Mapping
 
 When replaying events from history, aggregate roots maintain their version.
