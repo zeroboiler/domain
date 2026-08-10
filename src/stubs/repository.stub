@@ -11,7 +11,47 @@ use ZeroBoiler\Domain\Contracts\Repository;
  * {{ class }} — aggregate root repository.
  *
  * Extend this interface to add domain-specific query methods.
- * Implementations should include optimistic locking checks.
+ * Implementations should include optimistic locking checks
+ * via version comparison on save().
+ *
+ * @since 1.0.0
+ *
+ * @example
+ * ```php
+ * // Interface definition (generated)
+ * interface OrderRepository extends Repository
+ * {
+ *     public function findById(string $id): ?Order;
+ * }
+ *
+ * // Eloquent implementation
+ * final class EloquentOrderRepository implements OrderRepository
+ * {
+ *     public function find(string|int $id): ?Order
+ *     {
+ *         return Order::where('id', $id)->first();
+ *     }
+ *
+ *     public function save(AggregateRoot $aggregate): void
+ *     {
+ *         $persisted = $this->find($aggregate->id());
+ *         if ($persisted && $persisted->version() !== $aggregate->version()) {
+ *             throw OptimisticLockException::for(
+ *                 $aggregate->id(),
+ *                 expectedVersion: $aggregate->version(),
+ *                 actualVersion: $persisted->version(),
+ *             );
+ *         }
+ *         DB::table('orders')->upsert([...], 'id');
+ *         $aggregate->incrementVersion();
+ *     }
+ *
+ *     public function delete(string|int $id): void
+ *     {
+ *         DB::table('orders')->delete($id);
+ *     }
+ * }
+ * ```
  */
 interface {{ class }} extends Repository
 {

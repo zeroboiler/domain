@@ -6,18 +6,47 @@ namespace {{ namespace }};
 
 use ZeroBoiler\Domain\AggregateRoot;
 use ZeroBoiler\Domain\AggregateRootId;
+use ZeroBoiler\Domain\Concerns\EventSourced;
 use ZeroBoiler\Events\Domain\DomainEvent;
 
 /**
  * {{ class }} — domain aggregate root.
  *
  * Business rules and invariant enforcement live here.
- * State mutations are driven by domain events.
+ * State mutations are driven by domain events via the apply() method.
+ *
+ * Add domain properties as public typed fields. The EventSourced trait
+ * enables reconstitution from event history via fromHistory().
+ *
+ * @since 1.0.0
+ *
+ * @example
+ * ```php
+ * // Create
+ * $order = {{ class }}::create(AggregateRootId::generate());
+ *
+ * // Mutate state via events
+ * $order->doSomething();
+ *
+ * // Pull events for dispatch
+ * $events = $order->pullDomainEvents();
+ *
+ * // Reconstitute from history
+ * $order = {{ class }}::fromHistory(...$events);
+ * ```
  */
 final class {{ class }} extends AggregateRoot
 {
+    use EventSourced;
+
+    // Add domain properties here:
+    // public string $status = 'pending';
+
     /**
      * Create a new {{ name }} aggregate.
+     *
+     * Records a creation event that initializes aggregate state.
+     * All state mutations go through events for full audit trail.
      *
      * @param  AggregateRootId  $id  The unique aggregate identity.
      * @return self
@@ -35,6 +64,10 @@ final class {{ class }} extends AggregateRoot
 
     /**
      * Apply the created event to initialize aggregate state.
+     *
+     * Handler methods are resolved by convention:
+     * '{{ class }}.created' → apply{{ class }}Created()
+     * 'order.item_added'    → applyOrderItemAdded()
      */
     protected function apply{{ class }}Created(DomainEvent $event): void
     {

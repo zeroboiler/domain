@@ -10,12 +10,34 @@ use ZeroBoiler\Domain\ValueObject;
  * {{ class }} — immutable domain value object.
  *
  * Value objects have no identity — equality is determined by
- * comparing all properties. Override equals() for custom logic.
+ * comparing all properties via toArray(). This provides deep
+ * structural equality rather than reference equality.
+ *
+ * Extend this stub to add domain-specific validation,
+ * factory methods, and computed properties.
+ *
+ * @since 1.0.0
+ *
+ * @example
+ * ```php
+ * // Create and compare
+ * $vo1 = {{ class }}::from('some-value');
+ * $vo2 = {{ class }}::from('some-value');
+ * $vo1->equals($vo2); // true
+ *
+ * // Round-trip serialization
+ * $array = $vo1->toArray();
+ * $restored = {{ class }}::fromArray($array);
+ * $vo1->equals($restored); // true
+ * ```
  */
 final readonly class {{ class }} extends ValueObject
 {
     /**
      * Create a new {{ class }} value object.
+     *
+     * Add validation invariants here to enforce domain rules
+     * at construction time (fail-fast principle).
      *
      * @param  string  $value  The underlying value.
      */
@@ -32,6 +54,17 @@ final readonly class {{ class }} extends ValueObject
     public static function from(string $value): self
     {
         return new self($value);
+    }
+
+    /**
+     * Reconstruct from an array (round-trip with toArray()).
+     *
+     * @param  array<string, mixed>  $array  The array from toArray().
+     * @return self
+     */
+    public static function fromArray(array $array): static
+    {
+        return new static($array['value']);
     }
 
     /**
