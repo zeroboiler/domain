@@ -2,6 +2,14 @@
 
 All notable changes to the `zeroboiler/domain` package will be documented in this file.
 
+## [1.50.0] - 2026-08-10
+
+### Changed
+- `InvalidStateException` now extends `DomainException` (was `Exception`) for consistent exception hierarchy — gains `errorCode()`, `toErrorArray()`, `toArray()`, and `JsonSerializable` support
+
+### Added
+- `DomainProductionComprehensiveTest` — single-file PHPUnit audit covering all domain primitives: AggregateRootId, Entity, all identifier types, DomainException hierarchy, DomainEventCollection, Snapshot, InMemoryUnitOfWork, and cross-package serialization contracts
+
 ## [1.49.0] - 2026-08-10
 
 ### Changed
