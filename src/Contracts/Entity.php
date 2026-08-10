@@ -48,4 +48,14 @@ interface Entity
      * @return array{id: string, type: string, ...}
      */
     public function toArray(): array;
+
+    /**
+     * Check if there are any uncommitted domain events.
+     *
+     * Entities using the HasDomainEvents trait expose this method
+     * for inspection of pending events before they are dispatched.
+     *
+     * @return bool True if there are pending events, false otherwise.
+     */
+    public function hasUncommittedEvents(): bool;
 }

@@ -1243,8 +1243,8 @@ The domain package includes a comprehensive test suite covering:
 
 | Interface | Extends | Key Methods |
 |---|---|---|
-| `Contracts\Entity` | — | `id(): string`, `equals(Entity): bool`, `toArray(): array` |
-| `Contracts\AggregateRoot` | `Entity` | `version(): int`, `incrementVersion(): void`, `pullDomainEvents(): DomainEventCollection`, `clearDomainEvents(): void` |
+| `Contracts\Entity` | — | `id(): string`, `equals(Entity): bool`, `toArray(): array`, `hasUncommittedEvents(): bool` |
+| `Contracts\AggregateRoot` | `Entity` | `version(): int`, `incrementVersion(): void`, `pullDomainEvents(): DomainEventCollection`, `clearDomainEvents(): void`, `hasUncommittedEvents(): bool`, `peekDomainEvents(): DomainEventCollection` |
 | `Contracts\Identifier` | `Stringable` | `fromString()`, `toString()`, `equals()` |
 | `Contracts\Repository` | — | `find(id): ?AggregateRoot`, `save(aggregate): void`, `delete(id): void` |
 | `Contracts\UnitOfWork` | — | `begin()`, `commit()`, `rollback()`, `run()`, `track()`, `queueEvent()`, `clear()`, `getCommitted()`, `getDeleted()`, `getPendingEvents()`, `markForDeletion()`, `isActive()`, `isTracking()` |
@@ -1467,6 +1467,12 @@ When using `zeroboiler/response` with this domain package:
 | < 8.4 | ❌ Not supported | Requires union types, readonly classes, named arguments |
 
 ## Changelog
+
+### v1.45.0 (2026-08-10)
+
+- Feat: Add `hasUncommittedEvents()` to `Contracts\Entity` interface — contract now requires uncommitted event inspection, matching the HasDomainEvents trait capability
+- Feat: Add `hasUncommittedEvents()` and `peekDomainEvents()` to `Contracts\AggregateRoot` interface — event inspection methods now part of the formal contract, enabling type-safe consumption without concrete class dependency
+- Docs: Update Contracts Quick Reference table with new interface methods
 
 ### v1.44.0 (2026-08-09)
 

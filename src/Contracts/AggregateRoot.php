@@ -49,4 +49,25 @@ interface AggregateRoot extends Entity
      * Clear all recorded domain events without returning them.
      */
     public function clearDomainEvents(): void;
+
+    /**
+     * Check if there are any uncommitted domain events.
+     *
+     * Returns true when the aggregate has recorded events that have not yet
+     * been pulled via `pullDomainEvents()` or cleared via `clearDomainEvents()`.
+     *
+     * @return bool True if there are pending events, false otherwise.
+     */
+    public function hasUncommittedEvents(): bool;
+
+    /**
+     * Peek at recorded domain events without removing them.
+     *
+     * Returns a typed collection for inspection, logging, or debugging
+     * without affecting the event state. The events remain available
+     * for subsequent `pullDomainEvents()` calls.
+     *
+     * @return DomainEventCollection A copy of all recorded events.
+     */
+    public function peekDomainEvents(): DomainEventCollection;
 }
