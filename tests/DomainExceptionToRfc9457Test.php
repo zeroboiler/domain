@@ -255,16 +255,6 @@ final class DomainExceptionToRfc9457Test extends TestCase
      */
     public function all_concrete_exceptions_are_final(): void
     {
-        $reflection = new \ReflectionClass(\ZeroBoiler\Domain\Exceptions\DomainException::class);
-
-        foreach ($reflection->getMethods() as $method) {
-            // No need to check constructor or inherited methods
-            if ($method->getDeclaringClass()->getName() === $reflection->getName()) {
-                // The class itself should not be instantiated directly (abstract)
-                continue;
-            }
-        }
-
         foreach (self::EXCEPTION_TYPES as $type) {
             $r = new \ReflectionClass($type);
             $this->assertTrue(
