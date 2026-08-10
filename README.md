@@ -1797,6 +1797,82 @@ When using `zeroboiler/response` with this domain package:
 - Docs: Enrich TransformerInterface `@param` tags with `@return` descriptions
 - Docs: Add usage examples to all console command docblocks
 
+## Production Readiness Checklist
+
+The ZeroBoiler Domain package is designed for production-grade DDD implementations. This section documents the quality guarantees and conventions.
+
+### Code Quality
+
+| Category | Status | Notes |
+|----------|--------|-------|
+| `declare(strict_types=1)` | ✅ All files | Zero tolerance for type coercion |
+| Return type declarations | ✅ All methods | Including `__construct`, `__clone`, magic methods |
+| Typed properties | ✅ All classes | `private readonly`, `protected`, visibility-locked |
+| Docblocks | ✅ All public API | `@param`, `@return`, `@throws`, `@since` annotations |
+| `#[Override]` | ✅ Interface impls | PHP 8.5 override attribute on all interface implementations |
+| `#[Deprecated]` | ✅ Legacy APIs | PHP 8.5 deprecation attribute on backward-compat shims |
+| Immutability | ✅ Core types | Value Objects, Identifiers, Snapshots are immutable |
+| `final` classes | ✅ Leaf types | Exceptions, Identifiers, Pagination — all sealed |
+
+### PHP Version & Syntax
+
+| Feature | Version | Usage |
+|---------|---------|-------|
+| `readonly` classes/properties | PHP 8.2+ | AggregateRootId, Identifiers |
+| `#[Override]` attribute | PHP 8.3+ | Service providers, interface implementations |
+| `#[Deprecated]` attribute | PHP 8.4+ | Legacy methods, deprecated classes |
+| Constructor promotion | PHP 8.0+ | All classes |
+| Named arguments | PHP 8.0+ | Factory methods, `sprintf` calls |
+| `array_is_list()` | PHP 8.3+ | DomainEventCollection |
+| `array_any()` | PHP 8.5+ | InMemoryUnitOfWork |
+| First-class callable syntax | PHP 8.1+ | Event dispatchers, callbacks |
+
+### Semver Compliance
+
+- **MAJOR**: Breaking changes to public API (method signature changes, removed methods)
+- **MINOR**: New features, new interfaces, new factory methods
+- **PATCH**: Bug fixes, documentation updates, performance improvements
+
+### Backward Compatibility Guarantees
+
+1. All public class/method signatures are stable within a major version
+2. Deprecated methods emit `#[Deprecated]` + `@deprecated` docblock (double signal)
+3. Factory methods (`::because()`, `::for()`, `::generate()`) never change signatures
+4. Interface contracts are append-only — new methods always have default implementations or are added to new interfaces
+5. `toArray()` / `fromArray()` output format is stable — safe for caching/queuing
+
+### Error Handling Contract
+
+All domain exceptions extend `DomainException` and guarantee:
+
+```php
+$exception->getMessage();    // Human-readable description
+$exception->errorCode();     // Machine-readable code (e.g., 'OPTIMISTIC_LOCK')
+$exception->toErrorArray(); // RFC 9457 Problem Details format
+$exception->toArray();       // Full serialization array
+json_encode($exception);    // JsonSerializable — safe for API responses
+```
+
+### Serialization Contract
+
+All serializable domain objects guarantee round-trip safety:
+
+```php
+$original = UuidIdentifier::generate();
+$restored = UuidIdentifier::fromArray($original->toArray());
+assert($original->equals($restored)); // true
+```
+
+Types with this guarantee: all Identifiers, Snapshot, DomainEventCollection.
+
+### Architecture Principles
+
+1. **Composition over inheritance** — Traits (`HasDomainEvents`, `EventSourced`, `HasSnapshots`) composed into aggregates
+2. **Interface segregation** — Separate `Entity`, `AggregateRoot`, `Identifier`, `Repository`, `UnitOfWork` contracts
+3. **Dependency inversion** — `DomainServiceProvider` checks `app->bound()` at runtime for optional packages
+4. **No framework coupling in domain** — Core classes depend only on PHP internals; Laravel integration via ServiceProvider
+5. **Open/closed** — Extend via traits, decorators, and new identifiers; never modify core classes
+
 ## License
 
 Proprietary
