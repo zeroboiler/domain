@@ -1468,9 +1468,14 @@ When using `zeroboiler/response` with this domain package:
 
 ## Changelog
 
-### v1.45.0 (2026-08-10)
+### v1.47.0 (2026-08-10)
 
-- Feat: Add `hasUncommittedEvents()` to `Contracts\Entity` interface — contract now requires uncommitted event inspection, matching the HasDomainEvents trait capability
+- Refactor: Add `#[Override]` to `HasDomainEvents::hasUncommittedEvents()` — PHP 8.5 best practice compliance with `Contracts\Entity::hasUncommittedEvents()`
+- Docs: Enrich `AggregateRoot::setReadOnlyProperty()` docblock — add `@param`/`@return` annotations and `@internal` marker
+
+### v1.46.0 (2026-08-10)
+
+- chore: bump to v1.46.0, add @since tags to MakeValueObjectCommand
 - Feat: Add `hasUncommittedEvents()` and `peekDomainEvents()` to `Contracts\AggregateRoot` interface — event inspection methods now part of the formal contract, enabling type-safe consumption without concrete class dependency
 - Docs: Update Contracts Quick Reference table with new interface methods
 

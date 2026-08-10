@@ -100,7 +100,10 @@ trait HasDomainEvents
      * been pulled via `releaseEvents()` or cleared via `clearEvents()`.
      *
      * @return bool True if there are pending events, false otherwise.
+     *
+     * @see Contracts\Entity::hasUncommittedEvents()
      */
+    #[\Override]
     public function hasUncommittedEvents(): bool
     {
         return $this->domainEvents !== [];

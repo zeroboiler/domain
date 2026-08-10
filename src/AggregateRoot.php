@@ -314,7 +314,14 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
     /**
      * Set a readonly property via reflection (used during reconstitution).
      *
-     * Walks up the class hierarchy to find the property declaration.
+     * Walks up the class hierarchy to find the property declaration,
+     * handling initialized readonly properties by unsetting them first.
+     *
+     * @param  object  $instance  The object whose property to set.
+     * @param  string  $name  The property name.
+     * @param  mixed  $value  The value to assign.
+     *
+     * @internal Used only by {@see reconstituteFromSnapshot()}.
      */
     private static function setReadOnlyProperty(object $instance, string $name, mixed $value): void
     {
