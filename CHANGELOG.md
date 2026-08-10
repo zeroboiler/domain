@@ -2,6 +2,17 @@
 
 All notable changes to the `zeroboiler/domain` package will be documented in this file.
 
+## [1.47.0] - 2026-08-10
+
+### Changed
+- Bump package version to 1.47.0
+
+### Fixed
+- `InMemoryUnitOfWork::restoreAggregateState()` — guard against uninitialized properties (avoids `getValue()` error) and wrap each property restore in try/catch for Closure/resource properties that cannot survive clone
+
+### Added
+- `@since 1.0.0` tag to `MakeValueObjectCommand`
+
 ## [1.46.0] - 2026-08-10
 
 ### Changed

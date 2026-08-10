@@ -628,8 +628,22 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
                     continue;
                 }
 
+                // Skip uninitialized properties — getValue() throws on them
+                // and there's nothing meaningful to restore anyway.
+                if (! $property->isInitialized($snapshot)) {
+                    $seen[$name] = true;
+                    continue;
+                }
+
                 $seen[$name] = true;
-                $property->setValue($target, $property->getValue($snapshot));
+
+                try {
+                    $property->setValue($target, $property->getValue($snapshot));
+                } catch (\Throwable) {
+                    // Silently skip properties that cannot be restored
+                    // (e.g., Closure properties, resources, or dynamically
+                    // added internal state that doesn't survive clone).
+                }
             }
 
             $reflection = $reflection->getParentClass();
