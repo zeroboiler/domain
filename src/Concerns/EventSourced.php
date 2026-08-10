@@ -133,6 +133,13 @@ trait EventSourced
      *
      * Walks the class hierarchy from the instance's class upward to find
      * the property declaration, then sets its value via reflection.
+     * Handles initialized readonly properties by unsetting them first.
+     *
+     * @param  object  $instance  The object whose property to set.
+     * @param  string  $name  The property name.
+     * @param  mixed  $value  The value to assign.
+     *
+     * @internal Used only by {@see fromHistory()}.
      */
     private static function setInheritedProperty(object $instance, string $name, mixed $value): void
     {
@@ -140,7 +147,15 @@ trait EventSourced
 
         while ($target !== false) {
             if ($target->hasProperty($name)) {
-                $target->getProperty($name)->setValue($instance, $value);
+                $property = $target->getProperty($name);
+
+                // Unset readonly property first if it's initialized
+                // (PHP 8.5 allows re-initialization after unset via Reflection)
+                if ($property->isReadOnly() && $property->isInitialized($instance)) {
+                    unset($instance->{$name});
+                }
+
+                $property->setValue($instance, $value);
 
                 return;
             }

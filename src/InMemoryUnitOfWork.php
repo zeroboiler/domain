@@ -521,6 +521,15 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
 
     /**
      * Resolve a stable string identifier for an aggregate.
+     *
+     * Uses the aggregate's `id()` method when available.
+     * For aggregates without an ID (e.g., not yet initialized),
+     * falls back to an instance-local identity map via WeakMap.
+     *
+     * @param  AggregateRoot  $aggregate  The aggregate to resolve an ID for.
+     * @return string A stable string identifier for the aggregate.
+     *
+     * @internal
      */
     private function resolveId(AggregateRoot $aggregate): string
     {
