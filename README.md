@@ -1528,6 +1528,10 @@ When using `zeroboiler/response` with this domain package:
 
 ## Changelog
 
+### v1.49.0 (2026-08-10)
+
+- Test: Add `DomainEndToEndLifecycleTest` — comprehensive end-to-end lifecycle tests covering aggregate root creation/state invariants/serialization, entity identity equality (string/int/Stringable IDs)/argument validation, identifier types (UUID/ULID/String/Integer) round-trip/JSON serde/cross-type inequality, domain exceptions (unique codes/custom codes/RFC 9457 toErrorArray/JsonSerializable/InvalidStateException hierarchy/OptimisticLockException), snapshot round-trip/InMemorySnapshotStore CRUD/stats/purge, domain event collection operations, unit of work declarative/manual/rollback/clear/pending events/auto-rollback
+
 ### v1.48.0 (2026-08-10)
 
 - Refactor: Fix `InvalidStateException` hierarchy — standalone exception (outside DomainException) with correct inheritance, preventing `is_subclass_of(DomainException::class)` false negatives in cross-package error bridges
