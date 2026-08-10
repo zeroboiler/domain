@@ -2,6 +2,14 @@
 
 All notable changes to the `zeroboiler/domain` package will be documented in this file.
 
+## [1.46.0] - 2026-08-10
+
+### Changed
+- Bump package version to 1.46.0
+
+### Added
+- `@since 1.0.0` tag to `MakeValueObjectCommand`
+
 ## [1.45.0] - 2026-08-09
 
 ### Fixed

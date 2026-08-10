@@ -22,6 +22,8 @@ use Illuminate\Console\GeneratorCommand;
  *   php artisan zeroboiler:domain:value-object Email
  *   php artisan zeroboiler:domain:value-object Money --type=float,int
  *   ```
+ *
+ * @since 1.0.0
  */
 #[Description('Generate a new Domain Value Object class')]
 final class MakeValueObjectCommand extends GeneratorCommand
