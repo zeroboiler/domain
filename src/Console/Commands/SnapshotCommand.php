@@ -20,10 +20,15 @@ use ZeroBoiler\Domain\Snapshots\SnapshotStore;
  * aggregate's snapshot state for debugging event-sourced aggregates.
  *
  * Usage:
- *   php artisan domain:snapshot --class=App\\Models\\Order
- *   php artisan domain:snapshot --class=App\\Models\\Order --id=order-123
+ *   ```bash
+ *   php artisan domain:snapshot
+ *   php artisan domain:snapshot --class=App\Models\Order
+ *   php artisan domain:snapshot --class=App\Models\Order --id=order-123
+ *   ```
  *
  * @see \ZeroBoiler\Domain\Snapshots\SnapshotStore
+ *
+ * @since 1.0.0
  */
 final class SnapshotCommand extends Command
 {

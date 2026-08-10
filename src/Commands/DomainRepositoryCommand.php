@@ -17,6 +17,14 @@ use Illuminate\Support\Str;
  *
  * Creates both the repository interface in Domain/Repositories and
  * a concrete Eloquent implementation in Domain/Repositories/Eloquent.
+ *
+ * Usage:
+ *   ```bash
+ *   php artisan zeroboiler:domain:repository Order
+ *   php artisan zeroboiler:domain:repository Invoice --force
+ *   ```
+ *
+ * @since 1.0.0
  */
 #[Description('Generate a new Domain Repository interface and Eloquent implementation')]
 final class DomainRepositoryCommand extends GeneratorCommand

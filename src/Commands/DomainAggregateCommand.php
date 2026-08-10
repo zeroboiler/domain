@@ -16,6 +16,14 @@ use Illuminate\Console\GeneratorCommand;
  *
  * Creates a typed aggregate root stub with AggregateRootId identity,
  * event sourcing support, and domain event application methods.
+ *
+ * Usage:
+ *   ```bash
+ *   php artisan zeroboiler:domain:aggregate Order
+ *   php artisan zeroboiler:domain:aggregate Invoice --force
+ *   ```
+ *
+ * @since 1.0.0
  */
 #[Description('Generate a new Domain AggregateRoot class')]
 final class DomainAggregateCommand extends GeneratorCommand

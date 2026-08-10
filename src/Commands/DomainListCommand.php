@@ -17,6 +17,13 @@ use Symfony\Component\Finder\Finder;
  *
  * Scans the `app/Domain` directory and groups classes by subdirectory.
  * Useful for auditing the domain model structure in a project.
+ *
+ * Usage:
+ *   ```bash
+ *   php artisan zeroboiler:domain:list
+ *   ```
+ *
+ * @since 1.0.0
  */
 #[Description('List all Domain classes (Aggregates, Events, Repositories, ValueObjects)')]
 final class DomainListCommand extends Command
