@@ -28,10 +28,13 @@ use Ramsey\Uuid\UuidInterface;
  * ```php
  * $id = AggregateRootId::generate();          // Random UUID v4
  * $id = AggregateRootId::fromString('...');   // Parse existing UUID
+ * $id->isValid('not-a-uuid');                 // false
  * $id->toString();                             // '550e8400-e29b-41d4-...'
  * $id->equals($otherId);                      // Type-safe equality
  * echo json_encode(['order_id' => $id]);
  * // → {"order_id": "550e8400-e29b-41d4-a716-446655440000"}
+ * $id->toArray();                              // ['uuid' => '550e8400-...']
+ * AggregateRootId::fromArray($id->toArray()); // Round-trip
  * ```
  */
 final readonly class AggregateRootId implements \Stringable, JsonSerializable
@@ -46,6 +49,17 @@ final readonly class AggregateRootId implements \Stringable, JsonSerializable
     public static function generate(): self
     {
         return new self(Uuid::uuid4());
+    }
+
+    /**
+     * Validate whether a string is a valid UUID without throwing.
+     *
+     * @param  string  $value  The string to validate.
+     * @return bool True if the string is a valid UUID.
+     */
+    public static function isValid(string $value): bool
+    {
+        return Uuid::isValid($value);
     }
 
     /**
