@@ -20,13 +20,16 @@ use Exception;
  *
  * Provides a machine-readable `errorCode()` for programmatic error
  * handling in API responses, middleware, and client-side logic.
+ * Supports JSON serialization (RFC 9457 compatible) and full
+ * round-trip serialization via `toArray()` / `fromArray()`.
  *
- * @see InvalidStateDomainException
- * @see InvalidArgumentDomainException
- * @see NotFoundDomainException
- * @see ConflictDomainException
- * @see AggregateNotFoundException
- * @see OptimisticLockException
+ * @see InvalidStateDomainException For state-based business rule violations.
+ * @see InvalidArgumentDomainException For input validation at the domain boundary.
+ * @see NotFoundDomainException For missing aggregate/entity lookups.
+ * @see ConflictDomainException For concurrent modification conflicts.
+ * @see AggregateNotFoundException For aggregate-specific not-found errors.
+ * @see OptimisticLockException For version mismatch on save.
+ * @see \ZeroBoiler\Response\Transformers\DomainResponseFactory::error() For API response bridging.
  *
  * @example
  * ```php
@@ -53,8 +56,12 @@ use Exception;
  *         ->withMeta(['code' => $e->errorCode()])
  *         ->send();
  * }
+ *
+ * // Round-trip serialization for caching/queuing:
+ * $serialized = $e->toArray();
+ * $restored = DomainException::fromArray($serialized, OrderAlreadyShippedException::class);
  * ```
-
+ *
  * @implements \JsonSerializable<array{title: string, detail: string, code: string}>
  *
  * @since 1.0.0
@@ -141,6 +148,48 @@ abstract class DomainException extends Exception implements \JsonSerializable
             'detail' => $this->getMessage(),
             'code' => $this->errorCode(),
         ];
+    }
+
+    /**
+     * Reconstruct a domain exception from an array representation.
+     *
+     * Accepts the output of {@see toArray()} or {@see toErrorArray()}.
+     * The exception class must be passed explicitly since the base class
+     * cannot be instantiated directly (abstract).
+     *
+     * Returns the appropriate concrete subclass when $class is provided,
+     * or a generic DomainException when no class is specified.
+     *
+     * @param  array{error_code?: string, message?: string, title?: string, detail?: string, code?: string}  $array  The array from `toArray()` or `toErrorArray()`.
+     * @param  class-string<static>|null  $class  The concrete exception class to instantiate.
+     * @return static A reconstructed domain exception.
+     *
+     * @example
+     * ```php
+     * // Round-trip serialization
+     * try {
+     *     $order->pay($amount);
+     * } catch (InvalidStateDomainException $e) {
+     *     $serialized = $e->toArray();
+     *     // Cache or queue the serialized data...
+     *     $restored = DomainException::fromArray($serialized, InvalidStateDomainException::class);
+     *     echo $restored->getMessage(); // Same as original
+     *     echo $restored->errorCode(); // 'INVALID_STATE'
+     * }
+     *
+     * // From toErrorArray() format (RFC 9457)
+     * $error = $e->toErrorArray();
+     * $restored = DomainException::fromArray($error, InvalidStateDomainException::class);
+     * ```
+     */
+    public static function fromArray(array $array, ?string $class = null): static
+    {
+        $class = $class ?? static::class;
+
+        $message = $array['detail'] ?? $array['message'] ?? '';
+        $code = $array['error_code'] ?? $array['code'] ?? '';
+
+        return new $class($message, 0, null, $code);
     }
 
     /**

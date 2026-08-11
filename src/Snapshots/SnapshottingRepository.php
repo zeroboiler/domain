@@ -40,6 +40,33 @@ use ZeroBoiler\Observability\Trace;
  * The aggregate root must use the {@see HasSnapshots} trait for snapshot
  * operations (shouldSnapshot, createSnapshot, restoreFromSnapshot).
  *
+ * @see Snapshot
+ * @see SnapshotStore
+ * @see SnapshotPolicy
+ * @see HasSnapshots
+ *
+ * @example
+ * ```php
+ * use ZeroBoiler\Domain\Contracts\Repository;
+ * use ZeroBoiler\Domain\Snapshots\SnapshottingRepository;
+ * use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
+ *
+ * $innerRepo = new EventSourcedOrderRepository($eventStore);
+ * $snapshotStore = new InMemorySnapshotStore();
+ *
+ * $repo = new SnapshottingRepository(
+ *     inner: $innerRepo,
+ *     snapshotStore: $snapshotStore,
+ *     aggregateType: Order::class,
+ * );
+ *
+ * $order = $repo->find($orderId);
+ * // Loads from snapshot (if available) + replays only post-snapshot events
+ *
+ * $repo->save($order);
+ * // Saves via inner repo + auto-snapshots if #[SnapshotPolicy] triggers
+ * ```
+ *
  * @since 1.0.0
  */
 final readonly class SnapshottingRepository implements Repository
