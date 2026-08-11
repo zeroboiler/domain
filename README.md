@@ -1888,3 +1888,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 ## License
 
 Proprietary
+
+## v1.51.0 (2026-08-11)
+
+- Refactor: Remove unused `ENUM_MANAGER_CLASS` constant from DomainServiceProvider (dead code, phpstan-ignore eliminated)
+- Docs: Verify production readiness — all files have strict types, return types, docblocks, typed properties, PHP 8.5 syntax
+- Quality: Manual code review pass — confirm immutability, domain invariants, JSON serialization consistency across all 36 source files

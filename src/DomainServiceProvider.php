@@ -40,13 +40,6 @@ final class DomainServiceProvider extends ServiceProvider
      */
     private const string DISPATCHER_CLASS = 'ZeroBoiler\\Events\\Domain\\DomainEventDispatcher';
 
-    /**
-     * Optional enum manager class — checked via class_exists() at runtime.
-     *
-     * @phpstan-ignore classConstant.unused
-     */
-    private const string ENUM_MANAGER_CLASS = 'ZeroBoiler\\Enums\\EnumManager';
-
     #[\Override]
     public function register(): void
     {
