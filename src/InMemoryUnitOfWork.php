@@ -413,8 +413,10 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      *
      * Uses pullDomainEvents() which clears the aggregate's event list.
      * This is intentional: the UoW takes ownership of event dispatch.
+     *
+     * @internal
      */
-    private function collectEventsFromAggregate(AggregateRoot $aggregate): void /** @internal */
+    private function collectEventsFromAggregate(AggregateRoot $aggregate): void
     {
         $this->appendEvents($aggregate->pullDomainEvents());
     }
@@ -424,8 +426,10 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      *
      * Called at commit time to automatically capture any events the aggregate
      * raised between track() and commit(), without requiring manual queueEvent().
+     *
+     * @internal
      */
-    private function collectNewEventsFromAggregate(AggregateRoot $aggregate): void /** @internal */
+    private function collectNewEventsFromAggregate(AggregateRoot $aggregate): void
     {
         if (! method_exists($aggregate, 'hasUncommittedEvents') || ! $aggregate->hasUncommittedEvents()) {
             return;
@@ -441,8 +445,10 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      * and plain arrays (from releaseEvents()).
      *
      * @param  DomainEventCollection|list<DomainEvent>  $events
+     *
+     * @internal
      */
-    private function appendEvents(DomainEventCollection|array $events): void /** @internal */
+    private function appendEvents(DomainEventCollection|array $events): void
     {
         foreach ($events as $event) {
             $this->pendingEvents[] = $event;
@@ -578,8 +584,10 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
 
     /**
      * Dispatch all pending events through the configured dispatcher.
+     *
+     * @internal
      */
-    private function dispatchPendingEvents(): void /** @internal */
+    private function dispatchPendingEvents(): void
     {
         $dispatcher = $this->eventDispatcher;
 
@@ -595,8 +603,10 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      *
      * Called at commit time (outermost scope) before event dispatch so that
      * aggregates are durably stored before any event consumers react.
+     *
+     * @internal
      */
-    private function invokePersistenceCallback(): void /** @internal */
+    private function invokePersistenceCallback(): void
     {
         if ($this->persistenceCallback instanceof Closure) {
             ($this->persistenceCallback)($this->committed, $this->deleted);
@@ -612,8 +622,10 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      *
      * @param  AggregateRoot  $target  The live aggregate to restore state into
      * @param  AggregateRoot  $snapshot  The cloned snapshot to read state from
+     *
+     * @internal
      */
-    private function restoreAggregateState(AggregateRoot $target, AggregateRoot $snapshot): void /** @internal */
+    private function restoreAggregateState(AggregateRoot $target, AggregateRoot $snapshot): void
     {
         // Walk the entire class hierarchy and copy non-readonly properties.
         // We collect all properties first to avoid duplicate work when a
@@ -665,8 +677,10 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      * @return array{active: bool, tracked: array<string, AggregateRoot>, deleted: array<string, AggregateRoot>}
      *
      * @throws RuntimeException When no unit of work is active.
+     *
+     * @internal
      */
-    private function requireActiveScope(): array /** @internal */
+    private function requireActiveScope(): array
     {
         if ($this->nestingDepth === 0) {
             throw new RuntimeException('No active unit of work');
@@ -683,8 +697,10 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
 
     /**
      * Decrement nesting depth and scope counter after commit/rollback.
+     *
+     * @internal
      */
-    private function exitScope(): void /** @internal */
+    private function exitScope(): void
     {
         $this->nestingDepth--;
         $this->currentScope--;
@@ -696,8 +712,10 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      * Clears savepoints, snapshots, pending events, and scope counters.
      * Does NOT clear committed/deleted — those are accessible via
      * getCommitted()/getDeleted() until the next begin() or clear().
+     *
+     * @internal
      */
-    private function resetTransactionState(): void /** @internal */
+    private function resetTransactionState(): void
     {
         $this->pendingEvents = [];
         $this->aggregateEventOffsets = [];
