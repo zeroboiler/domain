@@ -161,7 +161,9 @@ final readonly class SnapshottingRepository implements Repository
     /**
      * Load an aggregate using snapshot optimization.
      *
-     * If a snapshot exists, restores it and replays only post-snapshot events.
+     * If a snapshot exists, delegates to the aggregate's public
+     * {@see AggregateRoot::reconstituteFromSnapshot()} method for snapshot
+     * restoration and post-snapshot event replay.
      * Otherwise, falls back to full event replay via the inner repository.
      *
      * @param  string  $id  The aggregate ID.
@@ -185,24 +187,15 @@ final readonly class SnapshottingRepository implements Repository
         $snapshot = $this->snapshotStore->load($this->aggregateType, $id);
 
         if ($snapshot instanceof Snapshot && $replayCallback !== null) {
-            // Create a new instance and restore from snapshot
-            $aggregate = $this->instantiateFromSnapshot($snapshot);
+            // Delegate to the aggregate's public reconstitution API
+            // instead of duplicating reflection-based event replay.
+            $postSnapshotEvents = $replayCallback($snapshot->version);
 
-            if ($aggregate instanceof AggregateRoot) {
-                // Get events after the snapshot version
-                $postSnapshotEvents = $replayCallback($snapshot->version);
-
-                // Replay remaining events
-                foreach ($postSnapshotEvents as $event) {
-                    if (method_exists($aggregate, 'applyEvent')) {
-                        $reflection = new \ReflectionMethod($aggregate, 'applyEvent');
-                        $reflection->invoke($aggregate, $event, true);
-                    }
-                }
-
-                $aggregate->clearDomainEvents();
-
-                return $aggregate;
+            if (is_subclass_of($this->aggregateType, AggregateRoot::class)) {
+                return $this->aggregateType::reconstituteFromSnapshot(
+                    $snapshot,
+                    $postSnapshotEvents,
+                );
             }
         }
 

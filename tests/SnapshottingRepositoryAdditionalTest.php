@@ -216,7 +216,7 @@ describe('SnapshottingRepository additional tests', function (): void {
         expect($store->has($aggregateClass::class, $aggregateClass->id()))->toBeFalse();
     });
 
-    it('findWithSnapshot replays events via reflection-based applyEvent', function (): void {
+    it('findWithSnapshot replays events via reconstituteFromSnapshot', function (): void {
         $store = new InMemorySnapshotStore;
 
         $aggregateClass = new class extends AggregateRoot
