@@ -1873,6 +1873,18 @@ Types with this guarantee: all Identifiers, Snapshot, DomainEventCollection.
 4. **No framework coupling in domain** — Core classes depend only on PHP internals; Laravel integration via ServiceProvider
 5. **Open/closed** — Extend via traits, decorators, and new identifiers; never modify core classes
 
+## Security Considerations
+
+- **No user input processing** — Domain objects accept validated, type-safe values only. Input sanitization is the responsibility of the application layer.
+- **Immutable identifiers** — All identifier classes are `final` and `readonly`; identity values cannot be mutated after construction.
+- **Domain events are value objects** — Events are serializable arrays, never carrying closures or callable references.
+- **Snapshot stores are internal** — `InMemorySnapshotStore` is intended for development/testing only; production stores should implement `SnapshotStore` with proper access controls.
+- **No framework coupling in domain core** — Core domain classes depend only on PHP internals (`ramsey/uuid` for UUIDv4 generation), minimizing attack surface.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
+
 ## License
 
 Proprietary
