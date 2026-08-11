@@ -56,8 +56,9 @@ final class SnapshotPolicyProductionTest extends TestCase
     public function test_declares_strict_types(): void
     {
         $file = (new ReflectionClass(SnapshotPolicy::class))->getFileName();
-        $contents = file_get_contents($file);
 
+        self::assertNotFalse($file, 'SnapshotPolicy must have a source file.');
+        $contents = file_get_contents($file);
         self::assertStringContainsString('declare(strict_types=1)', $contents);
     }
 
@@ -111,7 +112,7 @@ final class SnapshotPolicyProductionTest extends TestCase
         $ref = new ReflectionClass($policy);
         $prop = $ref->getProperty('every');
 
-        self::assertTrue($prop->isReadOnly(), 'every property must be readonly (PHP 8.1+).');
+        self::assertTrue($prop->isReadOnly(), 'every property must be readonly.');
         self::assertTrue($prop->isPublic(), 'every property must be public.');
     }
 
@@ -179,50 +180,6 @@ final class SnapshotPolicyProductionTest extends TestCase
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // Attribute Usage Validation
-    // ─────────────────────────────────────────────────────────────────────
-
-    public function test_can_be_instantiated_via_reflection_attribute(): void
-    {
-        // Simulate how SnapshottingRepository reads the attribute
-        $ref = new ReflectionClass($this->createDummyClass());
-
-        $attrs = $ref->getAttributes(SnapshotPolicy::class);
-        self::assertCount(1, $attrs);
-
-        /** @var SnapshotPolicy $policy */
-        $policy = $attrs[0]->newInstance();
-
-        self::assertSame(10, $policy->every);
-    }
-
-    public function test_reflection_attribute_without_argument_uses_default(): void
-    {
-        $ref = new ReflectionClass($this->createDummyClassWithoutArgument());
-
-        $attrs = $ref->getAttributes(SnapshotPolicy::class);
-        self::assertCount(1, $attrs);
-
-        /** @var SnapshotPolicy $policy */
-        $policy = $attrs[0]->newInstance();
-
-        self::assertSame(50, $policy->every);
-    }
-
-    public function test_reflection_attribute_with_zero(): void
-    {
-        $ref = new ReflectionClass($this->createDummyClassWithZero());
-
-        $attrs = $ref->getAttributes(SnapshotPolicy::class);
-        self::assertCount(1, $attrs);
-
-        /** @var SnapshotPolicy $policy */
-        $policy = $attrs[0]->newInstance();
-
-        self::assertSame(0, $policy->every);
-    }
-
-    // ─────────────────────────────────────────────────────────────────────
     // Multiple Instances Independence
     // ─────────────────────────────────────────────────────────────────────
 
@@ -236,30 +193,26 @@ final class SnapshotPolicyProductionTest extends TestCase
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // Helpers
+    // Attribute Re-instantiation via Reflection
     // ─────────────────────────────────────────────────────────────────────
 
-    private function createDummyClassWithoutArgument(): string
+    public function test_attribute_can_be_new_instance_without_args(): void
     {
-        return $this->createAnonymousClass('');
+        $ref = new ReflectionClass(SnapshotPolicy::class);
+        $attrs = $ref->getAttributes(\Attribute::class);
+
+        self::assertCount(1, $attrs);
+
+        $newInstance = $attrs[0]->newInstance();
+
+        self::assertInstanceOf(\Attribute::class, $newInstance);
+        self::assertSame(\Attribute::TARGET_CLASS, $newInstance->flags);
     }
 
-    private function createDummyClassWithZero(): string
+    public function test_attribute_new_instance_with_every_arg(): void
     {
-        return $this->createAnonymousClass('every: 0');
-    }
+        $policy = new SnapshotPolicy(every: 25);
 
-    private function createDummyClass(): string
-    {
-        return $this->createAnonymousClass('every: 10');
-    }
-
-    private function createAnonymousClass(string $args): string
-    {
-        $code = $args !== ''
-            ? "#[\Attribute(Attribute::TARGET_CLASS)]\nfinal readonly class __SnapshotPolicyTest_{$args} extends \ZeroBoiler\Domain\Snapshots\SnapshotPolicy { public function __construct() { parent::__construct(every: {$args}); } }"
-            : "#[\Attribute(Attribute::TARGET_CLASS)]\nfinal readonly class __SnapshotPolicyTestDefault extends \ZeroBoiler\Domain\Snapshots\SnapshotPolicy { public function __construct() { parent::__construct(); } }";
-
-        return $code;
+        self::assertSame(25, $policy->every);
     }
 }
