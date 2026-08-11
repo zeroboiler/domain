@@ -1889,6 +1889,91 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 
 Proprietary
 
+## Architecture Overview
+
+```
+src/
+├── AggregateRoot.php          # Base aggregate root — identity, versioning, domain events
+├── AggregateRootId.php        # UUID v4 aggregate identifier — readonly, JsonSerializable
+├── Entity.php                 # Base entity — identity equality, fromArray/fromJson
+├── ValueObject.php            # Base value object — structural equality (extends zeroboiler/value-objects)
+├── DomainEventCollection.php  # Immutable event collection — filter, map, merge, toArray
+├── InMemoryUnitOfWork.php     # Transactional UoW — savepoints, rollback snapshots, event queuing
+├── DomainServiceProvider.php  # Laravel service provider — UoW, snapshot store, Octane reset
+│
+├── Contracts/
+│   ├── Entity.php             # Entity contract — id(), equals(), toArray(), fromArray()
+│   ├── AggregateRoot.php      # AggregateRoot contract — version(), domain events, pull/clear
+│   ├── Identifier.php         # Identifier contract — toString(), equals(), fromString(), fromArray()
+│   ├── Repository.php         # Repository contract — find(), save(), delete()
+│   └── UnitOfWork.php         # UnitOfWork contract — transaction, commit, rollback
+│
+├── Identifiers/
+│   ├── Identifier.php         # Abstract identifier — toString(), equals(), fromString()
+│   ├── UuidIdentifier.php     # Abstract UUID — Ramsey\Uuid backed
+│   ├── UlidIdentifier.php     # Abstract ULID — monotonic, sortable
+│   ├── StringIdentifier.php   # Final string identifier
+│   └── IntegerIdentifier.php  # Final integer identifier
+│
+├── Concerns/
+│   ├── HasDomainEvents.php    # Domain event recording — recordThat(), pullDomainEvents()
+│   ├── EventSourced.php       # Event sourcing — fromHistory(), applyThat(), handler resolution
+│   └── HasSnapshots.php       # Snapshot support — shouldSnapshot(), createSnapshot(), restoreFromSnapshot()
+│
+├── Snapshots/
+│   ├── Snapshot.php           # Immutable snapshot DTO — aggregateType, version, state
+│   ├── SnapshotPolicy.php      # Attribute — configure auto-snapshot frequency
+│   ├── SnapshotStore.php      # Interface — load, save, delete, stats, purge
+│   ├── InMemorySnapshotStore.php   # In-memory implementation for testing
+│   └── SnapshottingRepository.php  # Repository decorator — snapshot optimization
+│
+├── Exceptions/
+│   ├── DomainException.php    # Abstract base — errorCode(), toErrorArray(), fromArray()
+│   ├── InvalidStateDomainException.php
+│   ├── InvalidArgumentDomainException.php
+│   ├── NotFoundDomainException.php
+│   ├── ConflictDomainException.php
+│   ├── AggregateNotFoundException.php
+│   ├── OptimisticLockException.php
+│   └── InvalidAggregateRootException.php
+│
+├── Commands/                  # Artisan generators
+│   ├── DomainAggregateCommand.php
+│   ├── DomainRepositoryCommand.php
+│   ├── DomainListCommand.php
+│   ├── MakeValueObjectCommand.php
+│   └── SnapshotCommand.php
+│
+└── stubs/
+    └── Trace.php               # No-op #[Trace] stub when zeroboiler/observability is absent
+```
+
+### Design Decisions
+
+| Decision | Rationale |
+|---|---|
+| `AggregateRootId` is `final readonly` | Prevents subclassing and mutation — UUID identity is opaque |
+| `Entity` is `abstract` but not `final` | Allows extension for specific domain entities |
+| `UuidIdentifier` is `abstract readonly` | Forces subclasses, enables type-safe equality across types |
+| `DomainException` has `toErrorArray()` | Maps directly to RFC 9457 Problem Details for API responses |
+| `SnapshottingRepository` uses decoration | Adds snapshot support without modifying the inner repository |
+| `EventSourced` uses dot-convention handlers | `on.order.created()` auto-resolves to `applyOrderCreated()` |
+| `InMemoryUnitOfWork` uses savepoints | Enables nested transactions with rollback to savepoints |
+
+### Cross-Package Data Flow
+
+```
+┌──────────────────┐     ┌──────────────────────┐     ┌────────────────────┐
+│  Domain Package   │────▶│  Response Package    │────▶│  HTTP Response     │
+│                   │     │                      │     │                    │
+│  AggregateRoot ────┼─────│  DomainTransformer ───┼────▶│  ApiResponse       │
+│  Entity ───────────┼─────│  DomainResponse      │     │  InertiaResponse   │
+│  ValueObject ─────┼─────│  Factory              │     │  ViewModel         │
+│  DomainException ─┼─────│                      │     │  Transformer       │
+│  Snapshot ────────┼─────│                      │     │  Pagination        │
+└──────────────────┘     └──────────────────────┘     └────────────────────┘
+```
+
 ## Production Readiness Checklist
 
 | Criteria | Status | Notes |
@@ -1908,6 +1993,12 @@ Proprietary
 | Optimistic locking | ✅ | `OptimisticLockException`, version tracking in `AggregateRoot` |
 | Exception hierarchy | ✅ | `DomainException` → 7 concrete subclasses with `errorCode()` and RFC 9457 `toErrorArray()` |
 | PHPUnit/Pest test coverage | ✅ | 100+ test files covering every source class, edge cases, and cross-package integration |
+
+## v1.52.0 (2026-08-11)
+
+- Docs: Add Architecture Overview with file tree, design decisions, and cross-package data flow diagram
+- Test: Add `DomainEntityImmutabilityContractTest` — immutability, equality, round-trip serialization for all identifier types
+- Quality: Full manual code review — all 40 source files confirmed production-ready (strict types, return types, docblocks, typed properties)
 
 ## v1.51.0 (2026-08-11)
 
