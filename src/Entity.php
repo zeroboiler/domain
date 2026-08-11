@@ -8,12 +8,7 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Domain;
 
-use ZeroBoiler\Domain\Concerns\HasDomainEvents;
 use ZeroBoiler\Domain\Contracts\Entity as EntityContract;
-use ZeroBoiler\Domain\Identifiers\IntegerIdentifier;
-use ZeroBoiler\Domain\Identifiers\StringIdentifier;
-use ZeroBoiler\Domain\Identifiers\UlidIdentifier;
-use ZeroBoiler\Domain\Identifiers\UuidIdentifier;
 
 /**
  * Base class for domain entities with flexible identity types.
@@ -33,11 +28,13 @@ use ZeroBoiler\Domain\Identifiers\UuidIdentifier;
  *
  * @template TId of int|string|\Stringable
  *
+ * @implements \JsonSerializable
+ *
  * @since 1.0.0
  */
-abstract class Entity implements EntityContract
+abstract class Entity implements EntityContract, \JsonSerializable
 {
-    use HasDomainEvents;
+    use Concerns\HasDomainEvents;
 
     /**
      * @param  TId  $id  The entity's identity.
@@ -93,7 +90,7 @@ abstract class Entity implements EntityContract
      * Subclasses should override to add domain-specific fields.
      * Useful for DomainTransformer integration and response serialization.
      *
-     * @return array{id: string, type: string}
+     * @return array{id: string, type: string, ...}
      *
      * @example
      * ```php
@@ -129,5 +126,95 @@ abstract class Entity implements EntityContract
             'id' => $this->id(),
             'type' => class_basename(static::class),
         ];
+    }
+
+    /**
+     * Reconstruct an entity from an array representation.
+     *
+     * Uses reflection to hydrate constructor parameters from the array.
+     * Only keys matching constructor parameter names are passed; extra
+     * keys are silently ignored. Missing required parameters throw
+     * an ArgumentCountError (from PHP itself).
+     *
+     * For aggregate roots, use {@see AggregateRoot::reconstituteFromSnapshot()}
+     * instead — it handles readonly property restoration via reflection.
+     *
+     * @param  array<string, mixed>  $data  The array from `toArray()`.
+     * @return static A new entity instance hydrated from the array.
+     *
+     * @throws \ArgumentCountError If a required constructor parameter is missing.
+     * @throws \ReflectionException If the class cannot be reflected.
+     *
+     * @since 2.9.0
+     *
+     * @example
+     * ```php
+     * class OrderItem extends Entity
+     * {
+     *     public function __construct(
+     *         int|string|\Stringable $id,
+     *         public readonly string $productId,
+     *         public readonly int $quantity,
+     *     ) {
+     *         parent::__construct($id);
+     *     }
+     * }
+     *
+     * $item = OrderItem::fromArray([
+     *     'id' => '42',
+     *     'productId' => 'prod-123',
+     *     'quantity' => 3,
+     * ]);
+     * $item->toArray();
+     * // ['id' => '42', 'type' => 'OrderItem', 'product_id' => 'prod-123', 'quantity' => 3]
+     * ```
+     */
+    public static function fromArray(array $data): static
+    {
+        $reflection = new \ReflectionClass(static::class);
+        $constructor = $reflection->getConstructor();
+
+        if ($constructor === null) {
+            return new static;
+        }
+
+        $args = [];
+        foreach ($constructor->getParameters() as $param) {
+            $name = $param->getName();
+
+            if (array_key_exists($name, $data)) {
+                $args[$name] = $data[$name];
+            } elseif ($param->isDefaultValueAvailable()) {
+                // Skip — PHP will use the default
+            } elseif (! $param->allowsNull()) {
+                throw new \ArgumentCountError(
+                    sprintf('Missing required parameter "%s" for %s.', $name, static::class)
+                );
+            }
+        }
+
+        return new static(...$args);
+    }
+
+    /**
+     * Serialize the entity to JSON for `json_encode()` support.
+     *
+     * Delegates to {@see toArray()} so the entity's array representation
+     * (identity, type, and domain-specific fields) is used when encoding.
+     *
+     * @return array<string, mixed>
+     *
+     * @since 2.9.0
+     *
+     * @example
+     * ```php
+     * echo json_encode($entity);
+     * // {"id":"550e8400-...","type":"Order","status":"pending","total":1999}
+     * ```
+     */
+    #[\Override]
+    public function jsonSerialize(): array
+    {
+        return $this->toArray();
     }
 }
