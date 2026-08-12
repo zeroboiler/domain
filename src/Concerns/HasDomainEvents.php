@@ -101,7 +101,7 @@ trait HasDomainEvents
      *
      * @return bool True if there are pending events, false otherwise.
      *
-     * @see Contracts\Entity::hasUncommittedEvents()
+     * @see \ZeroBoiler\Domain\Contracts\Entity::hasUncommittedEvents()
      */
     #[\Override]
     public function hasUncommittedEvents(): bool

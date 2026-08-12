@@ -38,7 +38,7 @@ final class DomainListCommand extends Command
         if (! is_dir($domainPath)) {
             $this->info('No domain classes found. Domain directory does not exist.');
 
-            return Command::SUCCESS;
+            return self::SUCCESS;
         }
 
         $this->info('Domain Classes:');
@@ -49,7 +49,7 @@ final class DomainListCommand extends Command
         $this->listDirectory($domainPath . '/Repositories', 'Repositories');
         $this->listDirectory($domainPath . '/ValueObjects', 'ValueObjects');
 
-        return Command::SUCCESS;
+        return self::SUCCESS;
     }
 
     /**
