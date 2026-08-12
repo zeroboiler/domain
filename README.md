@@ -113,6 +113,19 @@ $uow->getPendingEvents();                                     // → DomainEvent
 $uow->markForDeletion($aggregate);                            // queue for deletion on commit
 $uow->getCommitted();                                         // → AggregateRoot[] (after commit)
 $uow->getDeleted();                                           // → AggregateRoot[] (after commit)
+
+// Advanced: custom persistence and event dispatch
+$uow->setPersistenceCallback(function (array $committed, array $deleted): void {
+    foreach ($committed as $aggregate) {
+        DB::table('aggregates')->upsert([...]);
+    }
+    foreach ($deleted as $aggregate) {
+        DB::table('aggregates')->delete($aggregate->id());
+    }
+});
+$uow->setEventDispatcher(function (object $event): void {
+    app(\ZeroBoiler\Events\Domain\DomainEventDispatcher::class)->dispatch($event);
+});
 ```
 
 ### Identifiers
@@ -2127,6 +2140,11 @@ src/
 | Optimistic locking | ✅ | `OptimisticLockException`, version tracking in `AggregateRoot` |
 | Exception hierarchy | ✅ | `DomainException` → 7 concrete subclasses with `errorCode()` and RFC 9457 `toErrorArray()` |
 | PHPUnit/Pest test coverage | ✅ | 100+ test files covering every source class, edge cases, and cross-package integration |
+
+## v1.54.0 (2026-08-12)
+
+- Test: Add `DomainTypeSafetyContractTest` — reflection-based type safety verification (strict types, return types, final/readonly, interface contracts, serde methods, #[Override] attributes)
+- Docs: Add `setEventDispatcher` and `setPersistenceCallback` usage examples to One-Liner Quick Start section
 
 ## v1.53.0 (2026-08-12)
 
