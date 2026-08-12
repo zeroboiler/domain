@@ -1974,6 +1974,140 @@ src/
 └──────────────────┘     └──────────────────────┘     └────────────────────┘
 ```
 
+## API Quick Reference
+
+### AggregateRoot (extends Entity, abstract)
+
+| Method | Return | Description |
+|---|---|---|
+| `id(): string` | `string` | String representation of aggregate identity |
+| `aggregateId(): AggregateRootId` | `AggregateRootId` | Typed UUID identity object |
+| `version(): int` | `int` | Current version for optimistic locking |
+| `incrementVersion(): void` | `void` | Bump version after successful save |
+| `pullDomainEvents(): DomainEventCollection` | `DomainEventCollection` | Destructive pull of recorded events |
+| `clearDomainEvents(): void` | `void` | Discard all recorded events |
+| `peekDomainEvents(): DomainEventCollection` | `DomainEventCollection` | Non-destructive peek at events |
+| `hasUncommittedEvents(): bool` | `bool` | Check for pending events |
+| `equals(EntityContract): bool` | `bool` | Type-safe identity equality |
+| `toArray(): array` | `array` | `{id, version, type, ...}` |
+| `reconstituteFromSnapshot(Snapshot, array): static` | `static` | Restore from snapshot + post-snapshot events |
+
+### Entity (abstract, implements JsonSerializable)
+
+| Method | Return | Description |
+|---|---|---|
+| `id(): string` | `string` | String identity (int/string/Stringable) |
+| `equals(EntityContract): bool` | `bool` | Type + identity equality |
+| `toArray(): array` | `array` | `{id, type, ...}` |
+| `fromArray(array): static` | `static` | Reflection-based hydration |
+| `jsonSerialize(): array` | `array` | Delegates to `toArray()` |
+
+### AggregateRootId (final readonly)
+
+| Method | Return | Description |
+|---|---|---|
+| `generate(): self` | `self` | Random UUID v4 |
+| `fromString(string): self` | `self` | Parse existing UUID |
+| `isValid(string): bool` | `bool` | Pre-validate without throwing |
+| `toString(): string` | `string` | Canonical UUID string |
+| `equals(self): bool` | `bool` | UUID value equality |
+| `toArray(): array` | `{uuid: string}` | Serialization |
+| `fromArray(array): self` | `self` | Round-trip restore |
+| `jsonSerialize(): string` | `string` | JSON output |
+
+### Identifier Types (UuidIdentifier, UlidIdentifier, StringIdentifier, IntegerIdentifier)
+
+| Method | Return | Available On |
+|---|---|---|
+| `generate(): static` | `static` | Uuid, Ulid |
+| `fromString(string): static` | `static` | All |
+| `from(mixed): static` | `static` | String (from string), Integer (from int) |
+| `isValid(string): bool` | `bool` | All |
+| `toString(): string` | `string` | All |
+| `equals(IdentifierContract): bool` | `bool` | All (type-safe: same class only) |
+| `toArray(): array` | `array` | All (`uuid`/`ulid`/`string`/`integer` key) |
+| `fromArray(array): static` | `static` | All |
+| `toUuid(): UuidInterface` | `UuidInterface` | Uuid |
+| `toUlid(): SymfonyUlid` | `SymfonyUlid` | Ulid |
+| `toInt(): int` | `int` | Integer |
+
+### DomainEventCollection (final readonly, implements Countable, IteratorAggregate, JsonSerializable)
+
+| Method | Return | Description |
+|---|---|---|
+| `all(): list<DomainEvent>` | `list` | All events as plain array |
+| `count(): int` | `int` | Event count |
+| `isEmpty(): bool` | `bool` | Check for zero events |
+| `first(?callable): ?DomainEvent` | `?DomainEvent` | First matching event |
+| `last(): ?DomainEvent` | `?DomainEvent` | Last event |
+| `get(int): ?DomainEvent` | `?DomainEvent` | Event at index |
+| `map(callable): list` | `list` | Transform each event |
+| `filter(callable): self` | `self` | Filter events, new collection |
+| `merge(self\|list): self` | `self` | Merge, new collection |
+| `toArray(): list<array>` | `list` | Serialize each event |
+| `fromArray(list<array>): self` | `self` | Round-trip restore |
+
+### DomainException (abstract, extends Exception, implements JsonSerializable)
+
+| Method | Return | Description |
+|---|---|---|
+| `errorCode(): string` | `string` | Machine-readable code (e.g., `INVALID_STATE`) |
+| `toErrorArray(): array` | `{title, detail, code}` | RFC 9457 Problem Details |
+| `toArray(): array` | `{error_code, message, file, line}` | Debug serialization |
+| `fromArray(array, ?string): static` | `static` | Round-trip restore |
+| `jsonSerialize(): array` | `{title, detail, code}` | JSON output |
+
+| Concrete Exception | Default `errorCode()` | Named Constructor |
+|---|---|---|
+| `InvalidStateDomainException` | `INVALID_STATE` | `::because(reason, code)` |
+| `InvalidArgumentDomainException` | `INVALID_ARGUMENT` | `::because(reason, code)` |
+| `NotFoundDomainException` | `NOT_FOUND` | `::because(reason)`, `::forAggregate(type, id)` |
+| `ConflictDomainException` | `CONFLICT` | `::because(reason, code)` |
+| `OptimisticLockException` | `OPTIMISTIC_LOCK` | `::for(id, expected, actual, code)` |
+| `AggregateNotFoundException` | `AGGREGATE_NOT_FOUND` | `::for(type, id, code)` |
+| `InvalidAggregateRootException` | `INVALID_AGGREGATE_ROOT` | `::notAnAggregate(object, code)` |
+| `InvalidStateException` | `INVALID_STATE_SYSTEM` | `::because(reason, code)` |
+
+### InMemoryUnitOfWork (implements UnitOfWork)
+
+| Method | Return | Description |
+|---|---|---|
+| `begin(): void` | `void` | Start transaction (supports nesting) |
+| `commit(): void` | `void` | Persist + dispatch events |
+| `rollback(): void` | `void` | Restore aggregate state, discard events |
+| `run(Closure): mixed` | `mixed` | Auto begin/commit/rollback |
+| `track(AggregateRoot): void` | `void` | Track aggregate for transaction |
+| `isTracking(AggregateRoot): bool` | `bool` | Check if tracked |
+| `markForDeletion(AggregateRoot): void` | `void` | Queue for deletion on commit |
+| `isActive(): bool` | `bool` | Check if transaction active |
+| `hasPendingEvents(): bool` | `bool` | Check for queued events |
+| `getPendingEventCount(): int` | `int` | Count of queued events |
+| `getPendingEvents(): DomainEventCollection` | `DomainEventCollection` | Non-destructive peek |
+| `getCommitted(): array` | `array<string, AggregateRoot>` | Aggregates committed in this cycle |
+| `getDeleted(): array` | `array<string, AggregateRoot>` | Aggregates marked for deletion |
+| `clear(): void` | `void` | Reset all state |
+| `queueEvent(DomainEvent): void` | `void` | Manually queue an event |
+| `setPersistenceCallback(?Closure): void` | `void` | Set persist callback (before dispatch) |
+| `setEventDispatcher(?Closure): void` | `void` | Set event dispatch callback |
+
+### SnapshottingRepository (final readonly, implements Repository)
+
+| Method | Return | Description |
+|---|---|---|
+| `find(string\|int): ?AggregateRoot` | `?AggregateRoot` | Load with snapshot optimization |
+| `save(AggregateRoot): void` | `void` | Save + auto-snapshot if due |
+| `delete(string\|int): void` | `void` | Delete aggregate + snapshots |
+| `findWithSnapshot(string, ?callable): ?AggregateRoot` | `?AggregateRoot` | Explicit snapshot loading |
+| `snapshotStore(): SnapshotStore` | `SnapshotStore` | Get underlying store |
+
+### Traits
+
+| Trait | Methods | Description |
+|---|---|---|
+| `HasDomainEvents` | `recordThat()`, `releaseEvents()`, `clearEvents()`, `hasUncommittedEvents()`, `peekEvents()` | Event recording buffer |
+| `EventSourced` | `fromHistory()`, `applyEvent()` | Aggregate reconstitution from event stream |
+| `HasSnapshots` | `toSnapshotState()`, `restoreFromSnapshotState()`, `shouldSnapshot()`, `createSnapshot()`, `restoreFromSnapshot()`, `getSnapshotPolicy()` | Snapshot serialization |
+
 ## Production Readiness Checklist
 
 | Criteria | Status | Notes |
