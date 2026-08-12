@@ -33,6 +33,7 @@ interface AggregateRoot extends Entity
 
     /**
      * Increment the aggregate version (typically after a successful save).
+     * @return void
      */
     public function incrementVersion(): void;
 
@@ -47,6 +48,7 @@ interface AggregateRoot extends Entity
 
     /**
      * Clear all recorded domain events without returning them.
+     * @return void
      */
     public function clearDomainEvents(): void;
 

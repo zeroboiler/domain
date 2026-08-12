@@ -90,6 +90,7 @@ interface Repository
      * @param  AggregateRoot  $aggregate  The aggregate to persist.
      *
      * @throws OptimisticLockException When the aggregate version is stale.
+     * @return void
      */
     public function save(AggregateRoot $aggregate): void;
 
@@ -97,6 +98,7 @@ interface Repository
      * Delete an aggregate by ID.
      *
      * @param  string|int  $id  The aggregate's identity.
+     * @return void
      */
     public function delete(string|int $id): void;
 }

@@ -134,6 +134,7 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      * Set the event dispatcher callback.
      *
      * @param  ?Closure(DomainEvent): void  $dispatcher
+     * @return void
      */
     public function setEventDispatcher(?Closure $dispatcher): void
     {
@@ -147,6 +148,7 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      * Use this to integrate with a real persistence layer (e.g. Eloquent, Doctrine).
      *
      * @param  ?Closure(array<string, AggregateRoot>, array<string, AggregateRoot>): void  $callback
+     * @return void
      */
     public function setPersistenceCallback(?Closure $callback): void
     {
@@ -161,6 +163,7 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      * Nested calls create savepoints for scoped rollback support.
      *
      * Safe to call multiple times — nesting depth is tracked internally.
+     * @return void
      */
     #[\Override]
     public function begin(): void
@@ -196,6 +199,7 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      * 3. Resets transactional state for the next cycle
      *
      * @throws RuntimeException When no unit of work is active.
+     * @return void
      */
     #[\Override]
     public function commit(): void
@@ -240,6 +244,7 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      * state and any events they raised are discarded.
      *
      * @throws RuntimeException When no unit of work is active.
+     * @return void
      */
     #[\Override]
     public function rollback(): void
@@ -340,6 +345,7 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      * @param  AggregateRoot  $aggregate  The aggregate to track.
      *
      * @throws RuntimeException When no unit of work is active.
+     * @return void
      */
     #[\Override]
     public function track(AggregateRoot $aggregate): void
@@ -396,6 +402,7 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      * @param  AggregateRoot  $aggregate  The aggregate to mark for deletion.
      *
      * @throws RuntimeException When no unit of work is active.
+     * @return void
      */
     #[\Override]
     public function markForDeletion(AggregateRoot $aggregate): void
@@ -415,6 +422,7 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      * This is intentional: the UoW takes ownership of event dispatch.
      *
      * @internal
+     * @return void
      */
     private function collectEventsFromAggregate(AggregateRoot $aggregate): void
     {
@@ -428,6 +436,7 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      * raised between track() and commit(), without requiring manual queueEvent().
      *
      * @internal
+     * @return void
      */
     private function collectNewEventsFromAggregate(AggregateRoot $aggregate): void
     {
@@ -447,6 +456,7 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      * @param  DomainEventCollection|list<DomainEvent>  $events
      *
      * @internal
+     * @return void
      */
     private function appendEvents(DomainEventCollection|array $events): void
     {
@@ -464,6 +474,7 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      * @param  DomainEvent  $event  The event to queue for dispatch.
      *
      * @throws RuntimeException When no unit of work is active.
+     * @return void
      */
     public function queueEvent(DomainEvent $event): void
     {
@@ -586,6 +597,7 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      * Dispatch all pending events through the configured dispatcher.
      *
      * @internal
+     * @return void
      */
     private function dispatchPendingEvents(): void
     {
@@ -605,6 +617,7 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      * aggregates are durably stored before any event consumers react.
      *
      * @internal
+     * @return void
      */
     private function invokePersistenceCallback(): void
     {
@@ -624,6 +637,7 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      * @param  AggregateRoot  $snapshot  The cloned snapshot to read state from
      *
      * @internal
+     * @return void
      */
     private function restoreAggregateState(AggregateRoot $target, AggregateRoot $snapshot): void
     {
@@ -699,6 +713,7 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      * Decrement nesting depth and scope counter after commit/rollback.
      *
      * @internal
+     * @return void
      */
     private function exitScope(): void
     {
@@ -714,6 +729,7 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      * getCommitted()/getDeleted() until the next begin() or clear().
      *
      * @internal
+     * @return void
      */
     private function resetTransactionState(): void
     {
@@ -731,6 +747,7 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      * Resets the unit of work to its initial state, discarding all
      * savepoints, snapshots, pending events, and committed/deleted aggregates.
      * Useful for testing and between test cases.
+     * @return void
      */
     #[\Override]
     public function clear(): void

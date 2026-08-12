@@ -28,6 +28,7 @@ interface UnitOfWork
      * and only dispatched after a successful commit.
      *
      * @throws \RuntimeException If a unit of work is already active.
+     * @return void
      */
     public function begin(): void;
 
@@ -38,6 +39,7 @@ interface UnitOfWork
      * are dispatched in the order they were raised.
      *
      * @throws \RuntimeException If no active unit of work.
+     * @return void
      */
     public function commit(): void;
 
@@ -48,6 +50,7 @@ interface UnitOfWork
      * are cleared (never dispatched).
      *
      * @throws \RuntimeException If no active unit of work.
+     * @return void
      */
     public function rollback(): void;
 
@@ -76,6 +79,7 @@ interface UnitOfWork
 
     /**
      * Track an aggregate within the current unit of work.
+     * @return void
      */
     public function track(AggregateRoot $aggregate): void;
 
@@ -86,6 +90,7 @@ interface UnitOfWork
 
     /**
      * Mark an aggregate for deletion within the current unit of work.
+     * @return void
      */
     public function markForDeletion(AggregateRoot $aggregate): void;
 
@@ -131,6 +136,7 @@ interface UnitOfWork
      * Resets the unit of work to its initial state, discarding all
      * savepoints, snapshots, pending events, and committed/deleted aggregates.
      * Intended for testing — use rollback() for transactional resets.
+     * @return void
      */
     public function clear(): void;
 }

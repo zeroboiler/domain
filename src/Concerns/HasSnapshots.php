@@ -174,6 +174,7 @@ trait HasSnapshots
      * of readonly properties after unset via Reflection).
      *
      * @param  array<string, mixed>  $state
+     * @return void
      */
     public function restoreFromSnapshotState(array $state): void
     {
@@ -261,6 +262,7 @@ trait HasSnapshots
      * @param  Snapshot  $snapshot  The snapshot to restore from.
      *
      * @see SnapshottingRepository::find() Calls this during aggregate reconstitution.
+     * @return void
      */
     public function restoreFromSnapshot(Snapshot $snapshot): void
     {

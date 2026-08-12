@@ -53,6 +53,7 @@ final class DomainServiceProvider extends ServiceProvider
      * When the Events package is installed and the DomainEventDispatcher
      * is bound in the container, events queued in the UoW are dispatched
      * after a successful commit.
+     * @return void
      */
     private function registerUnitOfWork(): void
     {
@@ -82,6 +83,7 @@ final class DomainServiceProvider extends ServiceProvider
      * Register the snapshot store (in-memory by default).
      *
      * Override via `config.domain.snapshot_driver` in your app config.
+     * @return void
      */
     private function registerSnapshotStore(): void
     {
@@ -102,6 +104,7 @@ final class DomainServiceProvider extends ServiceProvider
      *
      * Domain event dispatching is optionally handled by the Events package's
      * DomainEventDispatcher, which may be auto-wired in EventsServiceProvider.
+     * @return void
      */
     #[\Override]
     public function boot(): void
@@ -126,6 +129,7 @@ final class DomainServiceProvider extends ServiceProvider
      * DomainEventDispatcher persists across requests. Without clearing,
      * listeners accumulate and cause memory leaks and cross-request
      * contamination.
+     * @return void
      */
     private function registerOctaneReset(): void
     {

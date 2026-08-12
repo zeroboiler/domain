@@ -63,6 +63,7 @@ interface SnapshotStore
      * Save a snapshot to the store.
      *
      * @param  Snapshot  $snapshot  The snapshot to persist.
+     * @return void
      */
     public function save(Snapshot $snapshot): void;
 
@@ -80,6 +81,7 @@ interface SnapshotStore
      *
      * @param  string  $aggregateType  The FQCN of the aggregate class.
      * @param  string  $aggregateId  The aggregate's unique identifier.
+     * @return void
      */
     public function delete(string $aggregateType, string $aggregateId): void;
 
@@ -91,6 +93,7 @@ interface SnapshotStore
      * @param  string  $aggregateType  The FQCN of the aggregate class.
      * @param  string  $aggregateId  The aggregate's unique identifier.
      * @param  int  $version  The minimum version to keep.
+     * @return void
      */
     public function deleteOlderThan(string $aggregateType, string $aggregateId, int $version): void;
 

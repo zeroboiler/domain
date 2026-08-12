@@ -59,6 +59,7 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
      * @param  DomainEvent  $event  The domain event to apply.
      *
      * @see EventSourced::applyEvent() For replay-mode event application.
+     * @return void
      */
     protected function apply(DomainEvent $event): void
     {
@@ -104,6 +105,8 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
      *
      * Not part of the AggregateRoot contract — intended for infrastructure
      * use only (repository hydration, event replay, snapshot restoration).
+     *
+     * @return void
      */
     public function setVersion(int $version): void
     {
@@ -112,6 +115,7 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
 
     /**
      * Increment the version (called after a successful save).
+     * @return void
      */
     #[\Override]
     public function incrementVersion(): void
@@ -322,6 +326,7 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
      * @param  mixed  $value  The value to assign.
      *
      * @internal Used only by {@see reconstituteFromSnapshot()}.
+     * @return void
      */
     private static function setReadOnlyProperty(object $instance, string $name, mixed $value): void
     {

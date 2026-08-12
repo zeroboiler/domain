@@ -97,6 +97,7 @@ trait EventSourced
      * @param  bool  $isReplay  When true, event is replayed without recording.
      *
      * @see AggregateRoot::apply() For normal (non-replay) event application.
+     * @return void
      */
     public function applyEvent(DomainEvent $event, bool $isReplay = false): void
     {
@@ -140,6 +141,7 @@ trait EventSourced
      * @param  mixed  $value  The value to assign.
      *
      * @internal Used only by {@see fromHistory()}.
+     * @return void
      */
     private static function setInheritedProperty(object $instance, string $name, mixed $value): void
     {

@@ -56,6 +56,7 @@ trait HasDomainEvents
      * or manual `releaseEvents()` call.
      *
      * @param  DomainEvent  $event  The domain event to record.
+     * @return void
      */
     protected function recordThat(DomainEvent $event): void
     {
@@ -87,6 +88,7 @@ trait HasDomainEvents
      * Discards all uncommitted events from the entity's buffer.
      * Use this when events should be silently dropped (e.g., after
      * a clone or reconstitution).
+     * @return void
      */
     public function clearEvents(): void
     {
