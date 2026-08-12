@@ -1,93 +1,119 @@
 <?php
 
-/**
- * This file is part of ZeroBoiler, licensed under the proprietary license.
- */
-
 declare(strict_types=1);
 
-use ZeroBoiler\Domain\AggregateRootId;
-use ZeroBoiler\Domain\Tests\Fixtures\TestAggregate;
-use ZeroBoiler\Events\Domain\DomainEvent;
+/**
+ * Tests for the abstract AggregateRoot base class.
+ *
+ * Uses TestConcreteAggregate fixture (defined in bootstrap.php).
+ *
+ * @covers \ZeroBoiler\Domain\AggregateRoot
+ */
+describe('AggregateRoot', function (): void {
+    it('constructs with AggregateRootId', function (): void {
+        $id = \ZeroBoiler\Domain\AggregateRootId::generate();
+        $aggregate = new TestConcreteAggregate($id, 'Order');
 
-beforeEach(function (): void {
-    $this->aggregateId = AggregateRootId::generate();
-});
+        expect($aggregate->id())->toBe($id->toString());
+        expect($aggregate->aggregateId())->toBe($id);
+        expect($aggregate->name)->toBe('Order');
+    });
 
-it('can be created with an ID', function (): void {
-    $aggregate = TestAggregate::create($this->aggregateId);
+    it('starts at version 0', function (): void {
+        $id = \ZeroBoiler\Domain\AggregateRootId::generate();
+        $aggregate = new TestConcreteAggregate($id);
+        expect($aggregate->version())->toBe(0);
+    });
 
-    expect($aggregate->id)->toBe($this->aggregateId);
-    expect($aggregate->getVersion())->toBe(1);
-});
+    it('compares equality by class and aggregate id', function (): void {
+        $id = \ZeroBoiler\Domain\AggregateRootId::fromString('550e8400-e29b-41d4-a716-446655440000');
+        $a = new TestConcreteAggregate($id);
+        $b = new TestConcreteAggregate($id);
+        $c = new TestConcreteAggregate(\ZeroBoiler\Domain\AggregateRootId::generate());
 
-it('records domain events', function (): void {
-    $aggregate = TestAggregate::create($this->aggregateId);
+        expect($a->equals($b))->toBeTrue();
+        expect($a->equals($c))->toBeFalse();
+    });
 
-    expect($aggregate->hasUncommittedEvents())->toBeTrue();
+    it('serializes to array with id, version, and type', function (): void {
+        $id = \ZeroBoiler\Domain\AggregateRootId::generate();
+        $aggregate = new TestConcreteAggregate($id, 'Order');
 
-    $events = $aggregate->releaseEvents();
+        $array = $aggregate->toArray();
+        expect($array)->toHaveKeys(['id', 'version', 'type', 'name']);
+        expect($array['id'])->toBe($id->toString());
+        expect($array['version'])->toBe(0);
+        expect($array['type'])->toBe('TestConcreteAggregate');
+        expect($array['name'])->toBe('Order');
+    });
 
-    expect($events)->toHaveCount(1);
-    expect($events[0])->toBeInstanceOf(DomainEvent::class);
-    expect($events[0]->eventType)->toBe('TestAggregateCreated');
-    expect($aggregate->hasUncommittedEvents())->toBeFalse();
-});
+    it('increments version via incrementVersion()', function (): void {
+        $id = \ZeroBoiler\Domain\AggregateRootId::generate();
+        $aggregate = new TestConcreteAggregate($id);
 
-it('increments version on event application', function (): void {
-    $aggregate = TestAggregate::create($this->aggregateId);
+        $aggregate->incrementVersion();
+        expect($aggregate->version())->toBe(1);
 
-    expect($aggregate->getVersion())->toBe(1);
+        $aggregate->incrementVersion();
+        expect($aggregate->version())->toBe(2);
+    });
 
-    $aggregate->releaseEvents();
+    it('records and pulls domain events as typed collection', function (): void {
+        $id = \ZeroBoiler\Domain\AggregateRootId::generate();
+        $aggregate = new TestConcreteAggregate($id);
 
-    expect($aggregate->getVersion())->toBe(1);
-});
+        $aggregate->testRecordThat(new TestDomainEvent('test.created'));
+        $events = $aggregate->pullDomainEvents();
 
-it('clears events after release', function (): void {
-    $aggregate = TestAggregate::create($this->aggregateId);
+        expect($events)->toBeInstanceOf(\ZeroBoiler\Domain\DomainEventCollection::class);
+        expect($events->count())->toBe(1);
+        expect($events->first()->eventType)->toBe('test.created');
 
-    $aggregate->releaseEvents();
+        // Events cleared after pull
+        expect($aggregate->pullDomainEvents()->count())->toBe(0);
+    });
 
-    expect($aggregate->hasUncommittedEvents())->toBeFalse();
-});
+    it('peeks at domain events without consuming them', function (): void {
+        $id = \ZeroBoiler\Domain\AggregateRootId::generate();
+        $aggregate = new TestConcreteAggregate($id);
 
-it('clears events manually', function (): void {
-    $aggregate = TestAggregate::create($this->aggregateId);
+        $aggregate->testRecordThat(new TestDomainEvent('test.peeked'));
 
-    $aggregate->clearEvents();
+        $peeked = $aggregate->peekDomainEvents();
+        expect($peeked->count())->toBe(1);
 
-    expect($aggregate->hasUncommittedEvents())->toBeFalse();
-});
+        // Events still available for pull
+        $pulled = $aggregate->pullDomainEvents();
+        expect($pulled->count())->toBe(1);
+    });
 
-it('dispatches to apply handler on new events (#664)', function (): void {
-    $aggregate = TestAggregate::create($this->aggregateId);
-    $aggregate->releaseEvents();
+    it('clears domain events', function (): void {
+        $id = \ZeroBoiler\Domain\AggregateRootId::generate();
+        $aggregate = new TestConcreteAggregate($id);
 
-    $aggregate->rename('New Name');
+        $aggregate->testRecordThat(new TestDomainEvent('test.cleared'));
+        expect($aggregate->peekDomainEvents()->count())->toBe(1);
 
-    expect($aggregate->name)->toBe('New Name')
-        ->and($aggregate->nameChanged)->toBeTrue();
-});
+        $aggregate->clearDomainEvents();
+        expect($aggregate->pullDomainEvents()->count())->toBe(0);
+    });
 
-it('increments version for each applied event', function (): void {
-    $aggregate = TestAggregate::create($this->aggregateId);
+    it('implements JsonSerializable', function (): void {
+        $id = \ZeroBoiler\Domain\AggregateRootId::generate();
+        $aggregate = new TestConcreteAggregate($id, 'Order');
 
-    expect($aggregate->getVersion())->toBe(1);
+        $json = json_encode($aggregate);
+        expect($json)->toBeString()->toBeJson();
+        $decoded = json_decode($json, true);
+        expect($decoded['id'])->toBe($id->toString());
+        expect($decoded['type'])->toBe('TestConcreteAggregate');
+    });
 
-    $aggregate->rename('First');
-    $aggregate->rename('Second');
+    it('supports setVersion for repository hydration', function (): void {
+        $id = \ZeroBoiler\Domain\AggregateRootId::generate();
+        $aggregate = new TestConcreteAggregate($id);
 
-    expect($aggregate->getVersion())->toBe(3);
-});
-
-it('records events from apply handler dispatch', function (): void {
-    $aggregate = TestAggregate::create($this->aggregateId);
-    $aggregate->releaseEvents();
-
-    $aggregate->rename('New Name');
-
-    $events = $aggregate->releaseEvents();
-    expect($events)->toHaveCount(1)
-        ->and($events[0]->eventType)->toBe('TestAggregateRenamed');
+        $aggregate->setVersion(5);
+        expect($aggregate->version())->toBe(5);
+    });
 });
