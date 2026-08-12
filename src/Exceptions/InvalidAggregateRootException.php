@@ -42,6 +42,7 @@ final class InvalidAggregateRootException extends DomainException
      *
      * @param  object  $object  The object that is not an aggregate root.
      * @param  string  $code  Optional machine-readable error code.
+     * @return self
      */
     public static function notAnAggregate(object $object, string $code = ''): self
     {

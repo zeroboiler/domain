@@ -38,6 +38,7 @@ final class ConflictDomainException extends DomainException
      *
      * @param  string  $reason  Description of the conflict.
      * @param  string  $code  Optional machine-readable error code.
+     * @return self
      */
     public static function because(string $reason, string $code = ''): self
     {

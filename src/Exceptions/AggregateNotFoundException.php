@@ -40,6 +40,7 @@ final class AggregateNotFoundException extends DomainException
      * @param  string  $aggregateType  The FQCN of the aggregate that was not found.
      * @param  string  $aggregateId    The identity of the aggregate that was not found.
      * @param  string  $code  Optional machine-readable error code.
+     * @return self
      */
     public static function for(string $aggregateType, string $aggregateId, string $code = ''): self
     {

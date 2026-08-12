@@ -45,6 +45,7 @@ final class OptimisticLockException extends DomainException
      * @param  int  $expectedVersion  The version the caller expected.
      * @param  int  $actualVersion  The version found in storage.
      * @param  string  $code  Optional machine-readable error code.
+     * @return self
      */
     public static function for(
         string $aggregateId,

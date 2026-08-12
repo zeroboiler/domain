@@ -37,6 +37,7 @@ final class NotFoundDomainException extends DomainException
      *
      * @param  string  $reason  Description of what was not found and why.
      * @param  string  $code  Optional machine-readable error code.
+     * @return self
      */
     public static function because(string $reason, string $code = ''): self
     {
@@ -52,6 +53,7 @@ final class NotFoundDomainException extends DomainException
      * @param  string  $aggregateType  The FQCN or human-readable name of the aggregate.
      * @param  string  $aggregateId    The identifier that was searched for.
      * @param  string  $code  Optional machine-readable error code.
+     * @return self
      */
     public static function forAggregate(string $aggregateType, string $aggregateId, string $code = ''): self
     {
