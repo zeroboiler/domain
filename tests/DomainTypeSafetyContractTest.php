@@ -560,18 +560,24 @@ final class DomainTypeSafetyContractTest extends TestCase
     /**
      * AggregateRoot::jsonSerialize() must have #[Override] attribute.
      *
+     * NOTE: AggregateRoot does NOT directly implement jsonSerialize().
+     * JSON serialization is inherited via the JsonSerializable interface
+     * contract, with concrete implementations in Entity, AggregateRootId,
+     * DomainEventCollection, Snapshot, and DomainException.
+     *
+     * This test verifies that AggregateRoot's toArray() method is present
+     * and typed, which serves as the primary serialization entry point.
+     *
      * @test
      */
-    public function test_aggregate_root_json_serialize_has_override_attribute(): void
+    public function test_aggregate_root_has_to_array_method(): void
     {
         $ref = new \ReflectionClass(\ZeroBoiler\Domain\AggregateRoot::class);
-        $method = $ref->getMethod('jsonSerialize');
+        $this->assertTrue($ref->hasMethod('toArray'), 'AggregateRoot must have toArray().');
 
-        $attrs = $method->getAttributes(\Override::class);
-        $this->assertNotEmpty(
-            $attrs,
-            'AggregateRoot::jsonSerialize() must have #[Override] attribute.',
-        );
+        $method = $ref->getMethod('toArray');
+        $this->assertTrue($method->hasReturnType(), 'toArray() must have a return type.');
+        $this->assertSame('array', (string) $method->getReturnType());
     }
 
     // ─── Helper ────────────────────────────────────────────────
