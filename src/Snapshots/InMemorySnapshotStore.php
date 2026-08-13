@@ -79,7 +79,7 @@ final class InMemorySnapshotStore implements SnapshotStore
      *
      * Alias of purge() for backward compatibility.
      *
-     * @deprecated Use {@see purge()} instead. This alias will be removed in v3.0.
+     * @deprecated Use {@see purge()} instead. Removed in v3.0.
      * @return void
      */
     #[\Deprecated(message: 'Use purge() instead.', since: '1.5.0')]

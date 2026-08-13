@@ -13,6 +13,7 @@ use ZeroBoiler\Domain\Commands\DomainAggregateCommand;
 use ZeroBoiler\Domain\Commands\DomainListCommand;
 use ZeroBoiler\Domain\Commands\DomainRepositoryCommand;
 use ZeroBoiler\Domain\Commands\MakeValueObjectCommand;
+use ZeroBoiler\Events\Domain\DomainEvent;
 use ZeroBoiler\Domain\Console\Commands\SnapshotCommand;
 use ZeroBoiler\Domain\Contracts\UnitOfWork as UnitOfWorkContract;
 use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
@@ -63,7 +64,7 @@ final class DomainServiceProvider extends ServiceProvider
                 $uow = new InMemoryUnitOfWork;
 
                 $uow->setEventDispatcher(
-                    function (object $event): void {
+                    function (DomainEvent $event): void {
                         $dispatcherClass = self::DISPATCHER_CLASS;
 
                         if ($this->app->bound($dispatcherClass)) {
