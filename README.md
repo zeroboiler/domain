@@ -2285,3 +2285,12 @@ class OrderController
 - Docs: Verify production readiness — all files have strict types, return types, docblocks, typed properties, PHP 8.5 syntax
 - Quality: Manual code review pass — confirm immutability, domain invariants, JSON serialization consistency across all 36 source files
 - Docs: Add Production Readiness Checklist to README with full criteria audit
+
+## Security
+
+If you discover a security vulnerability, please email `hello@zeroboiler.dev`. All security vulnerabilities will be promptly addressed.
+
+## License
+
+ZeroBoiler Domain is proprietary software. See the [LICENSE](LICENSE) file for details.
+

@@ -295,7 +295,7 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      * @template T
      *
      * @param  Closure(): T  $callback
-     * @return T
+     * @return T The return value of the callback.
      *
      * @throws Throwable Re-throws any exception from the callback.
      */
