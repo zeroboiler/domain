@@ -85,6 +85,9 @@ final readonly class Snapshot implements \JsonSerializable
      * Deserialize from persisted array.
      *
      * @param  array<string, mixed>  $data
+     * @return self
+     *
+     * @throws \InvalidArgumentException If the data contains invalid types.
      */
     public static function fromArray(array $data): self
     {
