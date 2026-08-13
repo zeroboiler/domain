@@ -203,7 +203,7 @@ test('AggregateRoot version() returns int for DomainResponseFactory version meta
 
 test('Snapshot toArray provides state for persistence serialization', function (): void {
     $snapshot = \ZeroBoiler\Domain\Snapshots\Snapshot::create(
-        aggregateType: 'App\\Domain\\Order',
+        aggregateType: 'App\Domain\Order',
         aggregateId: '550e8400-e29b-41d4-a716-446655440000',
         version: 10,
         state: ['status' => 'shipped', 'total' => 2500],

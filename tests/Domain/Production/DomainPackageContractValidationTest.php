@@ -284,7 +284,7 @@ final class DomainPackageContractValidationTest extends TestCase
     public function testSnapshotRoundTrip(): void
     {
         $snapshot = Snapshot::create(
-            aggregateType: 'App\\Domain\\Order',
+            aggregateType: 'App\Domain\Order',
             aggregateId: '550e8400-e29b-41d4-a716-446655440000',
             version: 10,
             state: ['status' => 'paid', 'total' => 1999],
