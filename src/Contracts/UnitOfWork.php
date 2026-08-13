@@ -79,18 +79,32 @@ interface UnitOfWork
 
     /**
      * Track an aggregate within the current unit of work.
+     *
+     * Takes a snapshot of the aggregate's state for rollback support
+     * and queues any pending domain events for dispatch at commit.
+     *
+     * @param  AggregateRoot  $aggregate  The aggregate to track.
      * @return void
+     *
+     * @throws \RuntimeException When no unit of work is active.
      */
     public function track(AggregateRoot $aggregate): void;
 
     /**
      * Check if an aggregate is tracked in the current unit of work.
+     *
+     * @param  AggregateRoot  $aggregate  The aggregate to check.
+     * @return bool True if the aggregate is tracked in any active scope.
      */
     public function isTracking(AggregateRoot $aggregate): bool;
 
     /**
      * Mark an aggregate for deletion within the current unit of work.
+     *
+     * @param  AggregateRoot  $aggregate  The aggregate to mark for deletion.
      * @return void
+     *
+     * @throws \RuntimeException When no unit of work is active.
      */
     public function markForDeletion(AggregateRoot $aggregate): void;
 
@@ -111,11 +125,15 @@ interface UnitOfWork
     /**
      * Check if there are pending domain events queued in the current
      * transaction scope.
+     *
+     * @return bool True when at least one event is queued across all active scopes.
      */
     public function hasPendingEvents(): bool;
 
     /**
      * Get the count of pending domain events.
+     *
+     * @return int The number of pending events across all active scopes.
      */
     public function getPendingEventCount(): int;
 
@@ -136,6 +154,7 @@ interface UnitOfWork
      * Resets the unit of work to its initial state, discarding all
      * savepoints, snapshots, pending events, and committed/deleted aggregates.
      * Intended for testing — use rollback() for transactional resets.
+     *
      * @return void
      */
     public function clear(): void;

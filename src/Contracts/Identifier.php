@@ -30,16 +30,24 @@ interface Identifier extends Stringable
 {
     /**
      * Create an instance from a string representation.
+     *
+     * @param  string  $value  The string representation of the identifier.
+     * @return static A new identifier instance.
      */
     public static function fromString(string $value): static;
 
     /**
      * Get the string representation of the identifier.
+     *
+     * @return string The identifier as a string.
      */
     public function toString(): string;
 
     /**
      * Check equality with another identifier of the same type.
+     *
+     * @param  self  $other  The identifier to compare against.
+     * @return bool True if both are the same concrete class with identical values.
      */
     public function equals(self $other): bool;
 }
