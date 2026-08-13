@@ -28,6 +28,8 @@ interface AggregateRoot extends Entity
      * Get the current version number of this aggregate.
      *
      * Used by repositories for optimistic locking checks.
+     *
+     * @return int The current aggregate version (0 = newly created).
      */
     public function version(): int;
 

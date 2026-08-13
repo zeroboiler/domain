@@ -27,6 +27,8 @@ interface Entity
      *
      * Returns a string representation of the entity's identifier,
      * ensuring consistent identity handling across the hierarchy.
+     *
+     * @return string The entity's identity as a string.
      */
     public function id(): string;
 
@@ -35,6 +37,9 @@ interface Entity
      *
      * Two entities are equal if and only if they are of the same type
      * and have the same identity.
+     *
+     * @param  Entity  $other  The entity to compare against.
+     * @return bool True if both entities are of the same type with identical identities.
      */
     public function equals(Entity $other): bool;
 

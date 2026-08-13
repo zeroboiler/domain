@@ -51,6 +51,10 @@ abstract class Entity implements EntityContract, \JsonSerializable
      *
      * Always returns a string representation for consistent identity
      * handling across the entity hierarchy.
+     *
+     * @return string The entity's identity as a string.
+     *
+     * @throws \LogicException When the entity's ID is of an unsupported type.
      */
     #[\Override]
     public function id(): string

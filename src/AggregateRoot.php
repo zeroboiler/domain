@@ -57,9 +57,9 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
      * which skips recording and only invokes handlers.
      *
      * @param  DomainEvent  $event  The domain event to apply.
+     * @return void
      *
      * @see EventSourced::applyEvent() For replay-mode event application.
-     * @return void
      */
     protected function apply(DomainEvent $event): void
     {
@@ -81,7 +81,10 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
     /**
      * Get the current version of this aggregate.
      *
-     * Used by repositories for optimistic locking.
+     * Used by repositories for optimistic locking and for tracking
+     * the number of events applied to this aggregate.
+     *
+     * @return int The current aggregate version (0 = newly created).
      */
     #[\Override]
     public function version(): int
@@ -107,6 +110,8 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
      * use only (repository hydration, event replay, snapshot restoration).
      *
      * @return void
+     *
+     * @internal Infrastructure use only — not part of the AggregateRoot contract.
      */
     public function setVersion(int $version): void
     {
@@ -169,6 +174,8 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
      *
      * Overrides Entity::id() which returns mixed. AggregateRoot narrows
      * the return type to string for consistent identity representation.
+     *
+     * @return string The aggregate's UUID identity as a canonical string.
      */
     #[\Override]
     public function id(): string
@@ -181,6 +188,8 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
      *
      * Use this when you need the actual AggregateRootId object rather
      * than its string representation.
+     *
+     * @return AggregateRootId The aggregate's typed identity.
      */
     public function aggregateId(): AggregateRootId
     {
