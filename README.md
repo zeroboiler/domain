@@ -1987,6 +1987,124 @@ src/
 └──────────────────┘     └──────────────────────┘     └────────────────────┘
 ```
 
+## End-to-End Integration Example
+
+Complete example: from domain aggregate root to HTTP response, showing the full data flow across `zeroboiler/domain` → `zeroboiler/response`.
+
+```php
+use App\Domain\Order;
+use App\Domain\OrderId;
+use ZeroBoiler\Domain\Contracts\UnitOfWork;
+use ZeroBoiler\Domain\Exceptions\InvalidStateDomainException;
+use ZeroBoiler\Response\Facades\Response;
+use ZeroBoiler\Response\Transformers\DomainTransformer;
+
+// --- 1. Domain Layer: Aggregate Root ---
+class Order extends \ZeroBoiler\Domain\AggregateRoot
+{
+    use \ZeroBoiler\Domain\Concerns\EventSourced;
+
+    public string $status = 'pending';
+    public float $total = 0.0;
+
+    public function pay(float $amount): void
+    {
+        if ($this->status !== 'pending') {
+            throw InvalidStateDomainException::because('Order must be pending to pay.');
+        }
+        $this->apply(\ZeroBoiler\Events\Domain\DomainEvent::occur('order.paid', [
+            'id' => $this->id(),
+            'amount' => $amount,
+        ]));
+    }
+
+    protected function applyOrderPaid(\ZeroBoiler\Events\Domain\DomainEvent $event): void
+    {
+        $this->status = 'paid';
+        $this->total = $event->payload['amount'];
+    }
+
+    public function toArray(): array
+    {
+        return [
+            ...parent::toArray(),
+            'status' => $this->status,
+            'total' => $this->total,
+        ];
+    }
+}
+
+// --- 2. Response Layer: DomainTransformer ---
+final class OrderTransformer extends DomainTransformer
+{
+    protected function mapDomainFields(object $entity, array $context = []): array
+    {
+        return $this->extractBaseArray($entity);
+    }
+
+    protected function mapMeta(object $entity, array $context = []): array
+    {
+        return ['version' => $this->extractVersion($entity)];
+    }
+}
+
+// --- 3. Controller: Domain → Response Bridge ---
+class OrderController
+{
+    public function show(string $id, UnitOfWork $uow, OrderRepository $repo): \Illuminate\Http\JsonResponse
+    {
+        // Unit of Work with auto commit/rollback + event dispatch
+        return $uow->run(function () use ($id, $repo) {
+            $order = $repo->find($id);
+            if ($order === null) {
+                throw NotFoundDomainException::forAggregate(Order::class, $id);
+            }
+
+            // Transform domain entity to API response
+            return Response::transform($order)
+                ->through(OrderTransformer::class)
+                ->api()
+                ->send();
+            // → {"data":{"id":"...","version":1,"type":"Order","status":"pending","total":0},"_meta":{"version":1}}
+        });
+    }
+
+    public function pay(string $id, UnitOfWork $uow, OrderRepository $repo): \Illuminate\Http\JsonResponse
+    {
+        return $uow->run(function () use ($id, $uow, $repo) {
+            $order = $repo->find($id);
+            $uow->track($order);
+
+            $order->pay(99.99);        // Raises domain event
+            $repo->save($order);      // Persists + increments version
+
+            return $uow->run(fn () => Response::transform($order)
+                ->through(OrderTransformer::class)
+                ->api()
+                ->send());
+            // → {"data":{"id":"...","version":2,"type":"Order","status":"paid","total":99.99}}
+            // Events dispatched automatically after outermost commit
+        });
+        // On exception: rollback restores aggregate state, events discarded
+    }
+
+    public function store(Request $request, UnitOfWork $uow, OrderRepository $repo): \Illuminate\Http\JsonResponse
+    {
+        return $uow->run(function () use ($request, $uow, $repo) {
+            $order = Order::create(\                // Raises 'order.placed' event
+                \ZeroBoiler\Domain\AggregateRootId::generate()
+            );
+            $repo->save($order);
+
+            return DomainResponseFactory::created($order, $order->toArray())
+                ->withLinks(['self' => "/api/orders/{$order->id()}"])
+                ->send();
+            // → HTTP 201, {"data":{...},"links":{"self":"/api/orders/..."}}
+        });
+    }
+}
+```
+
 ## API Quick Reference
 
 ### AggregateRoot (extends Entity, abstract)

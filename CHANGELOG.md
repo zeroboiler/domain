@@ -6,6 +6,7 @@ All notable changes to the `zeroboiler/domain` package will be documented in thi
 
 ### Added
 - **API Quick Reference** — comprehensive method reference tables for all public APIs: AggregateRoot, Entity, AggregateRootId, all Identifier types, DomainEventCollection, DomainException hierarchy, InMemoryUnitOfWork, SnapshottingRepository, and Traits
+- **End-to-End Integration Example** — complete walkthrough from AggregateRoot → DomainTransformer → Controller → HTTP response, showing Unit of Work, event sourcing, domain exceptions, and DomainResponseFactory usage in a single cohesive example
 
 ## [1.50.0] - 2026-08-10
 
