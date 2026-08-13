@@ -16,7 +16,7 @@ use ZeroBoiler\Domain\Contracts\Repository;
 // must still be available since SnapshottingRepository uses it on methods.
 // This stub file provides a no-op fallback.
 if (! class_exists(\ZeroBoiler\Observability\Trace::class)) {
-    require_once __DIR__ . '/../../stubs/Trace.php';
+    require_once __DIR__ . '/../stubs/Trace.php';
 }
 
 use ZeroBoiler\Observability\Trace;
