@@ -2259,6 +2259,11 @@ class OrderController
 | Exception hierarchy | ✅ | `DomainException` → 7 concrete subclasses with `errorCode()` and RFC 9457 `toErrorArray()` |
 | PHPUnit/Pest test coverage | ✅ | 100+ test files covering every source class, edge cases, and cross-package integration |
 
+## v1.55.0 (2026-08-13)
+
+- Docs: Add missing docblocks to `Entity::equals()`, `AggregateRoot::pullDomainEvents()`, `AggregateRoot::clearDomainEvents()`
+- Quality: Manual code review — all 40 source files verified production-ready
+
 ## v1.54.0 (2026-08-12)
 
 - Test: Add `DomainTypeSafetyContractTest` — reflection-based type safety verification (strict types, return types, final/readonly, interface contracts, serde methods, #[Override] attributes)

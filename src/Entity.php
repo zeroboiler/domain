@@ -70,6 +70,16 @@ abstract class Entity implements EntityContract, \JsonSerializable
         };
     }
 
+    /**
+     * Check identity equality with another entity.
+     *
+     * Two entities are equal if and only if they are of the same concrete
+     * class and have the same string identity. Uninitialized IDs result
+     * in `false` to prevent `LogicException` crashes.
+     *
+     * @param  EntityContract  $other  The entity to compare against.
+     * @return bool True if both are the same concrete class with identical identity.
+     */
     #[\Override]
     public function equals(EntityContract $other): bool
     {

@@ -128,6 +128,15 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
         $this->version++;
     }
 
+    /**
+     * Pull and clear all recorded domain events from this aggregate.
+     *
+     * Returns a typed DomainEventCollection of all events that were
+     * recorded via `apply()`, then clears the internal buffer.
+     * Used by UnitOfWork during commit to collect events for dispatching.
+     *
+     * @return DomainEventCollection The collected events (ownership transferred to caller).
+     */
     #[\Override]
     public function pullDomainEvents(): DomainEventCollection
     {
@@ -137,6 +146,14 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
         return new DomainEventCollection(array_values($events));
     }
 
+    /**
+     * Clear all recorded domain events without returning them.
+     *
+     * Used by UnitOfWork during rollback to discard events that were
+     * recorded during a failed transaction.
+     *
+     * @return void
+     */
     #[\Override]
     public function clearDomainEvents(): void
     {
