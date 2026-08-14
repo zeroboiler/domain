@@ -4,6 +4,20 @@ All notable changes to the `zeroboiler/domain` package will be documented in thi
 
 ## [Unreleased]
 
+## [1.64.0] - 2026-08-14
+
+### Added
+- `Entity::toJson()` — convenience method for explicit JSON serialization with configurable encoding options
+- `DomainEventCollection::toJson()` — convenience method for JSON serialization consistent with `fromJson()` round-trip
+- `UuidIdentifier::toJson()`, `UlidIdentifier::toJson()`, `StringIdentifier::toJson()`, `IntegerIdentifier::toJson()` — consistent JSON serialization across all identifier types
+- `DomainToJsonProductionContractTest` — production contract tests verifying `toJson()`/`fromJson()` round-trip parity on all domain types
+
+### Changed
+- Bump package version to 1.64.0
+
+### Quality
+- Manual production readiness audit — all 40 source files verified: strict_types, return type declarations, typed properties, docblocks, PHP 8.5 syntax, immutability, domain invariants, JSON serialization consistency, toJson()/fromJson() round-trip parity
+
 ## [1.63.0] - 2026-08-14
 
 ### Changed

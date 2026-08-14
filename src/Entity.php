@@ -263,4 +263,26 @@ abstract class Entity implements EntityContract, \JsonSerializable
 
         return static::fromArray($data);
     }
+
+    /**
+     * Convert the entity to a JSON string.
+     *
+     * Convenience method for explicit JSON serialization without passing
+     * to `json_encode()`. Uses `JSON_THROW_ON_ERROR` for safety.
+     *
+     * @param  int  $options  JSON encoding options bitmask (default: JSON_UNESCAPED_UNICODE).
+     * @return string The JSON-encoded entity representation.
+     *
+     * @since 1.64.0
+     *
+     * @example
+     * ```php
+     * $json = $entity->toJson();
+     * echo $json; // {"id":"42","type":"OrderItem","product_id":"prod-1","quantity":3}
+     * ```
+     */
+    public function toJson(int $options = JSON_UNESCAPED_UNICODE): string
+    {
+        return json_encode($this->toArray(), $options | JSON_THROW_ON_ERROR);
+    }
 }

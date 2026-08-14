@@ -230,6 +230,19 @@ abstract readonly class UlidIdentifier implements IdentifierContract, JsonSerial
     }
 
     /**
+     * Convert the identifier to a JSON string.
+     *
+     * @param  int  $options  JSON encoding options bitmask (default: JSON_UNESCAPED_UNICODE).
+     * @return string The JSON-encoded identifier representation.
+     *
+     * @since 1.64.0
+     */
+    public function toJson(int $options = JSON_UNESCAPED_UNICODE): string
+    {
+        return json_encode($this->toArray(), $options | JSON_THROW_ON_ERROR);
+    }
+
+    /**
      * Serialize for PHP's native serialize().
      *
      * @return array{ulid: string}

@@ -540,4 +540,28 @@ final readonly class DomainEventCollection implements Countable, IteratorAggrega
 
         return self::fromArray($data);
     }
+
+    /**
+     * Convert the collection to a JSON string.
+     *
+     * Convenience method for explicit JSON serialization. Uses
+     * `JSON_THROW_ON_ERROR` for safety.
+     *
+     * @param  int  $options  JSON encoding options bitmask (default: JSON_UNESCAPED_UNICODE).
+     * @return string The JSON-encoded event collection.
+     *
+     * @since 1.64.0
+     *
+     * @example
+     * ```php
+     * $collection = new DomainEventCollection([$event1, $event2]);
+     * $json = $collection->toJson();
+     * $restored = DomainEventCollection::fromJson($json);
+     * $restored->count(); // 2
+     * ```
+     */
+    public function toJson(int $options = JSON_UNESCAPED_UNICODE): string
+    {
+        return json_encode($this->toArray(), $options | JSON_THROW_ON_ERROR);
+    }
 }
