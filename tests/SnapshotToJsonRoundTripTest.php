@@ -65,7 +65,7 @@ describe('Snapshot toJson/fromJson round-trip', function () {
         $snapshot = Snapshot::create('Test', 'id', 1, []);
 
         $json = $snapshot->toJson();
-        $brokenJson = substr($json, 0, 5) . '{invalid';
+        $brokenJson = substr($json, 0, 5) . 'INVALID';
 
         expect(fn () => Snapshot::fromJson($brokenJson))->toThrow(JsonException::class);
     });
