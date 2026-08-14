@@ -54,6 +54,65 @@ installed, ensuring `SnapshottingRepository` works without it.
 - **DomainException** hierarchy — typed exceptions for domain violations
 - **CLI Generators** — `domain:aggregate`, `domain:repository`, `domain:value-object`, `domain:list`, `domain:snapshot`
 
+## Class Reference
+
+| Class / Interface | Type | Description |
+|---|---|---|
+| `AggregateRoot` | abstract class | Base class for aggregate roots with UUID v4 identity, domain events, versioning |
+| `AggregateRootId` | final readonly class | UUID v4 identifier for aggregate roots |
+| `Entity` | abstract class | Base class for entities with identity equality |
+| `ValueObject` | abstract class | Base class for value objects extending `zeroboiler/value-objects` |
+| `DomainEventCollection` | final readonly class | Immutable typed collection of domain events |
+| `InMemoryUnitOfWork` | class | In-memory Unit of Work with transactional boundaries |
+| `DomainException` | abstract class | Base exception with `errorCode()`, `toErrorArray()`, JSON serialization |
+| `InvalidStateDomainException` | final class | Business rule violation (e.g., pay already-paid order) |
+| `InvalidArgumentDomainException` | final class | Input validation failure at domain boundary |
+| `NotFoundDomainException` | final class | Missing aggregate/entity lookup |
+| `ConflictDomainException` | final class | Concurrent modification conflict |
+| `AggregateNotFoundException` | final class | Aggregate-specific not-found error |
+| `OptimisticLockException` | final class | Version mismatch on concurrent save |
+| `InvalidAggregateRootException` | final class | Object is not a valid aggregate root |
+| `InvalidStateException` | final class | Infrastructure-level state check failure |
+| `Contracts\AggregateRoot` | interface | Contract for aggregate root implementations |
+| `Contracts\Entity` | interface | Contract for entity implementations |
+| `Contracts\Identifier` | interface | Contract for all identifier types |
+| `Contracts\Repository` | interface | Repository contract: `find()`, `save()`, `delete()` |
+| `Contracts\UnitOfWork` | interface | UoW contract: `begin()`, `commit()`, `rollback()`, `run()` |
+| `Identifiers\Identifier` | abstract class | Base identifier with `toString()`, `equals()`, serialization |
+| `Identifiers\UuidIdentifier` | class | UUID v4 identifier |
+| `Identifiers\UlidIdentifier` | class | ULID identifier |
+| `Identifiers\StringIdentifier` | class | String-based identifier |
+| `Identifiers\IntegerIdentifier` | class | Integer-based identifier |
+| `Concerns\HasDomainEvents` | trait | Domain event recording and clearing |
+| `Concerns\EventSourced` | trait | Event sourcing reconstitution from history |
+| `Concerns\HasSnapshots` | trait | Snapshot creation and restoration |
+| `Snapshots\Snapshot` | final readonly class | Immutable snapshot of aggregate state |
+| `Snapshots\SnapshotStore` | interface | Snapshot persistence contract |
+| `Snapshots\SnapshotPolicy` | attribute | Configurable snapshot policy (version threshold) |
+| `Snapshots\InMemorySnapshotStore` | class | In-memory snapshot store |
+| `Snapshots\SnapshottingRepository` | final readonly class | Repository decorator with snapshot optimization |
+
+## Exception Hierarchy
+
+```
+DomainException (abstract, Exception, JsonSerializable)
+├── InvalidStateDomainException        — Business rule violation
+├── InvalidArgumentDomainException      — Input validation failure
+├── NotFoundDomainException            — Missing aggregate/entity
+├── ConflictDomainException            — Concurrent modification
+├── AggregateNotFoundException         — Aggregate-specific not-found
+├── OptimisticLockException            — Version mismatch on save
+├── InvalidAggregateRootException     — Not a valid aggregate root
+└── InvalidStateException              — Infrastructure state failure
+```
+
+All exceptions provide:
+- `errorCode()` — machine-readable code (e.g., `'INVALID_STATE'`, `'OPTIMISTIC_LOCK'`)
+- `toErrorArray()` — RFC 9457-compatible error object
+- `toArray()` / `fromArray()` — round-trip serialization
+- `fromJson()` — JSON deserialization
+- `JsonSerializable` — direct `json_encode()` support
+
 ## One-Liner Quick Start
 
 Copy-paste ready examples for every domain class:
@@ -2322,6 +2381,12 @@ class OrderController
 | Optimistic locking | ✅ | `OptimisticLockException`, version tracking in `AggregateRoot` |
 | Exception hierarchy | ✅ | `DomainException` → 7 concrete subclasses with `errorCode()` and RFC 9457 `toErrorArray()` |
 | PHPUnit/Pest test coverage | ✅ | 100+ test files covering every source class, edge cases, and cross-package integration |
+
+## v1.61.0 (2026-08-14)
+
+- Docs: Add **Class Reference Table** — complete listing of all 32 classes/interfaces/traits with descriptions
+- Docs: Add **Exception Hierarchy** diagram — visual tree of all 8 domain exceptions with common API summary
+- Docs: Enrich README with structured reference sections for discoverability
 
 ## v1.60.0 (2026-08-14)
 
