@@ -2423,6 +2423,45 @@ class OrderController
 | `EventSourced` | `fromHistory()`, `applyEvent()` | Aggregate reconstitution from event stream |
 | `HasSnapshots` | `toSnapshotState()`, `restoreFromSnapshotState()`, `shouldSnapshot()`, `createSnapshot()`, `restoreFromSnapshot()`, `getSnapshotPolicy()` | Snapshot serialization |
 
+## Serialization Contract
+
+Every serializable class supports a consistent set of serialization formats:
+
+| Class | `toArray()` | `fromArray()` | `fromJson()` | `jsonSerialize()` | `__serialize()` | `__unserialize()` |
+|---|---|---|---|---|---|---|
+| `AggregateRootId` | ✅ `['uuid' => ...]` | ✅ | ✅ | ✅ `string` | ✅ | ✅ (reflection) |
+| `Entity` | ✅ `['id', 'type', ...]` | ✅ (reflection) | ✅ | ✅ `array` | — | — |
+| `AggregateRoot` | ✅ `['id', 'version', 'type']` | — | — | — | — | — |
+| `ValueObject` | ✅ (via subclass) | ✅ (via subclass) | — | — | — | — |
+| `DomainEventCollection` | ✅ `list<array>` | ✅ | ✅ | ✅ `list<array>` | — | — |
+| `Snapshot` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (reflection) |
+| `UuidIdentifier` | ✅ `['uuid' => ...]` | ✅ | ✅ | ✅ `string` | ✅ | ✅ (reflection) |
+| `UlidIdentifier` | ✅ `['ulid' => ...]` | ✅ | ✅ | ✅ `string` | ✅ | ✅ (reflection) |
+| `StringIdentifier` | ✅ `['string' => ...]` | ✅ | ✅ | ✅ `string` | ✅ | ✅ (reflection) |
+| `IntegerIdentifier` | ✅ `['integer' => ...]` | ✅ | ✅ | ✅ `int` | ✅ | ✅ (reflection) |
+| `Identifier` (legacy) | ✅ `['value' => ...]` | ✅ | ✅ | ✅ `string` | — | — |
+| `DomainException` | ✅ | ✅ | ✅ | ✅ `array` (RFC 9457) | — | — |
+| `SnapshotPolicy` | — | — | — | — | — | — (attribute only) |
+
+### Round-Trip Guarantees
+
+```php
+// Every class with fromArray() guarantees this pattern:
+$original = $id->toArray();
+$restored = ClassName::fromArray($original);
+// $restored is functionally equivalent to $original
+
+// JSON round-trip:
+$json = json_encode($entity->toArray());
+$restored = ClassName::fromJson($json);
+// $restored is functionally equivalent to $original
+
+// PHP native serialize() round-trip (readonly classes):
+$serialized = serialize($id);
+$restored = unserialize($serialized);
+// Works via __serialize()/__unserialize() with reflection
+```
+
 ## Production Readiness Checklist
 
 | Criteria | Status | Notes |
@@ -2442,6 +2481,11 @@ class OrderController
 | Optimistic locking | ✅ | `OptimisticLockException`, version tracking in `AggregateRoot` |
 | Exception hierarchy | ✅ | `DomainException` → 7 concrete subclasses with `errorCode()` and RFC 9457 `toErrorArray()` |
 | PHPUnit/Pest test coverage | ✅ | 100+ test files covering every source class, edge cases, and cross-package integration |
+
+## v1.62.0 (2026-08-14)
+
+- Docs: Add **Serialization Contract** table — comprehensive serialization support matrix for all domain classes (toArray/fromArray/fromJson/jsonSerialize/__serialize/__unserialize)
+- Docs: Add **Round-Trip Guarantees** section with copy-paste code examples for array, JSON, and PHP native serialize round-trips
 
 ## v1.61.0 (2026-08-14)
 
