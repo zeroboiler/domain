@@ -223,4 +223,35 @@ abstract class DomainException extends Exception implements \JsonSerializable
     {
         return $this->toErrorArray();
     }
+
+    /**
+     * Create a DomainException from a JSON string.
+     *
+     * Parses the JSON and delegates to {@see fromArray()} for hydration.
+     * Supports both toArray() format and toErrorArray() format (RFC 9457).
+     *
+     * @param  string  $json  A valid JSON object string.
+     * @param  string|null  $class  The exception class to instantiate (default: static).
+     * @return static A new DomainException instance.
+     *
+     * @throws \JsonException If the JSON string is invalid.
+     * @throws \InvalidArgumentException If the JSON does not decode to an array.
+     *
+     * @example
+     * ```php
+     * $json = json_encode($exception->toArray());
+     * $restored = DomainException::fromJson($json, InvalidStateDomainException::class);
+     * $restored->getMessage(); // Same as original
+     * ```
+     */
+    public static function fromJson(string $json, ?string $class = null): static
+    {
+        $data = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
+
+        if (! is_array($data)) {
+            throw new \InvalidArgumentException('JSON must decode to an array/object.');
+        }
+
+        return static::fromArray($data, $class);
+    }
 }

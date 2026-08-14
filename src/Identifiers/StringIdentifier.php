@@ -175,6 +175,37 @@ final readonly class StringIdentifier implements IdentifierContract, JsonSeriali
     }
 
     /**
+     * Create a StringIdentifier from a JSON string.
+     *
+     * Parses the JSON and delegates to {@see fromArray()} for hydration.
+     * Enables round-trip serialization via `json_encode()` → `fromJson()`.
+     *
+     * @param  string  $json  A valid JSON object string.
+     * @return self A new StringIdentifier instance.
+     *
+     * @throws \JsonException If the JSON string is invalid.
+     * @throws \InvalidArgumentException If the JSON does not decode to an array.
+     *
+     * @example
+     * ```php
+     * $slug = StringIdentifier::from('my-blog-post');
+     * $json = json_encode($slug->toArray());
+     * $restored = StringIdentifier::fromJson($json);
+     * $slug->equals($restored); // true
+     * ```
+     */
+    public static function fromJson(string $json): self
+    {
+        $data = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
+
+        if (! is_array($data)) {
+            throw new \InvalidArgumentException('JSON must decode to an array/object.');
+        }
+
+        return self::fromArray($data);
+    }
+
+    /**
      * @return string The identifier string.
      */
     public function __toString(): string

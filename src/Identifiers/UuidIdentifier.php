@@ -190,6 +190,37 @@ abstract readonly class UuidIdentifier implements IdentifierContract, JsonSerial
     }
 
     /**
+     * Create an identifier from a JSON string.
+     *
+     * Parses the JSON and delegates to {@see fromArray()} for hydration.
+     * Enables round-trip serialization via `json_encode()` → `fromJson()`.
+     *
+     * @param  string  $json  A valid JSON object string.
+     * @return static A new identifier instance.
+     *
+     * @throws \JsonException If the JSON string is invalid.
+     * @throws \InvalidArgumentException If the JSON does not decode to an array.
+     *
+     * @example
+     * ```php
+     * $id = OrderId::generate();
+     * $json = json_encode($id->toArray());
+     * $restored = OrderId::fromJson($json);
+     * $id->equals($restored); // true
+     * ```
+     */
+    public static function fromJson(string $json): static
+    {
+        $data = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
+
+        if (! is_array($data)) {
+            throw new \InvalidArgumentException('JSON must decode to an array/object.');
+        }
+
+        return static::fromArray($data);
+    }
+
+    /**
      * Get the string representation of the identifier.
      *
      * @return string The UUID as a canonical string.

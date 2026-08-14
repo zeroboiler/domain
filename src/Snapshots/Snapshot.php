@@ -136,6 +136,36 @@ final readonly class Snapshot implements \JsonSerializable
     }
 
     /**
+     * Create a Snapshot from a JSON string.
+     *
+     * Parses the JSON and delegates to {@see fromArray()} for hydration.
+     * Enables round-trip serialization for caching and queue jobs.
+     *
+     * @param  string  $json  A valid JSON object string.
+     * @return self A new Snapshot instance.
+     *
+     * @throws \JsonException If the JSON string is invalid.
+     * @throws \InvalidArgumentException If the JSON does not decode to an array.
+     *
+     * @example
+     * ```php
+     * $json = json_encode($snapshot->toArray());
+     * $restored = Snapshot::fromJson($json);
+     * $snapshot->equals($restored); // true
+     * ```
+     */
+    public static function fromJson(string $json): self
+    {
+        $data = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
+
+        if (! is_array($data)) {
+            throw new \InvalidArgumentException('JSON must decode to an array/object.');
+        }
+
+        return self::fromArray($data);
+    }
+
+    /**
      * Check equality with another snapshot.
      *
      * Two snapshots are equal if they represent the same aggregate type,

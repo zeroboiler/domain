@@ -508,4 +508,36 @@ final readonly class DomainEventCollection implements Countable, IteratorAggrega
 
         return new self($events);
     }
+
+    /**
+     * Reconstruct a DomainEventCollection from a JSON string.
+     *
+     * Parses the JSON array of serialized events and delegates to
+     * {@see fromArray()} for hydration. Enables round-trip serialization
+     * for caching, queue jobs, and event replay from storage.
+     *
+     * @param  string  $json  A valid JSON array string of event objects.
+     * @return self A new DomainEventCollection with reconstructed events.
+     *
+     * @throws \JsonException If the JSON string is invalid.
+     * @throws \InvalidArgumentException If the JSON does not decode to an array.
+     *
+     * @example
+     * ```php
+     * $collection = new DomainEventCollection([$event1, $event2]);
+     * $json = json_encode($collection->toArray());
+     * $restored = DomainEventCollection::fromJson($json);
+     * $restored->count(); // 2
+     * ```
+     */
+    public static function fromJson(string $json): self
+    {
+        $data = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
+
+        if (! is_array($data)) {
+            throw new \InvalidArgumentException('JSON must decode to an array/object.');
+        }
+
+        return self::fromArray($data);
+    }
 }

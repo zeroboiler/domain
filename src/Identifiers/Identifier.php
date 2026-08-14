@@ -173,4 +173,35 @@ abstract class Identifier implements IdentifierContract, JsonSerializable
 
         return self::fromString($data['value']);
     }
+
+    /**
+     * Create an Identifier from a JSON string.
+     *
+     * Parses the JSON and delegates to {@see fromArray()} for hydration.
+     * Enables round-trip serialization via `json_encode()` → `fromJson()`.
+     *
+     * @param  string  $json  A valid JSON object string.
+     * @return static A new Identifier instance.
+     *
+     * @throws \JsonException If the JSON string is invalid.
+     * @throws \InvalidArgumentException If the JSON does not decode to an array.
+     *
+     * @example
+     * ```php
+     * $id = self::generate();
+     * $json = json_encode($id->toArray());
+     * $restored = self::fromJson($json);
+     * $id->equals($restored); // true
+     * ```
+     */
+    public static function fromJson(string $json): static
+    {
+        $data = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
+
+        if (! is_array($data)) {
+            throw new \InvalidArgumentException('JSON must decode to an array/object.');
+        }
+
+        return static::fromArray($data);
+    }
 }

@@ -231,4 +231,36 @@ abstract class Entity implements EntityContract, \JsonSerializable
     {
         return $this->toArray();
     }
+
+    /**
+     * Create an entity from a JSON string.
+     *
+     * Parses the JSON and delegates to {@see fromArray()} for hydration.
+     * Enables round-trip serialization via `json_encode()` → `fromJson()`.
+     *
+     * @param  string  $json  A valid JSON object string.
+     * @return static A new entity instance hydrated from the JSON data.
+     *
+     * @throws \JsonException If the JSON string is invalid.
+     * @throws \InvalidArgumentException If the JSON does not decode to an array.
+     *
+     * @since 2.10.0
+     *
+     * @example
+     * ```php
+     * $json = json_encode($entity);
+     * $restored = OrderItem::fromJson($json);
+     * $restored->toArray(); // Same as original
+     * ```
+     */
+    public static function fromJson(string $json): static
+    {
+        $data = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
+
+        if (! is_array($data)) {
+            throw new \InvalidArgumentException('JSON must decode to an array/object.');
+        }
+
+        return static::fromArray($data);
+    }
 }

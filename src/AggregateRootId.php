@@ -167,4 +167,35 @@ final readonly class AggregateRootId implements \Stringable, JsonSerializable
 
         return self::fromString($uuid);
     }
+
+    /**
+     * Create an AggregateRootId from a JSON string.
+     *
+     * Parses the JSON and delegates to {@see fromArray()} for hydration.
+     * Enables round-trip serialization via `json_encode()` → `fromJson()`.
+     *
+     * @param  string  $json  A valid JSON object string.
+     * @return self A new AggregateRootId instance.
+     *
+     * @throws \JsonException If the JSON string is invalid.
+     * @throws \InvalidArgumentException If the JSON does not decode to an array.
+     *
+     * @example
+     * ```php
+     * $id = AggregateRootId::generate();
+     * $json = json_encode($id->toArray());
+     * $restored = AggregateRootId::fromJson($json);
+     * $id->equals($restored); // true
+     * ```
+     */
+    public static function fromJson(string $json): self
+    {
+        $data = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
+
+        if (! is_array($data)) {
+            throw new \InvalidArgumentException('JSON must decode to an array/object.');
+        }
+
+        return self::fromArray($data);
+    }
 }
