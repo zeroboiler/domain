@@ -197,6 +197,7 @@ throw AggregateNotFoundException::for('App\Domain\Order', $id);
 throw ConflictDomainException::because('Concurrent modification.');
 throw OptimisticLockException::for($id, expected: 5, actual: 3);
 throw InvalidAggregateRootException::notAnAggregate($obj);
+throw InvalidStateException::because('Config is invalid.');    // infrastructure-level state
 
 $e->errorCode();                                              // → 'INVALID_STATE'
 $e->toErrorArray();                                           // → ['title' => '...', 'detail' => '...', 'code' => '...']
@@ -1550,6 +1551,11 @@ When using `zeroboiler/response` with this domain package:
 | < 8.4 | ❌ Not supported | Requires union types, readonly classes, named arguments |
 
 ## Changelog
+
+### v1.57.0 (2026-08-14)
+
+- Docs: Add `InvalidStateException` one-liner example to Quick Start — infrastructure-level state exception now included alongside other domain exceptions
+- Quality: Manual code review — all 40 source files verified production-ready (strict types, return types, docblocks, typed properties, PHP 8.5 syntax)
 
 ### v1.56.0 (2026-08-14)
 
