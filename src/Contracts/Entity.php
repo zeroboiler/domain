@@ -55,6 +55,32 @@ interface Entity
     public function toArray(): array;
 
     /**
+     * Reconstruct an entity from an array representation.
+     *
+     * Uses reflection to hydrate constructor parameters from the array.
+     * Supports round-trip serialization with toArray() for caching,
+     * queue jobs, and API responses.
+     *
+     * @param  array<string, mixed>  $array  The array from toArray().
+     * @return static A new entity instance hydrated from the array.
+     */
+    public static function fromArray(array $array): static;
+
+    /**
+     * Reconstruct an entity from a JSON string.
+     *
+     * Parses the JSON and delegates to fromArray() for hydration.
+     * Enables round-trip serialization via json_encode() → fromJson().
+     *
+     * @param  string  $json  A valid JSON object string.
+     * @return static A new entity instance hydrated from the JSON data.
+     *
+     * @throws \JsonException If the JSON string is invalid.
+     * @throws \InvalidArgumentException If the JSON does not decode to an array.
+     */
+    public static function fromJson(string $json): static;
+
+    /**
      * Check if there are any uncommitted domain events.
      *
      * Entities using the HasDomainEvents trait expose this method
