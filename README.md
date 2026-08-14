@@ -40,6 +40,142 @@ the Events package integration truly optional at runtime. The Observability
 `#[Trace]` attribute is provided via a no-op stub when the package is not
 installed, ensuring `SnapshottingRepository` works without it.
 
+## Quick Start
+
+### Creating an Aggregate Root
+
+```php
+use ZeroBoiler\Domain\AggregateRoot;
+use ZeroBoiler\Domain\AggregateRootId;
+use ZeroBoiler\Domain\Concerns\EventSourced;
+use ZeroBoiler\Events\Domain\DomainEvent;
+
+class Order extends AggregateRoot
+{
+    use EventSourced;
+
+    public static function place(string $customerId): self
+    {
+        $order = new self(AggregateRootId::generate());
+        $order->apply(DomainEvent::occur('order.placed', [
+            'customer_id' => $customerId,
+        ]));
+
+        return $order;
+    }
+
+    public function addItem(string $productId, int $quantity): void
+    {
+        $this->apply(DomainEvent::occur('order.item_added', [
+            'product_id' => $productId,
+            'quantity' => $quantity,
+        ]));
+    }
+
+    protected function applyOrderPlaced(DomainEvent $event): void
+    {
+        // State mutation handler — called automatically by apply()
+    }
+
+    protected function applyOrderItemAdded(DomainEvent $event): void
+    {
+        // State mutation handler for item additions
+    }
+
+    public function toArray(): array
+    {
+        return [
+            ...parent::toArray(),
+            // Add domain-specific fields
+        ];
+    }
+}
+
+// Usage
+$order = Order::place('customer-uuid');
+$order->addItem('product-uuid', 3);
+echo $order->id();      // UUID string
+echo $order->version(); // 2
+```
+
+### Creating Identifiers
+
+```php
+use ZeroBoiler\Domain\Identifiers\UuidIdentifier;
+use ZeroBoiler\Domain\Identifiers\UlidIdentifier;
+use ZeroBoiler\Domain\Identifiers\StringIdentifier;
+use ZeroBoiler\Domain\Identifiers\IntegerIdentifier;
+
+// UUID v4 — subclass for domain-specific types
+class OrderId extends UuidIdentifier {}
+$id = OrderId::generate();
+$id->equals($otherId);  // Type-safe equality
+$id->toArray();          // ['uuid' => '550e8400-...']
+OrderId::fromArray($id->toArray()); // Round-trip
+
+// ULID — monotonic, sortable
+class ProductId extends UlidIdentifier {}
+$pid = ProductId::generate();
+
+// String — slugs, codes
+$slug = StringIdentifier::from('my-blog-post');
+
+// Integer — auto-increment IDs
+$seqId = IntegerIdentifier::from(42);
+```
+
+### Domain Exceptions
+
+```php
+use ZeroBoiler\Domain\Exceptions\InvalidStateDomainException;
+use ZeroBoiler\Domain\Exceptions\NotFoundDomainException;
+use ZeroBoiler\Domain\Exceptions\OptimisticLockException;
+
+// Throw with semantic factory methods
+throw InvalidStateDomainException::because('Order must be pending to pay.');
+throw NotFoundDomainException::forAggregate('Order', $orderId);
+throw OptimisticLockException::for($id, expectedVersion: 5, actualVersion: 6);
+
+// All exceptions support:
+$e->errorCode();      // 'INVALID_STATE', 'NOT_FOUND', 'OPTIMISTIC_LOCK'
+$e->httpStatus();     // 422, 404, 409
+$e->toErrorArray();   // RFC 9457 compatible: ['title', 'detail', 'code', 'status']
+$e->toArray();        // Debug: ['error_code', 'message', 'file', 'line']
+json_encode($e);      // Auto JSON serialization
+```
+
+### Unit of Work
+
+```php
+use ZeroBoiler\Domain\InMemoryUnitOfWork;
+
+$uow = app(InMemoryUnitOfWork::class);
+
+// Transactional with auto-commit/rollback
+$result = $uow->run(function () use ($repository, $id) {
+    $order = $repository->find($id);
+    $order->pay(100.00);
+    $repository->save($order);
+
+    return $order;
+});
+// Events dispatched only after successful commit
+
+// Manual transaction
+$uow->begin();
+$uow->track($aggregate);
+$uow->commit();
+
+// On failure — events are never dispatched
+$uow->begin();
+try {
+    $order->ship(); // Fails
+    $uow->commit();
+} catch (DomainException $e) {
+    $uow->rollback(); // Events discarded, state restored
+}
+```
+
 ## Features
 
 - **AggregateRoot** — typed identity (UUID v4), domain events, versioning, optimistic locking
@@ -107,7 +243,7 @@ This enables `serialize()`/`unserialize()` round-trips without sacrificing immut
 | `InvalidAggregateRootException` | final class | Object is not a valid aggregate root |
 | `InvalidStateException` | final class | Infrastructure-level state check failure |
 | `Contracts\AggregateRoot` | interface | Contract for aggregate root implementations |
-| `Contracts\Entity` | interface | Contract for entity implementations |
+| `Contracts\Entity` | interface | Contract for entity implementations (extends JsonSerializable) |
 | `Contracts\Identifier` | interface | Contract for all identifier types |
 | `Contracts\Repository` | interface | Repository contract: `find()`, `save()`, `delete()` |
 | `Contracts\UnitOfWork` | interface | UoW contract: `begin()`, `commit()`, `rollback()`, `run()` |

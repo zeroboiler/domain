@@ -4,6 +4,15 @@ All notable changes to the `zeroboiler/domain` package will be documented in thi
 
 ## [Unreleased]
 
+## [1.63.0] - 2026-08-14
+
+### Changed
+- Add `JsonSerializable` to the `Entity` contract interface for explicit serialization guarantee across the entity hierarchy
+- Bump package version to 1.63.0
+
+### Quality
+- Manual code review pass — all 36 source files verified: strict_types, return type declarations, typed properties, docblocks, PHP 8.5 syntax, immutability, domain invariants, JSON serialization consistency
+
 ## [1.61.0] - 2026-08-14
 
 ### Changed

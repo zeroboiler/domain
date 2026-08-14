@@ -15,12 +15,15 @@ namespace ZeroBoiler\Domain\Contracts;
  * their identity rather than their properties. Two entities with
  * the same ID but different property values are still considered equal.
  *
+ * All entities implement JsonSerializable for consistent serialization
+ * in API responses, caching, and logging pipelines.
+ *
  * @see \ZeroBoiler\Domain\Entity Base implementation
  * @see \ZeroBoiler\Domain\Contracts\AggregateRoot Extended contract with versioning and events
  *
  * @since 1.0.0
  */
-interface Entity
+interface Entity extends \JsonSerializable
 {
     /**
      * Return the entity's domain identity.
