@@ -531,6 +531,7 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
      * $uow->commit(); // Events are dispatched normally
      * ```
      */
+    #[\Override]
     public function getPendingEvents(): DomainEventCollection
     {
         return new DomainEventCollection($this->pendingEvents);
