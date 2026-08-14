@@ -68,7 +68,9 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
         // Dispatch to the specific apply* handler if present.
         // This ensures state mutation handlers (e.g., applyOrderPlaced) are invoked
         // when applying new events, not just when replaying from history (#664).
-        $parts = explode('.', $event->eventType);
+        // Uses preg_split for consistency with EventSourced::applyEvent() —
+        // supports dot/hyphen/underscore convention (e.g., 'order.item_added').
+        $parts = preg_split('/[._-]/', $event->eventType) ?: [];
         $method = 'apply' . implode('', array_map(ucfirst(...), $parts));
 
         if (method_exists($this, $method)) {
@@ -359,7 +361,7 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
     {
         $class = new \ReflectionClass($instance);
 
-        while ($class !== false) {
+        while ($class !== false && $class instanceof \ReflectionClass) {
             if ($class->hasProperty($name)) {
                 $property = $class->getProperty($name);
 

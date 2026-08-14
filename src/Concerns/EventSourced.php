@@ -147,7 +147,7 @@ trait EventSourced
     {
         $target = new \ReflectionClass($instance);
 
-        while ($target !== false) {
+        while ($target !== false && $target instanceof \ReflectionClass) {
             if ($target->hasProperty($name)) {
                 $property = $target->getProperty($name);
 
