@@ -297,7 +297,8 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
     public static function reconstituteFromSnapshot(
         Snapshots\Snapshot $snapshot,
         array $postSnapshotEvents = [],
-    ): static {
+    ): static
+    {
         $reflection = new \ReflectionClass(static::class);
 
         if (! $reflection->isSubclassOf(self::class)) {

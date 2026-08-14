@@ -55,7 +55,8 @@ final readonly class Snapshot implements \JsonSerializable
         string $aggregateId,
         int $version,
         array $state,
-    ): self {
+    ): self
+    {
         return new self(
             aggregateType: $aggregateType,
             aggregateId: $aggregateId,

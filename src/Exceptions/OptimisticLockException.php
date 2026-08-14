@@ -52,7 +52,8 @@ final class OptimisticLockException extends DomainException
         int $expectedVersion,
         int $actualVersion,
         string $code = '',
-    ): self {
+    ): self
+    {
         return new self(
             sprintf(
                 'Optimistic lock failed for aggregate "%s": expected version %d, but current version %d. '
