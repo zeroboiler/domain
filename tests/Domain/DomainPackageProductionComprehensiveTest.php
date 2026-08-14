@@ -32,8 +32,6 @@ use ZeroBoiler\Domain\Identifiers\StringIdentifier;
 use ZeroBoiler\Domain\Identifiers\UuidIdentifier;
 use ZeroBoiler\Domain\Identifiers\UlidIdentifier;
 use ZeroBoiler\Domain\InMemoryUnitOfWork;
-use ZeroBoiler\Domain\ValueObject;
-use ZeroBoiler\Domain\SnapshottingRepository;
 use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
 use ZeroBoiler\Domain\Snapshots\Snapshot;
 use ZeroBoiler\Domain\Snapshots\SnapshotPolicy;
@@ -52,7 +50,6 @@ use ZeroBoiler\Events\Domain\DomainEvent;
  * @covers \ZeroBoiler\Domain\Identifiers\*
  * @covers \ZeroBoiler\Domain\Exceptions\*
  * @covers \ZeroBoiler\Domain\InMemoryUnitOfWork
- * @covers \ZeroBoiler\Domain\SnapshottingRepository
  *
  * @since 1.60.0
  */
