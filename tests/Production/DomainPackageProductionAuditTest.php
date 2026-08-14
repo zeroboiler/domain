@@ -595,16 +595,9 @@ final class DomainPackageProductionAuditTest extends \PHPUnit\Framework\TestCase
     // Helpers
     // ════════════════════════════════════════════════════════════
 
-    private function createDomainEvent(string $type): object
+    private function createDomainEvent(string $type): \ZeroBoiler\Events\Domain\DomainEvent
     {
-        return new class($type) {
-            public function __construct(public readonly string $eventType) {}
-
-            public function toArray(): array
-            {
-                return ['eventType' => $this->eventType];
-            }
-        };
+        return new TestDomainEvent($type);
     }
 }
 
