@@ -108,6 +108,32 @@ final readonly class AggregateRootId implements \Stringable, JsonSerializable
     }
 
     /**
+     * Convert the aggregate root ID to a JSON string.
+     *
+     * Convenience method for explicit JSON serialization without passing
+     * to `json_encode()`. Uses `JSON_THROW_ON_ERROR` for safety.
+     * Encodes the full `toArray()` representation (not just the UUID string)
+     * for consistent round-trip with `fromJson()`.
+     *
+     * @param  int  $options  JSON encoding options bitmask (default: JSON_UNESCAPED_UNICODE).
+     * @return string The JSON-encoded aggregate root ID representation.
+     *
+     * @since 1.66.0
+     *
+     * @example
+     * ```php
+     * $id = AggregateRootId::generate();
+     * $json = $id->toJson();
+     * $restored = AggregateRootId::fromJson($json);
+     * $id->equals($restored); // true
+     * ```
+     */
+    public function toJson(int $options = JSON_UNESCAPED_UNICODE): string
+    {
+        return json_encode($this->toArray(), $options | JSON_THROW_ON_ERROR);
+    }
+
+    /**
      * @return string The UUID as a canonical string.
      */
     public function __toString(): string
