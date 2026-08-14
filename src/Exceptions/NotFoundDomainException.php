@@ -69,4 +69,29 @@ final class NotFoundDomainException extends DomainException
             $code,
         );
     }
+
+    /**
+     * Create an exception for a missing aggregate or entity by its ID.
+     *
+     * Convenience shortcut when you don't have the aggregate type at hand
+     * but know the ID that was searched for.
+     *
+     * @param  string  $id  The identifier that was searched for.
+     * @param  string  $code  Optional machine-readable error code.
+     * @return self
+     *
+     * @example
+     * ```php
+     * throw NotFoundDomainException::forId('order-123');
+     * ```
+     */
+    public static function forId(string $id, string $code = ''): self
+    {
+        return new self(
+            sprintf('Aggregate or entity with ID "%s" was not found.', $id),
+            0,
+            null,
+            $code,
+        );
+    }
 }

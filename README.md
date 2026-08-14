@@ -236,7 +236,7 @@ This enables `serialize()`/`unserialize()` round-trips without sacrificing immut
 | `DomainException` | abstract class | Base exception with `errorCode()`, `toErrorArray()`, JSON serialization |
 | `InvalidStateDomainException` | final class | Business rule violation (e.g., pay already-paid order) |
 | `InvalidArgumentDomainException` | final class | Input validation failure at domain boundary |
-| `NotFoundDomainException` | final class | Missing aggregate/entity lookup |
+| `NotFoundDomainException` | final class | Missing aggregate/entity lookup (`because`, `forAggregate`, `forId`) |
 | `ConflictDomainException` | final class | Concurrent modification conflict |
 | `AggregateNotFoundException` | final class | Aggregate-specific not-found error |
 | `OptimisticLockException` | final class | Version mismatch on concurrent save |
@@ -449,6 +449,7 @@ use ZeroBoiler\Domain\Exceptions\{
 throw InvalidStateDomainException::because('Order must be pending.');
 throw InvalidArgumentDomainException::because('Qty must be > 0.');
 throw NotFoundDomainException::forAggregate('Order', $id);
+throw NotFoundDomainException::forId('order-123');               // ID-only convenience
 throw AggregateNotFoundException::for('App\Domain\Order', $id);
 throw ConflictDomainException::because('Concurrent modification.');
 throw OptimisticLockException::for($id, expected: 5, actual: 3);
