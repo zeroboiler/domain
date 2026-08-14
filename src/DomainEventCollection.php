@@ -222,6 +222,228 @@ final readonly class DomainEventCollection implements Countable, IteratorAggrega
     }
 
     /**
+     * Iterate over each event with a callback.
+     *
+     * Unlike {@see map()}, this method does not return a new collection
+     * or collect results — it's used for side effects (logging, dispatching).
+     *
+     * @param  callable(DomainEvent, int): void  $callback  Called for each event with ($event, $index).
+     * @return self Returns the same collection for fluent chaining.
+     *
+     * @since 1.58.0
+     *
+     * @example
+     * ```php
+     * $collection->each(function (DomainEvent $event, int $index): void {
+     *     logger()->debug("Event {$index}: {$event->eventType}");
+     * });
+     * ```
+     */
+    public function each(callable $callback): self
+    {
+        $index = 0;
+        foreach ($this->events as $event) {
+            $callback($event, $index++);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Reduce the collection to a single value using a callback.
+     *
+     * Iteratively applies the callback to carry the accumulated result
+     * across all events, returning the final value.
+     *
+     * @template TCarry
+     *
+     * @param  callable(TCarry, DomainEvent, int): TCarry  $callback  Reduction function ($carry, $event, $index).
+     * @param  TCarry  $initial  Initial carry value.
+     * @return TCarry The final accumulated value.
+     *
+     * @since 1.58.0
+     *
+     * @example
+     * ```php
+     * // Sum event payload amounts
+     * $total = $collection->reduce(
+     *     fn (float $sum, DomainEvent $event): float => $sum + ($event->payload['amount'] ?? 0),
+     *     0.0,
+     * );
+     * // Group events by type
+     * $grouped = $collection->reduce(
+     *     fn (array $groups, DomainEvent $event): array => [
+     *         ...$groups,
+     *         $event->eventType => [...($groups[$event->eventType] ?? []), $event],
+     *     ],
+     *     [],
+     * );
+     * ```
+     */
+    public function reduce(callable $callback, mixed $initial = null): mixed
+    {
+        $carry = $initial;
+        $index = 0;
+
+        foreach ($this->events as $event) {
+            $carry = $callback($carry, $event, $index++);
+        }
+
+        return $carry;
+    }
+
+    /**
+     * Check if any event satisfies the given predicate.
+     *
+     * Returns `true` on the first matching event (short-circuits).
+     * Equivalent to "exists" in other collection libraries.
+     *
+     * @param  callable(DomainEvent): bool  $predicate
+     * @return bool True if at least one event matches.
+     *
+     * @since 1.58.0
+     *
+     * @example
+     * ```php
+     * $hasPayment = $collection->some(fn (DomainEvent $e): bool => $e->eventType === 'order.paid');
+     * // true if any payment event exists
+     * ```
+     */
+    public function some(callable $predicate): bool
+    {
+        foreach ($this->events as $event) {
+            if ($predicate($event)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if no events satisfy the given predicate.
+     *
+     * Returns `true` only if all events fail the predicate (inverse of {@see some()}).
+     *
+     * @param  callable(DomainEvent): bool  $predicate
+     * @return bool True if no events match the predicate.
+     *
+     * @since 1.58.0
+     *
+     * @example
+     * ```php
+     * $noCancellations = $collection->none(fn (DomainEvent $e): bool => $e->eventType === 'order.cancelled');
+     * // true if there are no cancellation events
+     * ```
+     */
+    public function none(callable $predicate): bool
+    {
+        return ! $this->some($predicate);
+    }
+
+    /**
+     * Get the first event matching a predicate, or null if none found.
+     *
+     * Unlike {@see first()}, this always requires a predicate and is named
+     * for clarity in functional-style pipelines.
+     *
+     * @param  callable(DomainEvent): bool  $predicate
+     * @return DomainEvent|null The first matching event, or null.
+     *
+     * @since 1.58.0
+     *
+     * @example
+     * ```php
+     * $paymentEvent = $collection->find(fn (DomainEvent $e): bool => $e->eventType === 'order.paid');
+     * ```
+     */
+    public function find(callable $predicate): ?DomainEvent
+    {
+        foreach ($this->events as $event) {
+            if ($predicate($event)) {
+                return $event;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Check if the collection contains a specific event type.
+     *
+     * Shorthand for `some(fn ($e) => $e->eventType === $type)`.
+     *
+     * @param  string  $eventType  The event type string to search for.
+     * @return bool True if any event matches the type.
+     *
+     * @since 1.58.0
+     *
+     * @example
+     * ```php
+     * $collection->hasType('order.paid'); // true if any 'order.paid' event exists
+     * ```
+     */
+    public function hasType(string $eventType): bool
+    {
+        return $this->some(fn (DomainEvent $event): bool => $event->eventType === $eventType);
+    }
+
+    /**
+     * Get the number of events matching a predicate.
+     *
+     * @param  callable(DomainEvent): bool  $predicate
+     * @return int Count of matching events.
+     *
+     * @since 1.58.0
+     *
+     * @example
+     * ```php
+     * $paymentCount = $collection->countBy(fn (DomainEvent $e): bool => $e->eventType === 'order.paid');
+     * ```
+     */
+    public function countBy(callable $predicate): int
+    {
+        $count = 0;
+        foreach ($this->events as $event) {
+            if ($predicate($event)) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * Get event types present in the collection.
+     *
+     * Returns a unique list of event type strings in the order they first appear.
+     *
+     * @return list<string> Unique event types.
+     *
+     * @since 1.58.0
+     *
+     * @example
+     * ```php
+     * $types = $collection->types();
+     * // ['order.placed', 'order.item_added', 'order.paid']
+     * ```
+     */
+    public function types(): array
+    {
+        $seen = [];
+        $result = [];
+
+        foreach ($this->events as $event) {
+            if (! in_array($event->eventType, $seen, true)) {
+                $seen[] = $event->eventType;
+                $result[] = $event->eventType;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * Convert the collection to a plain array representation.
      *
      * Alias for {@see jsonSerialize()} — provides explicit `toArray()` method

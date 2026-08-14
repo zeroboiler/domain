@@ -719,6 +719,30 @@ foreach ($collection as $event) {
 }
 echo json_encode($collection);
 // [[...], [...]]
+
+// Side-effect iteration (fluent, returns self for chaining)
+$collection->each(function (DomainEvent $event, int $index): void {
+    logger()->debug("Event {$index}: {$event->eventType}");
+});
+
+// Reduce to a single value
+$totalAmount = $collection->reduce(
+    fn (float $sum, DomainEvent $event): float => $sum + ($event->payload['amount'] ?? 0),
+    0.0,
+);
+
+// Predicate checks
+$hasPayment = $collection->some(fn (DomainEvent $e): bool => $e->eventType === 'order.paid');  // true
+$noCancel = $collection->none(fn (DomainEvent $e): bool => $e->eventType === 'order.cancelled'); // true
+$paymentCount = $collection->countBy(fn (DomainEvent $e): bool => $e->eventType === 'order.paid'); // 1
+
+// Find and hasType
+$paidEvent = $collection->find(fn (DomainEvent $e): bool => $e->eventType === 'order.paid');
+$hasPlaced = $collection->hasType('order.placed'); // true
+
+// Unique event types in order of first appearance
+$types = $collection->types();
+// ['order.placed', 'order.item_added', 'order.paid']
 ```
 
 ### SnapshottingRepository
@@ -1310,7 +1334,7 @@ The domain package includes a comprehensive test suite covering:
 | `AggregateRootId` | final readonly | UUID v4 identity for aggregates | `generate()`, `fromString()`, `toString()`, `equals()`, `jsonSerialize()` |
 | `Entity` | abstract | Base domain entity with flexible ID | `id()`, `equals()`, `toArray()`, `recordThat()`, `releaseEvents()`, `hasUncommittedEvents()`, `peekEvents()`, `clearEvents()`, constructor accepts `int\|string\|Stringable` |
 | `ValueObject` | abstract | Domain value object base | `equals()`, `toArray()` (from value-objects package) |
-| `DomainEventCollection` | final readonly | Type-safe event collection | `all()`, `count()`, `isEmpty()`, `get()`, `filter()`, `map()`, `first()`, `last()`, `merge()`, `toArray()`, `fromArray()` |
+| `DomainEventCollection` | final readonly | Type-safe event collection | `all()`, `count()`, `isEmpty()`, `get()`, `filter()`, `map()`, `first()`, `last()`, `merge()`, `each()`, `reduce()`, `some()`, `none()`, `find()`, `hasType()`, `countBy()`, `types()`, `toArray()`, `fromArray()` |
 | `InMemoryUnitOfWork` | final | Transactional event queuing | `begin()`, `commit()`, `rollback()`, `run()`, `track()`, `queueEvent()`, `clear()`, `getCommitted()`, `getDeleted()`, `getPendingEvents()`, `markForDeletion()`, `isActive()`, `isTracking()` |
 | `SnapshottingRepository` | final readonly | Repository decorator with snapshots | `find()`, `save()`, `delete()`, `findWithSnapshot()`, `snapshotStore()` |
 
@@ -1551,6 +1575,13 @@ When using `zeroboiler/response` with this domain package:
 | < 8.4 | ❌ Not supported | Requires union types, readonly classes, named arguments |
 
 ## Changelog
+
+### v1.58.0 (2026-08-14)
+
+- Feat: Add extended collection API to `DomainEventCollection` — `each()` (side-effect iteration, fluent), `reduce()` (reduce to single value), `some()` (any match), `none()` (no match), `find()` (first match with required predicate), `hasType()` (type check shorthand), `countBy()` (conditional count), `types()` (unique event types in order)
+- Test: Add `DomainEventCollectionExtendedTest` — 22 tests covering each, reduce (sum/group/index), some (match/no-match/empty/short-circuit), none (inverse), find (match/none/empty), hasType, countBy, types (unique/order/empty/single), existing API compatibility
+- Docs: Update DomainEventCollection Quick Reference table and API Quick Reference table with 8 new methods
+- Docs: Add extended collection API usage examples to Domain Events README section (each, reduce, some, none, countBy, find, hasType, types)
 
 ### v1.57.0 (2026-08-14)
 
@@ -2196,6 +2227,14 @@ class OrderController
 | `map(callable): list` | `list` | Transform each event |
 | `filter(callable): self` | `self` | Filter events, new collection |
 | `merge(self\|list): self` | `self` | Merge, new collection |
+| `each(callable): self` | `self` | Side-effect iteration (fluent) |
+| `reduce(callable, mixed): mixed` | `mixed` | Reduce to single value |
+| `some(callable): bool` | `bool` | Any event matches predicate |
+| `none(callable): bool` | `bool` | No events match predicate |
+| `find(callable): ?DomainEvent` | `?DomainEvent` | First matching event |
+| `hasType(string): bool` | `bool` | Contains event type |
+| `countBy(callable): int` | `int` | Count matching events |
+| `types(): list` | `list` | Unique event types in order |
 | `toArray(): list<array>` | `list` | Serialize each event |
 | `fromArray(list<array>): self` | `self` | Round-trip restore |
 
