@@ -122,13 +122,71 @@ abstract class DomainException extends Exception implements \JsonSerializable
     }
 
     /**
+     * Get the recommended HTTP status code for this exception type.
+     *
+     * Override in subclasses to provide a domain-specific status code
+     * that maps to the appropriate HTTP error category. Used by
+     * `DomainResponseFactory::fromException()` and `ApiResponse::fromException()`
+     * to set the HTTP status when no explicit override is given.
+     *
+     * @return int The recommended HTTP status code (default: 500).
+     *
+     * @see https://datatracker.ietf.org/doc/html/rfc9457 RFC 9457 Problem Details for HTTP APIs
+     *
+     * @since 2.13.0
+     *
+     * @example
+     * ```php
+     * // Subclass override:
+     * final class NotFoundDomainException extends DomainException
+     * {
+     *     protected function defaultHttpStatus(): int
+     *     {
+     *         return 404;
+     *     }
+     * }
+     *
+     * // Usage:
+     * try {
+     *     $repo->find($id);
+     * } catch (DomainException $e) {
+     *     $status = $e->httpStatus(); // 404 for NotFoundDomainException
+     *     return DomainResponseFactory::fromException($e, $status)->send();
+     * }
+     * ```
+     */
+    public function httpStatus(): int
+    {
+        return $this->defaultHttpStatus();
+    }
+
+    /**
+     * Get the default recommended HTTP status code for this exception type.
+     *
+     * Override in subclasses to provide a domain-specific status code.
+     * The base implementation returns 500 (Internal Server Error) as a
+     * safe default for unrecognized domain errors.
+     *
+     * @return int The default HTTP status code.
+     *
+     * @since 2.13.0
+     */
+    protected function defaultHttpStatus(): int
+    {
+        return 500;
+    }
+
+    /**
      * Convert the exception to a structured array for API responses.
      *
      * Returns an RFC 9457-compatible error object with title, detail,
-     * and a machine-readable code. Useful for mapping domain exceptions
+     * status, and a machine-readable code. Useful for mapping domain exceptions
      * to response DTOs via DomainResponseFactory::error().
      *
-     * @return array{title: string, detail: string, code: string}
+     * The `status` field is included for explicit HTTP status communication
+     * to API consumers, matching the RFC 9457 Problem Details specification.
+     *
+     * @return array{title: string, detail: string, code: string, status: int}
      *
      * @example
      * ```php
@@ -136,8 +194,8 @@ abstract class DomainException extends Exception implements \JsonSerializable
      *     $order->pay($amount);
      * } catch (DomainException $e) {
      *     $error = $e->toErrorArray();
-     *     // ['title' => '...', 'detail' => '...', 'code' => 'INVALID_STATE']
-     *     return DomainResponseFactory::error($error)->send();
+     *     // ['title' => '...', 'detail' => '...', 'code' => 'INVALID_STATE', 'status' => 422]
+     *     return DomainResponseFactory::error($error, $error['status'])->send();
      * }
      * ```
      */
@@ -147,6 +205,7 @@ abstract class DomainException extends Exception implements \JsonSerializable
             'title' => class_basename(static::class),
             'detail' => $this->getMessage(),
             'code' => $this->errorCode(),
+            'status' => $this->httpStatus(),
         ];
     }
 

@@ -41,6 +41,11 @@ final class InvalidStateException extends DomainException
         return 'INVALID_STATE_SYSTEM';
     }
 
+    protected function defaultHttpStatus(): int
+    {
+        return 500;
+    }
+
     /**
      * Create an exception with the given reason.
      *

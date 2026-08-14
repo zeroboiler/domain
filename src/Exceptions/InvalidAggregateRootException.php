@@ -37,6 +37,11 @@ final class InvalidAggregateRootException extends DomainException
         return 'INVALID_AGGREGATE_ROOT';
     }
 
+    protected function defaultHttpStatus(): int
+    {
+        return 500;
+    }
+
     /**
      * Create an exception for an invalid aggregate root.
      *

@@ -36,6 +36,11 @@ final class InvalidStateDomainException extends DomainException
         return 'INVALID_STATE';
     }
 
+    protected function defaultHttpStatus(): int
+    {
+        return 422;
+    }
+
     /**
      * Create an exception with a human-readable reason.
      *

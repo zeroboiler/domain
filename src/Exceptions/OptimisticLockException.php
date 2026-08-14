@@ -38,6 +38,11 @@ final class OptimisticLockException extends DomainException
         return 'OPTIMISTIC_LOCK';
     }
 
+    protected function defaultHttpStatus(): int
+    {
+        return 409;
+    }
+
     /**
      * Create an optimistic lock exception with typed parameters.
      *

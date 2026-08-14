@@ -34,6 +34,11 @@ final class AggregateNotFoundException extends DomainException
         return 'AGGREGATE_NOT_FOUND';
     }
 
+    protected function defaultHttpStatus(): int
+    {
+        return 404;
+    }
+
     /**
      * Create an exception for a missing aggregate.
      *

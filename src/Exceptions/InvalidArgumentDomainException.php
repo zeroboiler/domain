@@ -36,6 +36,11 @@ final class InvalidArgumentDomainException extends DomainException
         return 'INVALID_ARGUMENT';
     }
 
+    protected function defaultHttpStatus(): int
+    {
+        return 422;
+    }
+
     /**
      * Create an exception with a human-readable reason.
      *

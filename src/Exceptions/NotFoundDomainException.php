@@ -32,6 +32,11 @@ final class NotFoundDomainException extends DomainException
         return 'NOT_FOUND';
     }
 
+    protected function defaultHttpStatus(): int
+    {
+        return 404;
+    }
+
     /**
      * Create an exception with a human-readable reason.
      *

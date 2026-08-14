@@ -33,6 +33,11 @@ final class ConflictDomainException extends DomainException
         return 'CONFLICT';
     }
 
+    protected function defaultHttpStatus(): int
+    {
+        return 409;
+    }
+
     /**
      * Create an exception with a human-readable reason.
      *
