@@ -11,6 +11,11 @@ namespace ZeroBoiler\Domain\Tests\Fixtures;
 use Symfony\Component\Uid\Ulid;
 use ZeroBoiler\Domain\Identifiers\UlidIdentifier;
 
+/**
+ * Concrete ULID identifier fixture for testing.
+ *
+ * @internal Test-only class.
+ */
 final readonly class TestUlidIdentifier extends UlidIdentifier
 {
     public function __construct(?string $value = null)

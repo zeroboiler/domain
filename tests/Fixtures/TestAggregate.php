@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * This file is part of ZeroBoiler, licensed under the proprietary license.
+ */
+
 declare(strict_types=1);
 
 namespace ZeroBoiler\Domain\Tests\Fixtures;
@@ -8,6 +12,11 @@ use ZeroBoiler\Domain\AggregateRoot;
 use ZeroBoiler\Domain\AggregateRootId;
 use ZeroBoiler\Events\Domain\DomainEvent;
 
+/**
+ * Concrete aggregate root fixture for testing the abstract AggregateRoot class.
+ *
+ * @internal Test-only class.
+ */
 final class TestAggregate extends AggregateRoot
 {
     public bool $nameChanged = false;

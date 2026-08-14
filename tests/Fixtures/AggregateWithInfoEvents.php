@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * This file is part of ZeroBoiler, licensed under the proprietary license.
+ */
+
 declare(strict_types=1);
 
 namespace ZeroBoiler\Domain\Tests\Fixtures;
@@ -9,6 +13,11 @@ use ZeroBoiler\Domain\AggregateRootId;
 use ZeroBoiler\Domain\Concerns\EventSourced;
 use ZeroBoiler\Events\Domain\DomainEvent;
 
+/**
+ * Aggregate root fixture with informational events for testing.
+ *
+ * @internal Test-only class.
+ */
 final class AggregateWithInfoEvents extends AggregateRoot
 {
     use EventSourced;

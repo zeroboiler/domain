@@ -11,6 +11,11 @@ namespace ZeroBoiler\Domain\Tests\Fixtures;
 use Ramsey\Uuid\Uuid;
 use ZeroBoiler\Domain\Identifiers\UuidIdentifier;
 
+/**
+ * Concrete UUID identifier fixture for testing.
+ *
+ * @internal Test-only class.
+ */
 final readonly class TestUuidIdentifier extends UuidIdentifier
 {
     public function __construct(?string $value = null)

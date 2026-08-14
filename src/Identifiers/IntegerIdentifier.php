@@ -71,6 +71,8 @@ final readonly class IntegerIdentifier implements IdentifierContract, JsonSerial
      *
      * @param  string  $value  A string that represents an integer.
      * @return static
+     *
+     * @throws \InvalidArgumentException If the string does not represent a valid integer.
      */
     public static function fromString(string $value): static
     {
