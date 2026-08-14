@@ -1005,6 +1005,16 @@ php artisan domain:snapshot --class=App\Domain\Aggregates\Order
 php artisan domain:snapshot --class=App\Domain\Aggregates\Order --id=order-123
 ```
 
+### Command Details
+
+| Command | Description | Output Path |
+|---|---|---|
+| `zeroboiler:domain:aggregate` | Aggregate root extending `AggregateRoot` with event sourcing | `app/Domain/Aggregates/` |
+| `zeroboiler:domain:repository` | Repository interface + Eloquent implementation | `app/Domain/Repositories/` + `Eloquent/` |
+| `zeroboiler:domain:value-object` | Immutable value object extending `ValueObject` | `app/Domain/ValueObjects/` |
+| `zeroboiler:domain:list` | List all domain classes grouped by type | stdout |
+| `domain:snapshot` | Inspect snapshot store (stats, state) | stdout |
+
 ## Cross-Package Integration: Domain → Response
 
 When using `zeroboiler/domain` with `zeroboiler/response`, use `DomainTransformer`
@@ -1540,6 +1550,11 @@ When using `zeroboiler/response` with this domain package:
 | < 8.4 | ❌ Not supported | Requires union types, readonly classes, named arguments |
 
 ## Changelog
+
+### v1.56.0 (2026-08-14)
+
+- Docs: Add CLI Commands section with command details table — all 5 artisan commands documented with full usage examples and output paths
+- Docs: Enrich CLI Commands section with command details table — aggregate, repository, value-object, list, snapshot commands with descriptions and output paths
 
 ### v1.49.0 (2026-08-10)
 
