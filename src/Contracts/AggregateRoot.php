@@ -74,4 +74,17 @@ interface AggregateRoot extends Entity
      * @return DomainEventCollection A copy of all recorded events.
      */
     public function peekDomainEvents(): DomainEventCollection;
+
+    /**
+     * Convert the aggregate root to a JSON string.
+     *
+     * Convenience method for explicit JSON serialization without passing
+     * to `json_encode()`. Uses `JSON_THROW_ON_ERROR` for safety.
+     *
+     * @param  int  $options  JSON encoding options bitmask (default: JSON_UNESCAPED_UNICODE).
+     * @return string The JSON-encoded aggregate root representation.
+     *
+     * @since 1.66.0
+     */
+    public function toJson(int $options = JSON_UNESCAPED_UNICODE): string;
 }

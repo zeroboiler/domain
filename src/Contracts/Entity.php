@@ -84,6 +84,19 @@ interface Entity extends \JsonSerializable
     public static function fromJson(string $json): static;
 
     /**
+     * Convert the entity to a JSON string.
+     *
+     * Convenience method for explicit JSON serialization without passing
+     * to `json_encode()`. Uses `JSON_THROW_ON_ERROR` for safety.
+     *
+     * @param  int  $options  JSON encoding options bitmask (default: JSON_UNESCAPED_UNICODE).
+     * @return string The JSON-encoded entity representation.
+     *
+     * @since 1.66.0
+     */
+    public function toJson(int $options = JSON_UNESCAPED_UNICODE): string;
+
+    /**
      * Check if there are any uncommitted domain events.
      *
      * Entities using the HasDomainEvents trait expose this method
