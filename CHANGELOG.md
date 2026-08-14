@@ -4,8 +4,12 @@ All notable changes to the `zeroboiler/domain` package will be documented in thi
 
 ## [Unreleased]
 
+## [1.60.0] - 2026-08-14
+
 ### Changed
 - Docs: Add Security and License sections to README
+- Finalize [Unreleased] items into v1.60.0 release
+- Bump minimum-stability confirmation and dependency audit
 
 ### Added
 - Test: Add `DomainPackageFinalProductionAuditTest` — 30 reflection-based static analysis tests covering strict_types enforcement, return type declarations on all public methods, final/readonly class modifiers, typed properties on all classes, interface implementation completeness (AggregateRoot→Contract, Entity→Contract, Identifier→Contract, UoW→Contract, Repository→Contract), domain exception hierarchy verification (7 subclasses extend DomainException, all implement JsonSerializable), serde method completeness (fromArray/toArray/fromJson/jsonSerialize on identifiers/AggregateRootId/Snapshot/DomainEventCollection/Entity), #[Override] attribute presence on contract methods, domain invariant enforcement (AggregateRoot protected constructor, Entity public readonly id, AggregateRootId final readonly), unique default error codes per exception type, class hierarchy correctness, DomainEventCollection functional API completeness, InMemoryUnitOfWork contract completeness, InMemorySnapshotStore full CRUD contract, and docblock/@since tag presence on all core classes
@@ -13,6 +17,8 @@ All notable changes to the `zeroboiler/domain` package will be documented in thi
 - **End-to-End Integration Example** — complete walkthrough from AggregateRoot → DomainTransformer → Controller → HTTP response, showing Unit of Work, event sourcing, domain exceptions, and DomainResponseFactory usage in a single cohesive example
 - **ProductionFinalAuditTest** — comprehensive production readiness audit covering: strict_types enforcement, class visibility modifiers (final/abstract/readonly), return type declarations on all public methods, typed properties, identifier contract compliance, exception hierarchy validation, round-trip serialization (AggregateRootId, all Identifiers, DomainException, Snapshot, DomainEventCollection), SnapshotStore contract compliance, UnitOfWork contract compliance, and @since tag presence
 - **CrossPackage/ResponseContractIntegrationTest** — verifies domain→response serialization contracts: id() string format, toArray() base structure, Identifier toString()/Stringable/JsonSerializable, toErrorArray() RFC 9457 format, version() return type, Snapshot JSON serialization, and cross-package method return type declarations
+- **InMemoryUnitOfWork clear/lifecycle tests** — verifies clear() resets all tracking state and lifecycle methods (begin/commit/rollback) maintain proper state transitions
+- **Production manual code review pass** — confirm immutability, domain invariants, JSON serialization consistency across all 36 source files
 
 ## [1.50.0] - 2026-08-10
 
