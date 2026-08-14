@@ -181,4 +181,52 @@ final readonly class Snapshot implements \JsonSerializable
             && $this->version === $other->version
             && $this->state === $other->state;
     }
+
+    /**
+     * Serialize for PHP's native serialize().
+     *
+     * @return array{aggregate_type: string, aggregate_id: string, version: int, state: array<string, mixed>, created_at: string}
+     *
+     * @since 2.12.0
+     */
+    public function __serialize(): array
+    {
+        return $this->toArray();
+    }
+
+    /**
+     * Reconstruct from PHP's native unserialize().
+     *
+     * Uses reflection to set readonly properties after construction.
+     *
+     * @param  array<string, mixed>  $data
+     * @return void
+     *
+     * @since 2.12.0
+     */
+    public function __unserialize(array $data): void
+    {
+        $reflection = new \ReflectionClass(self::class);
+        $map = [
+            'aggregateType' => 'aggregate_type',
+            'aggregateId' => 'aggregate_id',
+            'version' => 'version',
+            'state' => 'state',
+            'createdAt' => 'created_at',
+        ];
+
+        foreach ($map as $prop => $key) {
+            if (! isset($data[$key])) {
+                continue;
+            }
+
+            $property = $reflection->getProperty($prop);
+
+            if ($prop === 'createdAt') {
+                $property->setValue($this, new \DateTimeImmutable($data[$key]));
+            } else {
+                $property->setValue($this, $data[$key]);
+            }
+        }
+    }
 }

@@ -228,4 +228,40 @@ abstract readonly class UlidIdentifier implements IdentifierContract, JsonSerial
     {
         return $this->toString();
     }
+
+    /**
+     * Serialize for PHP's native serialize().
+     *
+     * @return array{ulid: string}
+     *
+     * @since 2.12.0
+     */
+    public function __serialize(): array
+    {
+        return $this->toArray();
+    }
+
+    /**
+     * Reconstruct from PHP's native unserialize().
+     *
+     * Uses reflection to set the readonly property after construction.
+     *
+     * @param  array{ulid?: string, id?: string}  $data
+     * @return void
+     *
+     * @since 2.12.0
+     */
+    public function __unserialize(array $data): void
+    {
+        $ulid = $data['ulid'] ?? $data['id'] ?? null;
+
+        if (! is_string($ulid) || ! self::isValid($ulid)) {
+            throw new \InvalidArgumentException(
+                sprintf('Cannot unserialize %s: invalid or missing ULID, got %s.', static::class, get_debug_type($ulid)),
+            );
+        }
+
+        (new \ReflectionClass(static::class))->getProperty('value')
+            ->setValue($this, $ulid);
+    }
 }

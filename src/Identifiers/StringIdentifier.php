@@ -212,4 +212,40 @@ final readonly class StringIdentifier implements IdentifierContract, JsonSeriali
     {
         return $this->value;
     }
+
+    /**
+     * Serialize for PHP's native serialize().
+     *
+     * @return array{string: string}
+     *
+     * @since 2.12.0
+     */
+    public function __serialize(): array
+    {
+        return $this->toArray();
+    }
+
+    /**
+     * Reconstruct from PHP's native unserialize().
+     *
+     * Uses reflection to set the readonly property after construction.
+     *
+     * @param  array{string?: string, id?: string}  $data
+     * @return void
+     *
+     * @since 2.12.0
+     */
+    public function __unserialize(array $data): void
+    {
+        $value = $data['string'] ?? $data['id'] ?? null;
+
+        if (! is_string($value) || $value === '') {
+            throw new \InvalidArgumentException(
+                sprintf('Cannot unserialize StringIdentifier: missing or empty value, got %s.', get_debug_type($value)),
+            );
+        }
+
+        (new \ReflectionClass(self::class))->getProperty('value')
+            ->setValue($this, $value);
+    }
 }

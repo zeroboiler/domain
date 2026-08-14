@@ -116,6 +116,45 @@ final readonly class AggregateRootId implements \Stringable, JsonSerializable
     }
 
     /**
+     * Serialize for PHP's native serialize().
+     *
+     * @return array{uuid: string}
+     *
+     * @see https://www.php.net/manual/en/language.oop5.magic.php#object.serialize
+     * @since 2.12.0
+     */
+    public function __serialize(): array
+    {
+        return $this->toArray();
+    }
+
+    /**
+     * Reconstruct from PHP's native unserialize().
+     *
+     * Uses reflection to set the readonly property, as PHP requires
+     * unsetting a readonly property before re-initializing it.
+     *
+     * @param  array{uuid?: string, id?: string}  $data
+     * @return void
+     *
+     * @see https://www.php.net/manual/en/language.oop5.magic.php#object.unserialize
+     * @since 2.12.0
+     */
+    public function __unserialize(array $data): void
+    {
+        $uuid = $data['uuid'] ?? $data['id'] ?? null;
+
+        if (! is_string($uuid) || ! self::isValid($uuid)) {
+            throw new \InvalidArgumentException(
+                sprintf('Cannot unserialize AggregateRootId: invalid or missing UUID, got %s.', get_debug_type($uuid)),
+            );
+        }
+
+        $property = (new \ReflectionClass(self::class))->getProperty('value');
+        $property->setValue($this, Uuid::fromString($uuid));
+    }
+
+    /**
      * Convert the aggregate root ID to an array representation.
      *
      * Provides a consistent serialization format for caching, persistence,

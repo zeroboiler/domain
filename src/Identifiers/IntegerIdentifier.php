@@ -220,4 +220,44 @@ final readonly class IntegerIdentifier implements IdentifierContract, JsonSerial
     {
         return $this->toString();
     }
+
+    /**
+     * Serialize for PHP's native serialize().
+     *
+     * @return array{integer: int}
+     *
+     * @since 2.12.0
+     */
+    public function __serialize(): array
+    {
+        return $this->toArray();
+    }
+
+    /**
+     * Reconstruct from PHP's native unserialize().
+     *
+     * Uses reflection to set the readonly property after construction.
+     *
+     * @param  array{integer?: int, id?: int|string}  $data
+     * @return void
+     *
+     * @since 2.12.0
+     */
+    public function __unserialize(array $data): void
+    {
+        $value = $data['integer'] ?? $data['id'] ?? null;
+
+        if (is_int($value)) {
+            $integer = $value;
+        } elseif (is_string($value) && self::isValid($value)) {
+            $integer = (int) $value;
+        } else {
+            throw new \InvalidArgumentException(
+                sprintf('Cannot unserialize IntegerIdentifier: invalid or missing integer, got %s.', get_debug_type($value)),
+            );
+        }
+
+        (new \ReflectionClass(self::class))->getProperty('value')
+            ->setValue($this, $integer);
+    }
 }
