@@ -50,7 +50,7 @@ final class AggregateNotFoundException extends DomainException
     public static function for(string $aggregateType, string $aggregateId, string $code = ''): self
     {
         return new self(
-            sprintf('Aggregate %s with ID %s not found.', $aggregateType, $aggregateId),
+            sprintf('Aggregate "%s" with ID "%s" was not found.', $aggregateType, $aggregateId),
             0,
             null,
             $code,
