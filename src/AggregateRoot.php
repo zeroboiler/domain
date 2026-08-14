@@ -266,6 +266,29 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
     }
 
     /**
+     * Convert the aggregate root to a JSON string.
+     *
+     * Convenience method for explicit JSON serialization without passing
+     * to `json_encode()`. Uses `JSON_THROW_ON_ERROR` for safety.
+     *
+     * @param  int  $options  JSON encoding options bitmask (default: JSON_UNESCAPED_UNICODE).
+     * @return string The JSON-encoded aggregate root representation.
+     *
+     * @since 1.66.0
+     *
+     * @example
+     * ```php
+     * $json = $order->toJson();
+     * echo $json; // {"id":"550e8400-...","version":3,"type":"Order","status":"pending"}
+     * ```
+     */
+    #[\Override]
+    public function toJson(int $options = JSON_UNESCAPED_UNICODE): string
+    {
+        return json_encode($this->toArray(), $options | JSON_THROW_ON_ERROR);
+    }
+
+    /**
      * Reconstitute an aggregate root from a snapshot and optional post-snapshot events.
      *
      * This is a convenience factory that combines snapshot restoration with

@@ -313,4 +313,33 @@ abstract class DomainException extends Exception implements \JsonSerializable
 
         return static::fromArray($data, $class);
     }
+
+    /**
+     * Convert the exception to a JSON string.
+     *
+     * Uses the RFC 9457-compatible error array format via jsonSerialize().
+     * Uses `JSON_THROW_ON_ERROR` for safety.
+     *
+     * @param  int  $options  JSON encoding options bitmask (default: JSON_UNESCAPED_UNICODE).
+     * @return string The JSON-encoded RFC 9457 error representation.
+     *
+     * @since 2.15.0
+     *
+     * @example
+     * ```php
+     * try {
+     *     $order->pay($amount);
+     * } catch (InvalidStateDomainException $e) {
+     *     $json = $e->toJson();
+     *     // {"title":"InvalidStateDomainException","detail":"Order must be pending to pay.","code":"INVALID_STATE","status":422}
+     *     $restored = InvalidStateDomainException::fromJson($json, InvalidStateDomainException::class);
+     *     $restored->getMessage(); // Same as original
+     * }
+     * ```
+     */
+    public function toJson(int $options = JSON_UNESCAPED_UNICODE): string
+    {
+        return json_encode($this->jsonSerialize(), $options | JSON_THROW_ON_ERROR);
+    }
 }
+

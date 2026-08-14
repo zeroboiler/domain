@@ -223,6 +223,26 @@ $reflection->getProperty('readonlyProp')->setValue($instance, $newValue);
 
 This enables `serialize()`/`unserialize()` round-trips without sacrificing immutability.
 
+### Serialization Contract
+
+All domain classes provide a consistent serialization API for caching, queue
+jobs, API responses, and cross-package data exchange:
+
+| Class | `toArray()` | `fromArray()` | `toJson()` | `fromJson()` | `jsonSerialize()` | `__serialize()` |
+|---|---|---|---|---|---|---|
+| `AggregateRoot` | ✅ | — (use `fromArray` on subclass) | ✅ | — (use `Entity::fromJson`) | ✅ | — |
+| `Entity` | ✅ | ✅ | ✅ | ✅ | ✅ | — |
+| `AggregateRootId` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `UuidIdentifier` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `UlidIdentifier` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `StringIdentifier` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `IntegerIdentifier` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ValueObject` | — (abstract) | — (abstract) | ✅ | ✅ | — | — |
+| `DomainEventCollection` | ✅ | ✅ | ✅ | ✅ | ✅ | — |
+| `Snapshot` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `DomainException` | ✅ | ✅ | ✅ | ✅ | ✅ | — |
+| `InMemoryUnitOfWork` | ✅ (state) | — | ✅ (state) | — | — | — |
+
 ## Class Reference
 
 | Class / Interface | Type | Description |

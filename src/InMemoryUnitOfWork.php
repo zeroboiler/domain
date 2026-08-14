@@ -763,4 +763,47 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
         $this->pendingEvents = [];
         $this->nestingDepth = 0;
     }
+
+    /**
+     * Convert the unit of work's current state to an array.
+     *
+     * Provides a snapshot of the current transactional state for debugging,
+     * logging, or inspection. Does not include aggregate objects themselves,
+     * only their identity strings and counts.
+     *
+     * @return array{nesting_depth: int, pending_event_count: int, committed_count: int, deleted_count: int, is_active: bool}
+     *
+     * @since 1.66.0
+     *
+     * @example
+     * ```php
+     * $uow->begin();
+     * $uow->track($order);
+     * $state = $uow->toArray();
+     * // ['nesting_depth' => 1, 'pending_event_count' => 0, 'committed_count' => 0, ...]
+     * ```
+     */
+    public function toArray(): array
+    {
+        return [
+            'nesting_depth' => $this->nestingDepth,
+            'pending_event_count' => count($this->pendingEvents),
+            'committed_count' => count($this->committed),
+            'deleted_count' => count($this->deleted),
+            'is_active' => $this->isActive(),
+        ];
+    }
+
+    /**
+     * Convert the unit of work state to a JSON string.
+     *
+     * @param  int  $options  JSON encoding options bitmask (default: JSON_UNESCAPED_UNICODE).
+     * @return string The JSON-encoded UoW state representation.
+     *
+     * @since 1.66.0
+     */
+    public function toJson(int $options = JSON_UNESCAPED_UNICODE): string
+    {
+        return json_encode($this->toArray(), $options | JSON_THROW_ON_ERROR);
+    }
 }
