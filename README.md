@@ -1576,6 +1576,10 @@ When using `zeroboiler/response` with this domain package:
 
 ## Changelog
 
+### v1.59.0 (2026-08-14)
+
+- Test: Add `DomainProductionSerdeComprehensiveTest` — 35 production-ready serde tests covering AggregateRootId round-trip/JSON serialization, UuidIdentifier round-trip, StringIdentifier round-trip/fromArray-id-key/empty-validation, IntegerIdentifier round-trip/negative/fromArray-string-id, cross-identifier type inequality (String≠Integer, UUID≠String), Snapshot round-trip/JSON serialization, DomainEventCollection round-trip/JSON/empty serialization, DomainException hierarchy (7 types: unique default error codes, custom error code override, JSON serialization, Throwable compliance, InvalidStateException standalone hierarchy), InMemorySnapshotStore full CRUD (save/load/has/delete/deleteOlderThan/count/stats/purge), ValueObject equality, Entity toArray id+type serialization
+
 ### v1.58.0 (2026-08-14)
 
 - Feat: Add extended collection API to `DomainEventCollection` — `each()` (side-effect iteration, fluent), `reduce()` (reduce to single value), `some()` (any match), `none()` (no match), `find()` (first match with required predicate), `hasType()` (type check shorthand), `countBy()` (conditional count), `types()` (unique event types in order)
