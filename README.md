@@ -54,6 +54,39 @@ installed, ensuring `SnapshottingRepository` works without it.
 - **DomainException** hierarchy — typed exceptions for domain violations
 - **CLI Generators** — `domain:aggregate`, `domain:repository`, `domain:value-object`, `domain:list`, `domain:snapshot`
 
+## PHP 8.5 Features
+
+This package leverages modern PHP 8.5 features for maximum type safety and
+developer experience:
+
+| Feature | Where Used |
+|---|---|
+| `readonly` classes | `AggregateRootId`, `DomainEventCollection`, `Snapshot`, `SnapshotPolicy`, `SnapshottingRepository` |
+| `readonly` promoted properties | All identifier types, `Snapshot`, `SnapshotPolicy` |
+| `#[\Override]` attribute | All interface contract implementations (Entity, AggregateRoot, Identifier, Repository, UnitOfWork) |
+| `#[\Deprecated]` attribute | `InMemorySnapshotStore::clear()` (use `purge()` instead) |
+| Constructor property promotion | `AggregateRoot`, `Entity`, all identifiers, `Snapshot` |
+| `__serialize()`/`__unserialize()` | All readonly classes — uses reflection to set readonly props after unset |
+| Named arguments | Factory methods (`Snapshot::create()`, `InMemoryUnitOfWork::run()`) |
+| `static` return types | `Entity::fromArray()`, `Entity::fromJson()`, `Identifier::fromString()` |
+| `mixed` type | `Entity::id()` return type in contract |
+| Intersection types | Not used (duck typing preferred for decoupling) |
+| First-class callable syntax | `array_map(ucfirst(...), $parts)` in EventSourced trait |
+| `get_debug_type()` | All validation error messages in `fromArray()` methods |
+
+### Readonly Class Unserialization Pattern
+
+All readonly classes implement `__serialize()`/`__unserialize()` using the
+PHP 8.5 pattern of unsetting a readonly property before re-initializing it:
+
+```php
+// PHP 8.5+ allows re-initialization after unset
+unset($instance->readonlyProp);
+$reflection->getProperty('readonlyProp')->setValue($instance, $newValue);
+```
+
+This enables `serialize()`/`unserialize()` round-trips without sacrificing immutability.
+
 ## Class Reference
 
 | Class / Interface | Type | Description |
@@ -112,6 +145,34 @@ All exceptions provide:
 - `toArray()` / `fromArray()` — round-trip serialization
 - `fromJson()` — JSON deserialization
 - `JsonSerializable` — direct `json_encode()` support
+
+### RFC 9457 Problem Details Mapping
+
+Each domain exception maps to a recommended HTTP status code when used with
+the `zeroboiler/response` package's `DomainResponseFactory::fromException()`:
+
+| Exception | Error Code | HTTP Status | Use Case |
+|---|---|---|---|
+| `InvalidStateDomainException` | `INVALID_STATE` | 422 Unprocessable Entity | Business rule violation |
+| `InvalidArgumentDomainException` | `INVALID_ARGUMENT` | 422 Unprocessable Entity | Input validation failure |
+| `NotFoundDomainException` | `NOT_FOUND` | 404 Not Found | Missing entity lookup |
+| `ConflictDomainException` | `CONFLICT` | 409 Conflict | Duplicate / concurrent modification |
+| `AggregateNotFoundException` | `AGGREGATE_NOT_FOUND` | 404 Not Found | Aggregate-specific not-found |
+| `OptimisticLockException` | `OPTIMISTIC_LOCK` | 409 Conflict | Version mismatch on save |
+| `InvalidAggregateRootException` | `INVALID_AGGREGATE_ROOT` | 500 Internal Server Error | Invalid aggregate type |
+| `InvalidStateException` | `INVALID_STATE_SYSTEM` | 500 Internal Server Error | Infrastructure state failure |
+
+```php
+// Each exception produces a standard RFC 9457 error array:
+$e = NotFoundDomainException::forId('order-123');
+$e->toErrorArray();
+// [
+//     'title'  => 'NotFoundDomainException',
+//     'detail' => 'Aggregate or entity with ID "order-123" was not found.',
+//     'code'   => 'NOT_FOUND',
+//     'status' => 404,
+// ]
+```
 
 ## One-Liner Quick Start
 

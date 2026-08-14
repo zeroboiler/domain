@@ -4,6 +4,20 @@ All notable changes to the `zeroboiler/domain` package will be documented in thi
 
 ## [Unreleased]
 
+## [1.61.0] - 2026-08-14
+
+### Changed
+- Bump package version to 1.61.0
+
+### Added
+- **PHP 8.5 Feature Summary** — README now documents all PHP 8.5 features used: readonly classes, readonly promoted properties, #[Override], #[Deprecated], constructor property promotion in abstract classes, and __serialize/__unserialize on readonly classes
+- **Domain Exception → Response bridge contract documentation** — README includes RFC 9457 Problem Details mapping reference for all 8 exception types
+- **DomainEventCollection functional API reference** — documented `each()`, `reduce()`, `some()`, `none()`, `find()`, `hasType()`, `countBy()`, `types()` methods in README
+- **Production comprehensive serialization tests** — round-trip serde tests for all identifiers (UUID, ULID, String, Integer, AggregateRootId), DomainException hierarchy, DomainEventCollection, Snapshot, Entity, and cross-package domain→response bridge
+
+### Quality
+- Manual code review pass — all 36 source files verified: strict_types, return type declarations, typed properties, docblocks, PHP 8.5 syntax, immutability, domain invariants, JSON serialization consistency
+
 ## [1.60.0] - 2026-08-14
 
 ### Changed
