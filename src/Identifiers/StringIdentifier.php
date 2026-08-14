@@ -80,7 +80,7 @@ final readonly class StringIdentifier implements IdentifierContract, JsonSeriali
      *
      * @throws ValueError If the value is an empty string.
      */
-    public static function fromString(string $value): self
+    public static function fromString(string $value): static
     {
         return self::from($value);
     }
@@ -161,7 +161,7 @@ final readonly class StringIdentifier implements IdentifierContract, JsonSeriali
      * $slug->equals($restored); // true
      * ```
      */
-    public static function fromArray(array $array): self
+    public static function fromArray(array $array): static
     {
         $value = $array['string'] ?? $array['id'] ?? null;
 
@@ -194,7 +194,7 @@ final readonly class StringIdentifier implements IdentifierContract, JsonSeriali
      * $slug->equals($restored); // true
      * ```
      */
-    public static function fromJson(string $json): self
+    public static function fromJson(string $json): static
     {
         $data = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
 

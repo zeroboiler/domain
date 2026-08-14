@@ -165,7 +165,7 @@ final readonly class IntegerIdentifier implements IdentifierContract, JsonSerial
      * $id->equals($restored); // true
      * ```
      */
-    public static function fromArray(array $array): self
+    public static function fromArray(array $array): static
     {
         $value = $array['integer'] ?? $array['id'] ?? null;
 
@@ -202,7 +202,7 @@ final readonly class IntegerIdentifier implements IdentifierContract, JsonSerial
      * $id->equals($restored); // true
      * ```
      */
-    public static function fromJson(string $json): self
+    public static function fromJson(string $json): static
     {
         $data = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
 
