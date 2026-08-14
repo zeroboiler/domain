@@ -68,10 +68,10 @@ describe('AggregateRootId', function (): void {
         expect((string) $id)->toBe('550e8400-e29b-41d4-a716-446655440000');
     });
 
-    it('is readonly', function (): void {
-        $id = AggregateRootId::generate();
-
-        expect($id)->toBeInstanceOf(\ReadOnly::class); // implicit from final readonly
+    it('is readonly (final readonly class)', function (): void {
+        $reflection = new \ReflectionClass(AggregateRootId::class);
+        expect($reflection->isFinal())->toBeTrue();
+        expect($reflection->isReadOnly())->toBeTrue();
     });
 });
 
@@ -158,10 +158,10 @@ describe('Snapshot', function (): void {
             ->and(json_decode($json, true)['aggregate_type'])->toBe('Order');
     });
 
-    it('is readonly', function (): void {
-        $snapshot = Snapshot::create('Order', 'id-123', 1, []);
-
-        expect($snapshot)->toBeInstanceOf(\DateTimeImmutable::class); // property access check
+    it('is readonly (final readonly class)', function (): void {
+        $reflection = new \ReflectionClass(Snapshot::class);
+        expect($reflection->isFinal())->toBeTrue();
+        expect($reflection->isReadOnly())->toBeTrue();
     });
 });
 
