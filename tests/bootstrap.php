@@ -103,3 +103,19 @@ if (! class_exists(\TestDomainEvent::class)) {
         }
     }
 }
+
+// --- Concrete Identifier subclasses for testing abstract base classes ---
+
+if (! class_exists(\TestUuidIdentifier::class)) {
+    /**
+     * Concrete UuidIdentifier subclass for testing.
+     */
+    final readonly class TestUuidIdentifier extends \ZeroBoiler\Domain\Identifiers\UuidIdentifier {}
+}
+
+if (! class_exists(\TestUlidIdentifier::class)) {
+    /**
+     * Concrete UlidIdentifier subclass for testing.
+     */
+    final readonly class TestUlidIdentifier extends \ZeroBoiler\Domain\Identifiers\UlidIdentifier {}
+}
