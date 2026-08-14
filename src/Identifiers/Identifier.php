@@ -175,6 +175,22 @@ abstract class Identifier implements IdentifierContract, JsonSerializable
     }
 
     /**
+     * Convert the identifier to a JSON string.
+     *
+     * Convenience method for explicit JSON serialization without passing
+     * to `json_encode()`. Uses `JSON_THROW_ON_ERROR` for safety.
+     *
+     * @param  int  $options  JSON encoding options bitmask (default: JSON_UNESCAPED_UNICODE).
+     * @return string The JSON-encoded identifier representation.
+     *
+     * @since 1.66.0
+     */
+    public function toJson(int $options = JSON_UNESCAPED_UNICODE): string
+    {
+        return json_encode($this->toArray(), $options | JSON_THROW_ON_ERROR);
+    }
+
+    /**
      * Create an Identifier from a JSON string.
      *
      * Parses the JSON and delegates to {@see fromArray()} for hydration.

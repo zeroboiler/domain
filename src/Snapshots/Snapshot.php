@@ -136,6 +136,30 @@ final readonly class Snapshot implements \JsonSerializable
     }
 
     /**
+     * Convert the snapshot to a JSON string.
+     *
+     * Convenience method for explicit JSON serialization without passing
+     * to `json_encode()`. Uses `JSON_THROW_ON_ERROR` for safety.
+     *
+     * @param  int  $options  JSON encoding options bitmask (default: JSON_UNESCAPED_UNICODE).
+     * @return string The JSON-encoded snapshot representation.
+     *
+     * @since 1.66.0
+     *
+     * @example
+     * ```php
+     * $snapshot = Snapshot::create(Order::class, $id, 50, $state);
+     * $json = $snapshot->toJson();
+     * $restored = Snapshot::fromJson($json);
+     * $snapshot->equals($restored); // true
+     * ```
+     */
+    public function toJson(int $options = JSON_UNESCAPED_UNICODE): string
+    {
+        return json_encode($this->toArray(), $options | JSON_THROW_ON_ERROR);
+    }
+
+    /**
      * Create a Snapshot from a JSON string.
      *
      * Parses the JSON and delegates to {@see fromArray()} for hydration.
