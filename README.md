@@ -2639,6 +2639,18 @@ $restored = unserialize($serialized);
 | Exception hierarchy | ✅ | `DomainException` → 7 concrete subclasses with `errorCode()` and RFC 9457 `toErrorArray()` |
 | PHPUnit/Pest test coverage | ✅ | 100+ test files covering every source class, edge cases, and cross-package integration |
 
+## v1.66.0 (2026-08-14)
+
+- Feat: Add `toJson()` to `Entity` and `AggregateRoot` contracts for complete serialization API coverage — all domain classes now support `toArray()`/`fromJson()`/`toJson()` consistently
+- Feat: Add `toJson()` to `AggregateRootId`, `Contracts\AggregateRoot`, `Contracts\Entity`, `Contracts\Identifier`, `Identifiers\Identifier`, `Snapshots\Snapshot`, `InMemoryUnitOfWork`
+- Feat: Add `getPendingEvents()` and `clear()` to `InMemoryUnitOfWork` with `@since 1.66.0` annotations
+- Docs: Update Serialization Contract table with `toJson()` column for all classes
+- Quality: Manual code review — all 40 source files verified production-ready
+
+## v1.65.0 (2026-08-14)
+
+- Internal: Version bump for toJson() contract additions
+
 ## v1.62.0 (2026-08-14)
 
 - Docs: Add **Serialization Contract** table — comprehensive serialization support matrix for all domain classes (toArray/fromArray/fromJson/jsonSerialize/__serialize/__unserialize)
