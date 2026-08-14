@@ -88,4 +88,59 @@ abstract class ValueObject extends BaseValueObject
 
         return $this->toArray() === $other->toArray();
     }
+
+    /**
+     * Convert the value object to a JSON string.
+     *
+     * Convenience method for explicit JSON serialization without passing
+     * to `json_encode()`. Uses `JSON_THROW_ON_ERROR` for safety.
+     *
+     * @param  int  $options  JSON encoding options bitmask (default: JSON_UNESCAPED_UNICODE).
+     * @return string The JSON-encoded value object representation.
+     *
+     * @since 2.14.0
+     *
+     * @example
+     * ```php
+     * $address = Address::fromArray(['street' => '123 Main', 'city' => 'NYC', 'country' => 'US']);
+     * $json = $address->toJson();
+     * echo $json; // {"street":"123 Main","city":"NYC","country":"US"}
+     * ```
+     */
+    public function toJson(mixed $options = JSON_UNESCAPED_UNICODE): string
+    {
+        return json_encode($this->toArray(), (int) $options | JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * Create a value object from a JSON string.
+     *
+     * Parses the JSON and delegates to {@see fromArray()} for hydration.
+     * Enables round-trip serialization via `json_encode()` → `fromJson()`.
+     *
+     * @param  string  $json  A valid JSON object string.
+     * @return static A new value object instance hydrated from the JSON data.
+     *
+     * @throws \JsonException If the JSON string is invalid.
+     * @throws \InvalidArgumentException If the JSON does not decode to an array.
+     *
+     * @since 2.14.0
+     *
+     * @example
+     * ```php
+     * $json = json_encode($address->toArray());
+     * $restored = Address::fromJson($json);
+     * $address->equals($restored); // true
+     * ```
+     */
+    public static function fromJson(string $json): static
+    {
+        $data = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
+
+        if (! is_array($data)) {
+            throw new \InvalidArgumentException('JSON must decode to an array/object.');
+        }
+
+        return static::fromArray($data);
+    }
 }

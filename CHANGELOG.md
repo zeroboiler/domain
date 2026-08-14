@@ -4,6 +4,20 @@ All notable changes to the `zeroboiler/domain` package will be documented in thi
 
 ## [Unreleased]
 
+## [1.64.1] - 2026-08-14
+
+### Added
+- `ValueObject::toJson()` — convenience method for explicit JSON serialization with configurable encoding options
+- `ValueObject::fromJson()` — factory method for reconstructing value objects from JSON strings, completing the `fromArray()`/`toArray()`/`toJson()`/`fromJson()` serialization quartet
+- `TestValueObject::fromArray()` — added missing `fromArray()` to test fixture for `ValueObject::fromJson()` test coverage
+- `Unit/ValueObjectSerdeTest` — comprehensive test suite for `ValueObject::toJson()`/`fromJson()` round-trip serialization
+
+### Changed
+- Bump package version to 1.64.1
+
+### Quality
+- Manual production readiness audit — all 40 source files verified: strict_types, return type declarations, typed properties, docblocks, PHP 8.5 syntax, immutability, domain invariants, JSON serialization consistency
+
 ## [1.64.0] - 2026-08-14
 
 ### Added

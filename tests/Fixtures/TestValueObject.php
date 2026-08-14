@@ -26,6 +26,11 @@ final class TestValueObject extends ValueObject implements \Stringable
         return new self($value);
     }
 
+    public static function fromArray(array $data): static
+    {
+        return new static($data['value']);
+    }
+
     public function toArray(): array
     {
         return [
