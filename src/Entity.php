@@ -253,6 +253,7 @@ abstract class Entity implements EntityContract, \JsonSerializable
      * $restored->toArray(); // Same as original
      * ```
      */
+    #[\Override]
     public static function fromJson(string $json): static
     {
         $data = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
@@ -281,6 +282,7 @@ abstract class Entity implements EntityContract, \JsonSerializable
      * echo $json; // {"id":"42","type":"OrderItem","product_id":"prod-1","quantity":3}
      * ```
      */
+    #[\Override]
     public function toJson(int $options = JSON_UNESCAPED_UNICODE): string
     {
         return json_encode($this->toArray(), $options | JSON_THROW_ON_ERROR);
