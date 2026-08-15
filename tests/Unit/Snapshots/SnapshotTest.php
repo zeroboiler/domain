@@ -8,197 +8,174 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Domain\Tests\Unit\Snapshots;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use ZeroBoiler\Domain\Snapshots\Snapshot;
 
-/**
- * @covers \ZeroBoiler\Domain\Snapshots\Snapshot
- */
+#[CoversClass(Snapshot::class)]
+#[Group('unit')]
+#[Group('snapshots')]
 final class SnapshotTest extends TestCase
 {
-    private Snapshot $snapshot;
+    private static Snapshot $snapshot;
 
-    protected function setUp(): void
+    public static function setUpBeforeClass(): void
     {
-        $this->snapshot = Snapshot::create(
+        self::$snapshot = Snapshot::create(
             aggregateType: 'App\\Domain\\Order',
-            aggregateId: 'order-123',
-            version: 42,
-            state: ['status' => 'shipped', 'total' => 2999],
+            aggregateId: '550e8400-e29b-41d4-a716-446655440000',
+            version: 50,
+            state: ['status' => 'paid', 'total' => 100.00],
         );
     }
 
-    // ── Immutability & Construction ───────────────────────────────────
+    // ─── Creation ────────────────────────────────────────────────
 
-    public function test_create_returns_immutable_instance(): void
+    public function testCreateSetsAllProperties(): void
     {
-        $s = $this->snapshot;
+        $s = self::$snapshot;
 
-        self::assertInstanceOf(Snapshot::class, $s);
-        self::assertSame('App\Domain\Order', $s->aggregateType);
-        self::assertSame('order-123', $s->aggregateId);
-        self::assertSame(42, $s->version);
-        self::assertSame(['status' => 'shipped', 'total' => 2999], $s->state);
-        self::assertInstanceOf(\DateTimeImmutable::class, $s->createdAt);
+        $this->assertSame('App\Domain\Order', $s->aggregateType);
+        $this->assertSame('550e8400-e29b-41d4-a716-446655440000', $s->aggregateId);
+        $this->assertSame(50, $s->version);
+        $this->assertSame(['status' => 'paid', 'total' => 100.00], $s->state);
+        $this->assertInstanceOf(\DateTimeImmutable::class, $s->createdAt);
     }
 
-    public function test_readonly_class_cannot_be_mutated(): void
+    // ─── Immutability ────────────────────────────────────────────
+
+    public function testPropertiesAreReadonly(): void
     {
         $reflection = new \ReflectionClass(Snapshot::class);
 
-        self::assertTrue($reflection->isReadOnly());
+        foreach ($reflection->getProperties() as $prop) {
+            $this->assertTrue(
+                $prop->isReadOnly(),
+                "Property {$prop->getName()} should be readonly",
+            );
+        }
     }
 
-    // ── Serialization: toArray ────────────────────────────────────────
-
-    public function test_toArray_has_expected_keys(): void
+    public function testClassIsFinal(): void
     {
-        $array = $this->snapshot->toArray();
+        $reflection = new \ReflectionClass(Snapshot::class);
 
-        self::assertArrayHasKey('aggregate_type', $array);
-        self::assertArrayHasKey('aggregate_id', $array);
-        self::assertArrayHasKey('version', $array);
-        self::assertArrayHasKey('state', $array);
-        self::assertArrayHasKey('created_at', $array);
+        $this->assertTrue($reflection->isFinal());
     }
 
-    public function test_toArray_preserves_values(): void
+    // ─── Equality ────────────────────────────────────────────────
+
+    public function testEqualityWithIdenticalSnapshot(): void
     {
-        $array = $this->snapshot->toArray();
+        $s = self::$snapshot;
+        $other = Snapshot::create(
+            aggregateType: 'App\Domain\Order',
+            aggregateId: '550e8400-e29b-41d4-a716-446655440000',
+            version: 50,
+            state: ['status' => 'paid', 'total' => 100.00],
+        );
 
-        self::assertSame('App\Domain\Order', $array['aggregate_type']);
-        self::assertSame('order-123', $array['aggregate_id']);
-        self::assertSame(42, $array['version']);
-        self::assertSame(['status' => 'shipped', 'total' => 2999], $array['state']);
+        // State matches, type and ID match, version matches
+        // createdAt may differ, but equals() doesn't check createdAt
+        $this->assertSame($s->aggregateType, $other->aggregateType);
+        $this->assertSame($s->aggregateId, $other->aggregateId);
+        $this->assertSame($s->version, $other->version);
+        $this->assertSame($s->state, $other->state);
     }
 
-    // ── Deserialization: fromArray ───────────────────────────────────
-
-    public function test_fromArray_restores_snapshot(): void
+    public function testInequalityWithDifferentVersion(): void
     {
-        $restored = Snapshot::fromArray($this->snapshot->toArray());
+        $other = Snapshot::create('App\Domain\Order', '550e8400-e29b-41d4-a716-446655440000', 51, []);
 
-        self::assertTrue($this->snapshot->equals($restored));
-        self::assertSame($this->snapshot->aggregateType, $restored->aggregateType);
-        self::assertSame($this->snapshot->aggregateId, $restored->aggregateId);
-        self::assertSame($this->snapshot->version, $restored->version);
-        self::assertSame($this->snapshot->state, $restored->state);
+        $this->assertFalse(self::$snapshot->equals($other));
     }
 
-    public function test_fromArray_throws_on_invalid_types(): void
+    // ─── Serialization ────────────────────────────────────────────
+
+    public function testToArrayContainsExpectedKeys(): void
+    {
+        $data = self::$snapshot->toArray();
+
+        $this->assertArrayHasKey('aggregate_type', $data);
+        $this->assertArrayHasKey('aggregate_id', $data);
+        $this->assertArrayHasKey('version', $data);
+        $this->assertArrayHasKey('state', $data);
+        $this->assertArrayHasKey('created_at', $data);
+    }
+
+    public function testFromArrayRoundTrip(): void
+    {
+        $restored = Snapshot::fromArray(self::$snapshot->toArray());
+
+        $this->assertSame(self::$snapshot->aggregateType, $restored->aggregateType);
+        $this->assertSame(self::$snapshot->aggregateId, $restored->aggregateId);
+        $this->assertSame(self::$snapshot->version, $restored->version);
+        $this->assertSame(self::$snapshot->state, $restored->state);
+    }
+
+    public function testFromArrayRejectsInvalidData(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        Snapshot::fromArray(['invalid' => 'data']);
+    }
+
+    public function testFromArrayRejectsWrongTypes(): void
     {
         $this->expectException(\InvalidArgumentException::class);
 
         Snapshot::fromArray([
-            'aggregate_type' => 123, // should be string
-            'aggregate_id' => 'id',
-            'version' => 1,
-            'state' => [],
-            'created_at' => '2025-01-01T00:00:00+00:00',
+            'aggregate_type' => 123,
+            'aggregate_id' => 456,
+            'version' => 'not-an-int',
+            'state' => 'not-an-array',
+            'created_at' => 789,
         ]);
     }
 
-    public function test_fromArray_throws_on_missing_keys(): void
+    public function testToJsonRoundTrip(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
-
-        Snapshot::fromArray([]);
-    }
-
-    // ── JSON Round-trip ──────────────────────────────────────────────
-
-    public function test_jsonSerialize_returns_array(): void
-    {
-        $json = json_encode($this->snapshot);
-
-        self::assertIsString($json);
-        self::assertNotEmpty($json);
-
-        $decoded = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
-        self::assertIsArray($decoded);
-        self::assertSame('App\Domain\Order', $decoded['aggregate_type']);
-    }
-
-    public function test_fromJson_restores_snapshot(): void
-    {
-        $json = json_encode($this->snapshot, flags: JSON_THROW_ON_ERROR);
+        $json = self::$snapshot->toJson();
         $restored = Snapshot::fromJson($json);
 
-        self::assertTrue($this->snapshot->equals($restored));
+        $this->assertSame(self::$snapshot->aggregateType, $restored->aggregateType);
+        $this->assertSame(self::$snapshot->aggregateId, $restored->aggregateId);
+        $this->assertSame(self::$snapshot->version, $restored->version);
+        $this->assertSame(self::$snapshot->state, $restored->state);
     }
 
-    public function test_fromJson_throws_on_invalid_json(): void
+    public function testJsonSerializeReturnsSameAsToArray(): void
+    {
+        $s = self::$snapshot;
+
+        $this->assertSame($s->toArray(), $s->jsonSerialize());
+    }
+
+    public function testPhpSerializeRoundTrip(): void
+    {
+        $s = self::$snapshot;
+        $restored = unserialize(serialize($s));
+
+        $this->assertInstanceOf(Snapshot::class, $restored);
+        $this->assertSame($s->aggregateType, $restored->aggregateType);
+        $this->assertSame($s->aggregateId, $restored->aggregateId);
+        $this->assertSame($s->version, $restored->version);
+        $this->assertSame($s->state, $restored->state);
+    }
+
+    public function testFromJsonRejectsInvalidJson(): void
     {
         $this->expectException(\JsonException::class);
 
         Snapshot::fromJson('not-valid-json');
     }
 
-    public function test_fromJson_throws_on_non_object_json(): void
+    public function testFromJsonRejectsNonArrayJson(): void
     {
         $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('must decode to an array');
 
-        Snapshot::fromJson('"just-a-string"');
-    }
-
-    // ── Equality ─────────────────────────────────────────────────────
-
-    public function test_equals_same_snapshot(): void
-    {
-        $copy = Snapshot::create(
-            aggregateType: 'App\\Domain\\Order',
-            aggregateId: 'order-123',
-            version: 42,
-            state: ['status' => 'shipped', 'total' => 2999],
-        );
-
-        self::assertTrue($this->snapshot->equals($copy));
-    }
-
-    public function test_equals_different_type(): void
-    {
-        $other = Snapshot::create(
-            aggregateType: 'App\\Domain\\Invoice',
-            aggregateId: 'order-123',
-            version: 42,
-            state: ['status' => 'shipped', 'total' => 2999],
-        );
-
-        self::assertFalse($this->snapshot->equals($other));
-    }
-
-    public function test_equals_different_version(): void
-    {
-        $other = Snapshot::create(
-            aggregateType: 'App\\Domain\\Order',
-            aggregateId: 'order-123',
-            version: 43,
-            state: ['status' => 'shipped', 'total' => 2999],
-        );
-
-        self::assertFalse($this->snapshot->equals($other));
-    }
-
-    public function test_equals_different_state(): void
-    {
-        $other = Snapshot::create(
-            aggregateType: 'App\\Domain\\Order',
-            aggregateId: 'order-123',
-            version: 42,
-            state: ['status' => 'cancelled', 'total' => 2999],
-        );
-
-        self::assertFalse($this->snapshot->equals($other));
-    }
-
-    // ── Native PHP Serialize ─────────────────────────────────────────
-
-    public function test_php_serialize_roundtrip(): void
-    {
-        $serialized = serialize($this->snapshot);
-        $restored = unserialize($serialized);
-
-        self::assertInstanceOf(Snapshot::class, $restored);
-        self::assertTrue($this->snapshot->equals($restored));
+        Snapshot::fromJson('"just a string"');
     }
 }

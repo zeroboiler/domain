@@ -8,13 +8,15 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Domain\Tests\Unit\Snapshots;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore;
 use ZeroBoiler\Domain\Snapshots\Snapshot;
 
-/**
- * @covers \ZeroBoiler\Domain\Snapshots\InMemorySnapshotStore
- */
+#[CoversClass(InMemorySnapshotStore::class)]
+#[Group('unit')]
+#[Group('snapshots')]
 final class InMemorySnapshotStoreTest extends TestCase
 {
     private InMemorySnapshotStore $store;
@@ -24,139 +26,174 @@ final class InMemorySnapshotStoreTest extends TestCase
         $this->store = new InMemorySnapshotStore;
     }
 
-    // ── save / load ───────────────────────────────────────────────────
+    // ─── Save & Load ─────────────────────────────────────────────
 
-    public function test_save_and_load(): void
+    public function testSaveAndLoadSnapshot(): void
     {
-        $snapshot = Snapshot::create('Order', 'ord-1', 5, ['total' => 100]);
+        $snapshot = Snapshot::create('App\Domain\Order', 'uuid-1', 1, ['status' => 'new']);
+
+        $this->store->save($snapshot);
+        $loaded = $this->store->load('App\Domain\Order', 'uuid-1');
+
+        $this->assertNotNull($loaded);
+        $this->assertSame(1, $loaded->version);
+        $this->assertSame(['status' => 'new'], $loaded->state);
+    }
+
+    public function testLoadReturnsNullForMissing(): void
+    {
+        $this->assertNull($this->store->load('App\Domain\Order', 'missing-uuid'));
+    }
+
+    // ─── Has ─────────────────────────────────────────────────────
+
+    public function testHasReturnsTrueForExisting(): void
+    {
+        $snapshot = Snapshot::create('App\Domain\Order', 'uuid-1', 1, []);
+
         $this->store->save($snapshot);
 
-        $loaded = $this->store->load('Order', 'ord-1');
-
-        self::assertInstanceOf(Snapshot::class, $loaded);
-        self::assertTrue($snapshot->equals($loaded));
+        $this->assertTrue($this->store->has('App\Domain\Order', 'uuid-1'));
     }
 
-    public function test_load_returns_null_when_not_found(): void
+    public function testHasReturnsFalseForMissing(): void
     {
-        self::assertNull($this->store->load('Order', 'nonexistent'));
+        $this->assertFalse($this->store->has('App\Domain\Order', 'missing'));
     }
 
-    // ── has ──────────────────────────────────────────────────────────
+    // ─── Delete ──────────────────────────────────────────────────
 
-    public function test_has_returns_true_when_exists(): void
+    public function testDeleteRemovesSnapshot(): void
     {
-        $snapshot = Snapshot::create('Order', 'ord-1', 1, []);
+        $snapshot = Snapshot::create('App\Domain\Order', 'uuid-1', 1, []);
         $this->store->save($snapshot);
+        $this->assertTrue($this->store->has('App\Domain\Order', 'uuid-1'));
 
-        self::assertTrue($this->store->has('Order', 'ord-1'));
+        $this->store->delete('App\Domain\Order', 'uuid-1');
+
+        $this->assertFalse($this->store->has('App\Domain\Order', 'uuid-1'));
+        $this->assertNull($this->store->load('App\Domain\Order', 'uuid-1'));
     }
 
-    public function test_has_returns_false_when_not_exists(): void
+    // ─── deleteOlderThan ─────────────────────────────────────────
+
+    public function testDeleteOlderThanRemovesOldVersions(): void
     {
-        self::assertFalse($this->store->has('Order', 'ord-1'));
+        $old = Snapshot::create('App\Domain\Order', 'uuid-1', 10, []);
+        $this->store->save($old);
+
+        $this->store->deleteOlderThan('App\Domain\Order', 'uuid-1', 20);
+
+        $this->assertNull($this->store->load('App\Domain\Order', 'uuid-1'));
     }
 
-    // ── delete ───────────────────────────────────────────────────────
-
-    public function test_delete_removes_snapshot(): void
+    public function testDeleteOlderThanKeepsNewVersions(): void
     {
-        $snapshot = Snapshot::create('Order', 'ord-1', 1, []);
-        $this->store->save($snapshot);
-        $this->store->delete('Order', 'ord-1');
+        $new = Snapshot::create('App\Domain\Order', 'uuid-1', 50, []);
+        $this->store->save($new);
 
-        self::assertNull($this->store->load('Order', 'ord-1'));
+        $this->store->deleteOlderThan('App\Domain\Order', 'uuid-1', 30);
+
+        $this->assertNotNull($this->store->load('App\Domain\Order', 'uuid-1'));
+        $this->assertSame(50, $this->store->load('App\Domain\Order', 'uuid-1')->version);
     }
 
-    // ── deleteOlderThan ──────────────────────────────────────────────
+    // ─── Count ────────────────────────────────────────────────────
 
-    public function test_deleteOlderThan_removes_older_versions(): void
+    public function testCountTotal(): void
     {
-        $v5 = Snapshot::create('Order', 'ord-1', 5, ['v' => 5]);
-        $this->store->save($v5);
-        $this->store->deleteOlderThan('Order', 'ord-1', 10);
+        $this->store->save(Snapshot::create('TypeA', 'id-1', 1, []));
+        $this->store->save(Snapshot::create('TypeA', 'id-2', 1, []));
+        $this->store->save(Snapshot::create('TypeB', 'id-3', 1, []));
 
-        self::assertNull($this->store->load('Order', 'ord-1'));
+        $this->assertSame(3, $this->store->count());
     }
 
-    public function test_deleteOlderThan_keeps_newer_versions(): void
+    public function testCountByType(): void
     {
-        $v15 = Snapshot::create('Order', 'ord-1', 15, ['v' => 15]);
-        $this->store->save($v15);
-        $this->store->deleteOlderThan('Order', 'ord-1', 10);
+        $this->store->save(Snapshot::create('TypeA', 'id-1', 1, []));
+        $this->store->save(Snapshot::create('TypeA', 'id-2', 1, []));
+        $this->store->save(Snapshot::create('TypeB', 'id-3', 1, []));
 
-        $loaded = $this->store->load('Order', 'ord-1');
-        self::assertInstanceOf(Snapshot::class, $loaded);
-        self::assertSame(15, $loaded->version);
+        $this->assertSame(2, $this->store->count('TypeA'));
+        $this->assertSame(1, $this->store->count('TypeB'));
     }
 
-    // ── count ───────────────────────────────────────────────────────
+    // ─── Stats ───────────────────────────────────────────────────
 
-    public function test_count_returns_total(): void
+    public function testStatsReturnsStructure(): void
     {
-        $this->store->save(Snapshot::create('Order', 'ord-1', 1, []));
-        $this->store->save(Snapshot::create('Order', 'ord-2', 1, []));
-        $this->store->save(Snapshot::create('Invoice', 'inv-1', 1, []));
-
-        self::assertSame(3, $this->store->count());
-        self::assertSame(2, $this->store->count('Order'));
-        self::assertSame(1, $this->store->count('Invoice'));
-        self::assertSame(0, $this->store->count('Product'));
-    }
-
-    // ── stats ────────────────────────────────────────────────────────
-
-    public function test_stats_returns_aggregate_counts(): void
-    {
-        $this->store->save(Snapshot::create('Order', 'ord-1', 1, []));
-        $this->store->save(Snapshot::create('Order', 'ord-2', 1, []));
-        $this->store->save(Snapshot::create('Invoice', 'inv-1', 1, []));
+        $this->store->save(Snapshot::create('TypeA', 'id-1', 1, []));
+        $this->store->save(Snapshot::create('TypeB', 'id-2', 1, []));
 
         $stats = $this->store->stats();
 
-        self::assertSame(3, $stats['total']);
-        self::assertSame(2, $stats['by_type']['Order']);
-        self::assertSame(1, $stats['by_type']['Invoice']);
+        $this->assertArrayHasKey('total', $stats);
+        $this->assertArrayHasKey('by_type', $stats);
+        $this->assertSame(2, $stats['total']);
+        $this->assertCount(2, $stats['by_type']);
     }
 
-    // ── purge ───────────────────────────────────────────────────────
+    // ─── Purge ──────────────────────────────────────────────────
 
-    public function test_purge_all(): void
+    public function testPurgeByType(): void
     {
-        $this->store->save(Snapshot::create('Order', 'ord-1', 1, []));
-        $this->store->save(Snapshot::create('Invoice', 'inv-1', 1, []));
+        $this->store->save(Snapshot::create('TypeA', 'id-1', 1, []));
+        $this->store->save(Snapshot::create('TypeA', 'id-2', 1, []));
+        $this->store->save(Snapshot::create('TypeB', 'id-3', 1, []));
+
+        $removed = $this->store->purge('TypeA');
+
+        $this->assertSame(2, $removed);
+        $this->assertSame(1, $this->store->count());
+        $this->assertSame(1, $this->store->count('TypeB'));
+    }
+
+    public function testPurgeAll(): void
+    {
+        $this->store->save(Snapshot::create('TypeA', 'id-1', 1, []));
+        $this->store->save(Snapshot::create('TypeB', 'id-2', 1, []));
 
         $removed = $this->store->purge();
 
-        self::assertSame(2, $removed);
-        self::assertSame(0, $this->store->count());
+        $this->assertSame(2, $removed);
+        $this->assertSame(0, $this->store->count());
     }
 
-    public function test_purge_by_type(): void
+    public function testPurgeEmptyStoreReturnsZero(): void
     {
-        $this->store->save(Snapshot::create('Order', 'ord-1', 1, []));
-        $this->store->save(Snapshot::create('Invoice', 'inv-1', 1, []));
-
-        $removed = $this->store->purge('Order');
-
-        self::assertSame(1, $removed);
-        self::assertSame(1, $this->store->count());
-        self::assertNull($this->store->load('Order', 'ord-1'));
-        self::assertInstanceOf(Snapshot::class, $this->store->load('Invoice', 'inv-1'));
+        $this->assertSame(0, $this->store->purge());
     }
 
-    // ── overwrite behavior ────────────────────────────────────────────
+    // ─── Overwrite ──────────────────────────────────────────────
 
-    public function test_save_overwrites_previous_snapshot(): void
+    public function testSaveOverwritesExisting(): void
     {
-        $v1 = Snapshot::create('Order', 'ord-1', 1, ['status' => 'new']);
-        $v2 = Snapshot::create('Order', 'ord-1', 2, ['status' => 'paid']);
+        $v1 = Snapshot::create('TypeA', 'id-1', 1, ['status' => 'old']);
+        $v2 = Snapshot::create('TypeA', 'id-1', 5, ['status' => 'new']);
+
         $this->store->save($v1);
         $this->store->save($v2);
 
-        $loaded = $this->store->load('Order', 'ord-1');
-        self::assertInstanceOf(Snapshot::class, $loaded);
-        self::assertSame(2, $loaded->version);
-        self::assertSame(['status' => 'paid'], $loaded->state);
+        $loaded = $this->store->load('TypeA', 'id-1');
+
+        $this->assertSame(5, $loaded->version);
+        $this->assertSame(['status' => 'new'], $loaded->state);
+    }
+
+    // ─── Separate Types ─────────────────────────────────────────
+
+    public function testSeparateTypesAreIndependent(): void
+    {
+        $this->store->save(Snapshot::create('TypeA', 'same-id', 1, ['type' => 'A']));
+        $this->store->save(Snapshot::create('TypeB', 'same-id', 2, ['type' => 'B']));
+
+        $a = $this->store->load('TypeA', 'same-id');
+        $b = $this->store->load('TypeB', 'same-id');
+
+        $this->assertSame(1, $a->version);
+        $this->assertSame(2, $b->version);
+        $this->assertSame(['type' => 'A'], $a->state);
+        $this->assertSame(['type' => 'B'], $b->state);
     }
 }

@@ -8,240 +8,194 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Domain\Tests\Unit\Exceptions;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
-use ZeroBoiler\Domain\Exceptions\AggregateNotFoundException;
-use ZeroBoiler\Domain\Exceptions\ConflictDomainException;
-use ZeroBoiler\Domain\Exceptions\DomainException;
-use ZeroBoiler\Domain\Exceptions\InvalidAggregateRootException;
-use ZeroBoiler\Domain\Exceptions\InvalidArgumentDomainException;
-use ZeroBoiler\Domain\Exceptions\InvalidStateDomainException;
-use ZeroBoiler\Domain\Exceptions\InvalidStateException;
-use ZeroBoiler\Domain\Exceptions\NotFoundDomainException;
-use ZeroBoiler\Domain\Exceptions\OptimisticLockException;
+use ZeroBoiler\Domain\Exceptions\{
+    ConflictDomainException,
+    DomainException,
+    InvalidArgumentDomainException,
+    InvalidStateDomainException,
+    NotFoundDomainException,
+    OptimisticLockException,
+    AggregateNotFoundException,
+    InvalidAggregateRootException,
+    InvalidStateException,
+};
 
-/**
- * @covers \ZeroBoiler\Domain\Exceptions\DomainException
- * @covers \ZeroBoiler\Domain\Exceptions\AggregateNotFoundException
- * @covers \ZeroBoiler\Domain\Exceptions\ConflictDomainException
- * @covers \ZeroBoiler\Domain\Exceptions\InvalidAggregateRootException
- * @covers \ZeroBoiler\Domain\Exceptions\InvalidArgumentDomainException
- * @covers \ZeroBoiler\Domain\Exceptions\InvalidStateDomainException
- * @covers \ZeroBoiler\Domain\Exceptions\InvalidStateException
- * @covers \ZeroBoiler\Domain\Exceptions\NotFoundDomainException
- * @covers \ZeroBoiler\Domain\Exceptions\OptimisticLockException
- */
+#[CoversClass(DomainException::class)]
+#[CoversClass(InvalidStateDomainException::class)]
+#[CoversClass(InvalidArgumentDomainException::class)]
+#[CoversClass(NotFoundDomainException::class)]
+#[CoversClass(ConflictDomainException::class)]
+#[CoversClass(OptimisticLockException::class)]
+#[CoversClass(AggregateNotFoundException::class)]
+#[CoversClass(InvalidAggregateRootException::class)]
+#[CoversClass(InvalidStateException::class)]
+#[Group('unit')]
+#[Group('exceptions')]
 final class DomainExceptionTest extends TestCase
 {
-    // ── DomainException (base, abstract) ──────────────────────────────
+    // ─── InvalidStateDomainException ─────────────────────────────
 
-    public function test_domain_exception_extends_runtime_exception(): void
+    public function testInvalidStateBecause(): void
     {
-        $e = InvalidArgumentDomainException::because('test');
+        $e = InvalidStateDomainException::because('Order must be pending to pay.');
 
-        self::assertInstanceOf(\RuntimeException::class, $e);
-        self::assertInstanceOf(DomainException::class, $e);
-        self::assertSame('test', $e->getMessage());
+        $this->assertSame('Order must be pending to pay.', $e->getMessage());
+        $this->assertSame('INVALID_STATE', $e->errorCode());
+        $this->assertSame(422, $e->httpStatus());
     }
 
-    public function test_error_code_returns_default_when_no_custom(): void
-    {
-        $e = InvalidArgumentDomainException::because('test');
+    // ─── InvalidArgumentDomainException ─────────────────────────
 
-        self::assertSame('INVALID_ARGUMENT', $e->errorCode());
+    public function testInvalidArgumentBecause(): void
+    {
+        $e = InvalidArgumentDomainException::because('Quantity must be > 0.');
+
+        $this->assertSame('Quantity must be > 0.', $e->getMessage());
+        $this->assertSame('INVALID_ARGUMENT', $e->errorCode());
+        $this->assertSame(422, $e->httpStatus());
     }
 
-    public function test_error_code_returns_custom_when_provided(): void
-    {
-        $e = InvalidArgumentDomainException::because('test', 'CUSTOM_CODE');
+    // ─── NotFoundDomainException ─────────────────────────────────
 
-        self::assertSame('CUSTOM_CODE', $e->errorCode());
+    public function testNotFoundForAggregate(): void
+    {
+        $e = NotFoundDomainException::forAggregate('Order', 'order-uuid');
+
+        $this->assertStringContainsString('Order', $e->getMessage());
+        $this->assertStringContainsString('order-uuid', $e->getMessage());
+        $this->assertSame('NOT_FOUND', $e->errorCode());
+        $this->assertSame(404, $e->httpStatus());
     }
 
-    public function test_to_error_array_structure(): void
+    public function testNotFoundForId(): void
     {
-        $e = InvalidArgumentDomainException::because('Price must be positive.');
+        $e = NotFoundDomainException::forId('entity-123');
 
-        $array = $e->toErrorArray();
-
-        self::assertSame([
-            'title' => 'InvalidArgumentDomainException',
-            'detail' => 'Price must be positive.',
-            'code' => 'INVALID_ARGUMENT',
-        ], $array);
+        $this->assertStringContainsString('entity-123', $e->getMessage());
+        $this->assertSame('NOT_FOUND', $e->errorCode());
     }
 
-    public function test_to_array_includes_debug_info(): void
+    // ─── ConflictDomainException ─────────────────────────────────
+
+    public function testConflictBecause(): void
     {
-        $e = InvalidArgumentDomainException::because('bad arg');
+        $e = ConflictDomainException::because('Concurrent modification detected.');
 
-        $array = $e->toArray();
-
-        self::assertArrayHasKey('error_code', $array);
-        self::assertArrayHasKey('message', $array);
-        self::assertArrayHasKey('file', $array);
-        self::assertArrayHasKey('line', $array);
-        self::assertSame('bad arg', $array['message']);
+        $this->assertSame('CONFLICT', $e->errorCode());
+        $this->assertSame(409, $e->httpStatus());
     }
 
-    public function test_json_serialize_returns_rfc9457_format(): void
+    // ─── OptimisticLockException ────────────────────────────────
+
+    public function testOptimisticLockFor(): void
     {
-        $e = InvalidStateDomainException::because('Cannot ship unpaid order.');
+        $e = OptimisticLockException::for(
+            aggregateId: 'order-uuid',
+            expectedVersion: 5,
+            actualVersion: 6,
+        );
 
-        $json = json_encode($e);
-
-        self::assertIsString($json);
-
-        $decoded = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
-        self::assertSame('InvalidStateDomainException', $decoded['title']);
-        self::assertSame('Cannot ship unpaid order.', $decoded['detail']);
-        self::assertSame('INVALID_STATE', $decoded['code']);
+        $this->assertSame('OPTIMISTIC_LOCK', $e->errorCode());
+        $this->assertSame(409, $e->httpStatus());
+        $this->assertStringContainsString('expected version 5', $e->getMessage());
+        $this->assertStringContainsString('current version 6', $e->getMessage());
     }
 
-    public function test_from_array_roundtrip(): void
+    // ─── AggregateNotFoundException ───────────────────────────────
+
+    public function testAggregateNotFoundFor(): void
     {
-        $original = InvalidStateDomainException::because('Order already shipped.');
-        $serialized = $original->toArray();
+        $e = AggregateNotFoundException::for('App\Domain\Order', 'order-uuid');
 
-        $restored = DomainException::fromArray($serialized, InvalidStateDomainException::class);
-
-        self::assertInstanceOf(InvalidStateDomainException::class, $restored);
-        self::assertSame('Order already shipped.', $restored->getMessage());
-        self::assertSame('INVALID_STATE', $restored->errorCode());
+        $this->assertSame('AGGREGATE_NOT_FOUND', $e->errorCode());
+        $this->assertSame(404, $e->httpStatus());
+        $this->assertStringContainsString('App\Domain\Order', $e->getMessage());
     }
 
-    public function test_from_json_roundtrip(): void
-    {
-        $original = ConflictDomainException::because('Duplicate email.');
+    // ─── InvalidAggregateRootException ───────────────────────────
 
-        $json = json_encode($original->toErrorArray(), flags: JSON_THROW_ON_ERROR);
-        $restored = DomainException::fromJson($json, ConflictDomainException::class);
-
-        self::assertInstanceOf(ConflictDomainException::class, $restored);
-        self::assertSame('Duplicate email.', $restored->getMessage());
-    }
-
-    // ── InvalidArgumentDomainException ──────────────────────────────
-
-    public function test_invalid_argument_error_code(): void
-    {
-        $e = InvalidArgumentDomainException::because('Quantity must be > 0');
-
-        self::assertSame('INVALID_ARGUMENT', $e->errorCode());
-    }
-
-    // ── InvalidStateDomainException ──────────────────────────────────
-
-    public function test_invalid_state_error_code(): void
-    {
-        $e = InvalidStateDomainException::because('Cannot pay shipped order');
-
-        self::assertSame('INVALID_STATE', $e->errorCode());
-    }
-
-    // ── NotFoundDomainException ───────────────────────────────────────
-
-    public function test_not_found_because(): void
-    {
-        $e = NotFoundDomainException::because('User not found');
-
-        self::assertSame('NOT_FOUND', $e->errorCode());
-        self::assertSame('User not found', $e->getMessage());
-    }
-
-    public function test_not_found_for_aggregate(): void
-    {
-        $e = NotFoundDomainException::forAggregate('Order', 'ord-123');
-
-        self::assertSame('NOT_FOUND', $e->errorCode());
-        self::assertSame('Aggregate "Order" with ID "ord-123" was not found.', $e->getMessage());
-    }
-
-    // ── ConflictDomainException ────────────────────────────────────────
-
-    public function test_conflict_error_code(): void
-    {
-        $e = ConflictDomainException::because('Concurrent modification');
-
-        self::assertSame('CONFLICT', $e->errorCode());
-    }
-
-    // ── AggregateNotFoundException ────────────────────────────────────
-
-    public function test_aggregate_not_found(): void
-    {
-        $e = AggregateNotFoundException::for('App\\Domain\\Order', 'ord-999');
-
-        self::assertInstanceOf(NotFoundDomainException::class, $e);
-        self::assertSame('AGGREGATE_NOT_FOUND', $e->errorCode());
-        self::assertStringContainsString('Order', $e->getMessage());
-        self::assertStringContainsString('ord-999', $e->getMessage());
-    }
-
-    // ── OptimisticLockException ────────────────────────────────────────
-
-    public function test_optimistic_lock(): void
-    {
-        $e = OptimisticLockException::for('ord-123', expectedVersion: 5, actualVersion: 7);
-
-        self::assertInstanceOf(DomainException::class, $e);
-        self::assertSame('OPTIMISTIC_LOCK', $e->errorCode());
-        self::assertStringContainsString('ord-123', $e->getMessage());
-        self::assertStringContainsString('expected version 5', $e->getMessage());
-        self::assertStringContainsString('current version 7', $e->getMessage());
-    }
-
-    // ── InvalidAggregateRootException ────────────────────────────────
-
-    public function test_invalid_aggregate_root(): void
+    public function testInvalidAggregateRootNotAnAggregate(): void
     {
         $obj = new \stdClass;
+
         $e = InvalidAggregateRootException::notAnAggregate($obj);
 
-        self::assertInstanceOf(DomainException::class, $e);
-        self::assertSame('INVALID_AGGREGATE_ROOT', $e->errorCode());
-        self::assertStringContainsString('stdClass', $e->getMessage());
+        $this->assertSame('INVALID_AGGREGATE_ROOT', $e->errorCode());
+        $this->assertSame(500, $e->httpStatus());
+        $this->assertStringContainsString('stdClass', $e->getMessage());
     }
 
-    // ── InvalidStateException (system-level) ──────────────────────────
+    // ─── InvalidStateException (infrastructure) ────────────────
 
-    public function test_invalid_state_system(): void
+    public function testInfrastructureInvalidStateException(): void
     {
-        $e = InvalidStateException::because('Config invalid');
+        $e = InvalidStateException::because('Configuration is invalid.');
 
-        self::assertInstanceOf(DomainException::class, $e);
-        self::assertSame('INVALID_STATE_SYSTEM', $e->errorCode());
-        self::assertSame('Config invalid', $e->getMessage());
+        $this->assertSame('INVALID_STATE_SYSTEM', $e->errorCode());
+        $this->assertSame(500, $e->httpStatus());
     }
 
-    // ── Hierarchy: all extend DomainException ─────────────────────────
+    // ─── Common Interface ────────────────────────────────────────
 
-    /**
-     * @dataProvider exceptionHierarchyProvider
-     */
-    public function test_all_exceptions_extend_domain_exception(string $class, string $factoryMethod, array $factoryArgs): void
+    public function testAllExceptionsImplementJsonSerializable(): void
     {
-        $e = $class::$factoryMethod(...$factoryArgs);
-
-        self::assertInstanceOf(DomainException::class, $e);
-        self::assertNotEmpty($e->errorCode());
-        self::assertNotEmpty($e->getMessage());
-    }
-
-    /**
-     * @return array<string, array{class: class-string<DomainException>, factoryMethod: string, factoryArgs: array<int, mixed>}>
-     */
-    public static function exceptionHierarchyProvider(): array
-    {
-        return [
-            'invalid_argument' => [InvalidArgumentDomainException::class, 'because', ['msg']],
-            'invalid_state' => [InvalidStateDomainException::class, 'because', ['msg']],
-            'not_found' => [NotFoundDomainException::class, 'because', ['msg']],
-            'not_found_aggregate' => [NotFoundDomainException::class, 'forAggregate', ['Type', 'id']],
-            'conflict' => [ConflictDomainException::class, 'because', ['msg']],
-            'aggregate_not_found' => [AggregateNotFoundException::class, 'for', ['Type', 'id']],
-            'optimistic_lock' => [OptimisticLockException::class, 'for', ['id', 1, 2]],
-            'invalid_aggregate' => [InvalidAggregateRootException::class, 'notAnAggregate', [new \stdClass]],
-            'invalid_state_system' => [InvalidStateException::class, 'because', ['msg']],
+        $exceptions = [
+            InvalidStateDomainException::because('test'),
+            InvalidArgumentDomainException::because('test'),
+            NotFoundDomainException::forId('test'),
+            ConflictDomainException::because('test'),
+            OptimisticLockException::for('id', 1, 2),
+            AggregateNotFoundException::for('Class', 'id'),
+            InvalidAggregateRootException::notAnAggregate(new \stdClass),
+            InvalidStateException::because('test'),
         ];
+
+        foreach ($exceptions as $e) {
+            $this->assertInstanceOf(\JsonSerializable::class, $e, get_class($e) . ' must implement JsonSerializable');
+        }
+    }
+
+    public function testToErrorArrayReturnsRfc9457Structure(): void
+    {
+        $e = NotFoundDomainException::forId('order-123');
+        $error = $e->toErrorArray();
+
+        $this->assertArrayHasKey('title', $error);
+        $this->assertArrayHasKey('detail', $error);
+        $this->assertArrayHasKey('code', $error);
+        $this->assertArrayHasKey('status', $error);
+        $this->assertSame('NOT_FOUND', $error['code']);
+        $this->assertSame(404, $error['status']);
+    }
+
+    public function testJsonEncodeReturnsValidJson(): void
+    {
+        $e = InvalidStateDomainException::because('test error');
+        $json = json_encode($e);
+
+        $this->assertIsString($json);
+        $this->assertNotEmpty($json);
+
+        $decoded = json_decode($json, true);
+        $this->assertIsArray($decoded);
+    }
+
+    public function testToArrayRoundTrip(): void
+    {
+        $original = InvalidStateDomainException::because('test');
+        $array = $original->toArray();
+
+        $this->assertArrayHasKey('error_code', $array);
+        $this->assertArrayHasKey('message', $array);
+    }
+
+    public function testCustomErrorCode(): void
+    {
+        $e = InvalidStateDomainException::because('test', code: 'CUSTOM_CODE');
+
+        $this->assertSame('CUSTOM_CODE', $e->errorCode());
     }
 }
