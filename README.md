@@ -2621,6 +2621,164 @@ $restored = unserialize($serialized);
 // Works via __serialize()/__unserialize() with reflection
 ```
 
+## Advanced Patterns
+
+### Guard Clauses with Domain Exceptions
+
+```php
+class Order extends AggregateRoot
+{
+    public function markAsCompleted(): void
+    {
+        if ($this->status === OrderStatus::COMPLETED) {
+            throw InvalidStateDomainException::because(
+                'Order is already completed.',
+                'ORDER_ALREADY_COMPLETED',
+            );
+        }
+
+        $this->status = OrderStatus::COMPLETED;
+        $this->recordThat(new OrderCompleted($this->id(), $this->version()));
+    }
+}
+```
+
+### Composite Aggregate Pattern
+
+```php
+class Order extends AggregateRoot
+{
+    /** @var list<OrderLine> */
+    private array $lines = [];
+
+    public function addLine(ProductId $productId, int $quantity, Money $unitPrice): void
+    {
+        $line = new OrderLine($productId, $quantity, $unitPrice);
+        $this->lines[] = $line;
+        $this->recordThat(new LineAdded($this->id(), $productId, $quantity, $unitPrice));
+    }
+
+    public function getTotal(): Money
+    {
+        return array_reduce($this->lines, fn(Money $sum, OrderLine $line) => $sum->add($line->total()), Money::zero());
+    }
+}
+```
+
+### Event Sourcing with Reconstitution
+
+```php
+class Order extends AggregateRoot
+{
+    use EventSourced;
+
+    private function applyOrderCreated(OrderCreated $event): void
+    {
+        $this->id = AggregateRootId::fromString($event->orderId);
+        $this->status = OrderStatus::PENDING;
+    }
+
+    private function applyLineAdded(LineAdded $event): void
+    {
+        $this->lines[] = new OrderLine(
+            ProductId::fromString($event->productId),
+            $event->quantity,
+            $event->unitPrice,
+        );
+    }
+
+    // Reconstitute from event stream:
+    // $order = Order::fromHistory($events);
+}
+```
+
+### Snapshot-Optimized Event Sourcing
+
+```php
+// Auto-snapshot every 100 events (configurable via #[SnapshotPolicy])
+#[SnapshotPolicy(every: 100)]
+class Order extends AggregateRoot
+{
+    use EventSourced;
+    use HasSnapshots;
+
+    // Repository loads snapshot first, then replays only new events
+    // $order = $repository->find($id); // Uses SnapshottingRepository
+}
+```
+
+### Unit of Work with Transaction Management
+
+```php
+$uow = new InMemoryUnitOfWork(
+    persistCallback: fn(AggregateRoot $ar) => $repository->save($ar),
+    eventDispatcher: fn(DomainEventCollection $events) => $bus->dispatchAll($events),
+);
+
+$uow->begin();
+try {
+    $order = $repository->find($orderId);
+    $order->addItem($productId, 2);
+    $uow->track($order);
+    $uow->commit(); // Persists + dispatches events atomically
+} catch (\Throwable $e) {
+    $uow->rollback(); // Restores original state, discards events
+    throw $e;
+}
+
+// Or use the shorthand:
+$result = $uow->run(function () use ($uow, $order, $productId) {
+    $order->addItem($productId, 2);
+    $uow->track($order);
+});
+```
+
+### Domain → Response Mapping (Cross-Package)
+
+```php
+// In your controller or handler:
+use ZeroBoiler\Response\Response;
+use ZeroBoiler\Response\Transformers\DomainResponseFactory;
+use ZeroBoiler\Response\Transformers\DomainTransformer;
+
+class OrderTransformer extends DomainTransformer
+{
+    public function transform(object $order): array
+    {
+        return [
+            'id' => (string) $order->id(),
+            'status' => $order->status()->value,
+            'total' => $order->getTotal()->amount(),
+            'currency' => $order->getTotal()->currency()->code(),
+        ];
+    }
+}
+
+// Usage in controller:
+$api = DomainResponseFactory::entity($order, new OrderTransformer);
+return $api->send();
+
+// Collection:
+$api = DomainResponseFactory::collection($orders, new OrderTransformer);
+return $api->send();
+
+// Paginated:
+$api = DomainResponseFactory::paginatedCollection(
+    $orders,
+    new OrderTransformer,
+    OffsetPagination::fromPaginator($paginator)->toArray(),
+);
+return $api->send();
+
+// Exception → RFC 9457 auto-bridge:
+try {
+    $order->markAsCompleted();
+} catch (DomainException $e) {
+    return DomainResponseFactory::fromException($e)->send();
+    // Returns: {"title":"Invalid State","detail":"...","code":"INVALID_STATE"}
+}
+```
+
 ## Production Readiness Checklist
 
 | Criteria | Status | Notes |
@@ -2676,15 +2834,13 @@ $restored = unserialize($serialized);
 - Docs: Add missing docblocks to `Entity::equals()`, `AggregateRoot::pullDomainEvents()`, `AggregateRoot::clearDomainEvents()`
 - Quality: Manual code review — all 40 source files verified production-ready
 
-## v1.54.0 (2026-08-12)
+## v1.54.0 (2026-08-15)
 
 - Test: Add `DomainTypeSafetyContractTest` — reflection-based type safety verification (strict types, return types, final/readonly, interface contracts, serde methods, #[Override] attributes)
 - Docs: Add `setEventDispatcher` and `setPersistenceCallback` usage examples to One-Liner Quick Start section
-
-## v1.54.0 (2026-08-15)
-
 - Docs: Add Version Compatibility table (1.x, 2.x, 3.x roadmap with PHP/Laravel version matrix)
 - Docs: Enhance Production Ready Checklist — add `#[\Override]` attributes, `#[\Deprecated]` attributes, cross-package integration criteria, detailed readonly class listing, `static` return type annotations, `@template` generic annotations
+- Docs: Add Advanced Patterns section with guard clauses, composite aggregates, and domain event patterns
 
 ## v1.53.0 (2026-08-12)
 
