@@ -24,6 +24,9 @@ use ZeroBoiler\Domain\Identifiers\StringIdentifier;
 use ZeroBoiler\Domain\Identifiers\UuidIdentifier;
 use ZeroBoiler\Domain\Identifiers\UlidIdentifier;
 use ZeroBoiler\Domain\Snapshots\Snapshot;
+use ZeroBoiler\Domain\Tests\Fixtures\TestAggregate as FixtureAggregate;
+use ZeroBoiler\Domain\Tests\Fixtures\TestUuidIdentifier;
+use ZeroBoiler\Domain\Tests\Fixtures\TestUlidIdentifier;
 use ZeroBoiler\Domain\ValueObject;
 use ZeroBoiler\Events\Domain\DomainEvent;
 
@@ -59,38 +62,40 @@ final class DomainToResponseFullLifecycleTest extends TestCase
     public function test_aggregate_root_provides_string_identity(): void
     {
         $id = AggregateRootId::generate();
-        $root = TestAggregate::create($id);
+        $root = FixtureAggregate::create($id);
 
-        // DomainTransformer::extractId() uses id() method
         $this->assertIsString($root->id());
         $this->assertSame($id->toString(), $root->id());
     }
 
     public function test_aggregate_root_provides_version(): void
     {
-        $root = TestAggregate::create(AggregateRootId::generate());
-        $this->assertSame(0, $root->version());
+        $id = AggregateRootId::generate();
+        $root = FixtureAggregate::create($id);
 
-        $root->recordEvent();
+        // FixtureAggregate::create() calls apply() once (TestAggregateCreated)
         $this->assertSame(1, $root->version());
+
+        $root->rename('New Name');
+        $this->assertSame(2, $root->version());
     }
 
     public function test_aggregate_root_equality_is_identity_based(): void
     {
         $id = AggregateRootId::generate();
-        $root1 = TestAggregate::create($id);
-        $root2 = TestAggregate::create($id);
+        $root1 = FixtureAggregate::create($id);
+        $root2 = FixtureAggregate::create($id);
 
         $this->assertTrue($root1->equals($root2));
 
-        $root3 = TestAggregate::create(AggregateRootId::generate());
+        $root3 = FixtureAggregate::create(AggregateRootId::generate());
         $this->assertFalse($root1->equals($root3));
     }
 
     public function test_aggregate_root_to_array_includes_identity_and_version(): void
     {
         $id = AggregateRootId::generate();
-        $root = TestAggregate::create($id);
+        $root = FixtureAggregate::create($id);
 
         $array = $root->toArray();
 
@@ -98,14 +103,13 @@ final class DomainToResponseFullLifecycleTest extends TestCase
         $this->assertArrayHasKey('version', $array);
         $this->assertArrayHasKey('type', $array);
         $this->assertSame($id->toString(), $array['id']);
-        $this->assertSame(0, $array['version']);
+        $this->assertSame(1, $array['version']);
         $this->assertSame('TestAggregate', $array['type']);
     }
 
     public function test_aggregate_root_json_serialization_round_trip(): void
     {
-        $root = TestAggregate::create(AggregateRootId::generate());
-        $root->recordEvent();
+        $root = FixtureAggregate::create(AggregateRootId::generate());
 
         $json = $root->toJson();
         $decoded = json_decode($json, true);
@@ -120,21 +124,21 @@ final class DomainToResponseFullLifecycleTest extends TestCase
 
     public function test_entity_supports_multiple_id_types(): void
     {
-        $intEntity = new TestEntity(42);
+        $intEntity = new LifecycleTestEntity(42);
         $this->assertSame('42', $intEntity->id());
 
-        $stringEntity = new TestEntity('slug-123');
+        $stringEntity = new LifecycleTestEntity('slug-123');
         $this->assertSame('slug-123', $stringEntity->id());
 
-        $uuidEntity = new TestEntity(UuidIdentifier::generate());
+        $uuidEntity = new LifecycleTestEntity(TestUuidIdentifier::generate());
         $this->assertIsString($uuidEntity->id());
     }
 
     public function test_entity_equality_requires_same_class_and_id(): void
     {
-        $entity1 = new TestEntity(42);
-        $entity2 = new TestEntity(42);
-        $entity3 = new TestEntity(99);
+        $entity1 = new LifecycleTestEntity(42);
+        $entity2 = new LifecycleTestEntity(42);
+        $entity3 = new LifecycleTestEntity(99);
 
         $this->assertTrue($entity1->equals($entity2));
         $this->assertFalse($entity1->equals($entity3));
@@ -142,12 +146,12 @@ final class DomainToResponseFullLifecycleTest extends TestCase
 
     public function test_entity_json_serialize_delegates_to_to_array(): void
     {
-        $entity = new TestEntity(1);
+        $entity = new LifecycleTestEntity(1);
         $entity->name = 'Test';
 
         $serialized = $entity->jsonSerialize();
         $this->assertSame('1', $serialized['id']);
-        $this->assertSame('TestEntity', $serialized['type']);
+        $this->assertSame('LifecycleTestEntity', $serialized['type']);
     }
 
     // ─────────────────────────────────────────────────────────
@@ -211,7 +215,6 @@ final class DomainToResponseFullLifecycleTest extends TestCase
         $int = IntegerIdentifier::from(42);
         $rootId = AggregateRootId::generate();
 
-        // Verify all identifiers can be json_encoded directly
         $this->assertIsString(json_encode($uuid));
         $this->assertIsString(json_encode($ulid));
         $this->assertIsString(json_encode($str));
@@ -246,9 +249,9 @@ final class DomainToResponseFullLifecycleTest extends TestCase
 
     public function test_value_object_equality_is_structural(): void
     {
-        $vo1 = TestAddress::fromArray(['street' => '123 Main', 'city' => 'NYC', 'country' => 'US']);
-        $vo2 = TestAddress::fromArray(['street' => '123 Main', 'city' => 'NYC', 'country' => 'US']);
-        $vo3 = TestAddress::fromArray(['street' => '456 Oak', 'city' => 'NYC', 'country' => 'US']);
+        $vo1 = LifecycleTestAddress::fromArray(['street' => '123 Main', 'city' => 'NYC', 'country' => 'US']);
+        $vo2 = LifecycleTestAddress::fromArray(['street' => '123 Main', 'city' => 'NYC', 'country' => 'US']);
+        $vo3 = LifecycleTestAddress::fromArray(['street' => '456 Oak', 'city' => 'NYC', 'country' => 'US']);
 
         $this->assertTrue($vo1->equals($vo2));
         $this->assertFalse($vo1->equals($vo3));
@@ -256,9 +259,9 @@ final class DomainToResponseFullLifecycleTest extends TestCase
 
     public function test_value_object_json_serialization_round_trip(): void
     {
-        $vo = TestAddress::fromArray(['street' => '123 Main', 'city' => 'NYC', 'country' => 'US']);
+        $vo = LifecycleTestAddress::fromArray(['street' => '123 Main', 'city' => 'NYC', 'country' => 'US']);
         $json = $vo->toJson();
-        $restored = TestAddress::fromJson($json);
+        $restored = LifecycleTestAddress::fromJson($json);
 
         $this->assertTrue($vo->equals($restored));
     }
@@ -383,7 +386,6 @@ final class DomainToResponseFullLifecycleTest extends TestCase
         $this->assertIsArray($array);
         $this->assertCount(2, $array);
 
-        // Verify JSON serialization
         $json = json_encode($collection);
         $this->assertIsString($json);
         $this->assertNotSame('[]', $json);
@@ -396,13 +398,13 @@ final class DomainToResponseFullLifecycleTest extends TestCase
     public function test_snapshot_serialization_round_trip(): void
     {
         $state = ['status' => 'pending', 'total' => 1999, 'items' => 3];
-        $snapshot = Snapshot::create('App\\Domain\\Order', 'uuid-123', 5, $state);
+        $snapshot = Snapshot::create('App\Domain\Order', 'uuid-123', 5, $state);
 
         $array = $snapshot->toArray();
         $restored = Snapshot::fromArray($array);
 
         $this->assertTrue($snapshot->equals($restored));
-        $this->assertSame('App\\Domain\\Order', $restored->aggregateType);
+        $this->assertSame('App\Domain\Order', $restored->aggregateType);
         $this->assertSame('uuid-123', $restored->aggregateId);
         $this->assertSame(5, $restored->version);
         $this->assertSame($state, $restored->state);
@@ -410,7 +412,7 @@ final class DomainToResponseFullLifecycleTest extends TestCase
 
     public function test_snapshot_json_serialization(): void
     {
-        $snapshot = Snapshot::create('App\\Domain\\Order', 'uuid-123', 10, ['status' => 'shipped']);
+        $snapshot = Snapshot::create('App\Domain\Order', 'uuid-123', 10, ['status' => 'shipped']);
 
         $json = $snapshot->toJson();
         $restored = Snapshot::fromJson($json);
@@ -483,31 +485,26 @@ final class DomainToResponseFullLifecycleTest extends TestCase
 }
 
 // ─────────────────────────────────────────────────────────────
-// Test Fixtures
+// Test Fixtures (prefixed to avoid conflicts with Tests\Fixtures)
 // ─────────────────────────────────────────────────────────────
 
 /**
- * Test aggregate root for lifecycle testing.
+ * Test entity for identity testing.
  */
-final class TestAggregate extends AggregateRoot
+final class LifecycleTestEntity extends Entity
 {
-    public static function create(AggregateRootId $id): self
-    {
-        return new self($id);
+    public function __construct(
+        int|string|\Stringable $id,
+        public ?string $name = null,
+    ) {
+        parent::__construct($id);
     }
-
-    public function recordEvent(): void
-    {
-        $this->apply(DomainEvent::occur('test.event', ['id' => $this->id()]));
-    }
-
-    protected function applyTestEvent(DomainEvent $event): void {}
 }
 
 /**
  * Test address value object.
  */
-final class TestAddress extends ValueObject
+final class LifecycleTestAddress extends ValueObject
 {
     public function __construct(
         public readonly string $street,
@@ -531,18 +528,5 @@ final class TestAddress extends ValueObject
             'city' => $this->city,
             'country' => $this->country,
         ];
-    }
-}
-
-/**
- * Test entity for identity testing.
- */
-final class TestEntity extends Entity
-{
-    public function __construct(
-        int|string|\Stringable $id,
-        public ?string $name = null,
-    ) {
-        parent::__construct($id);
     }
 }
