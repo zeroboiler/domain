@@ -2681,6 +2681,11 @@ $restored = unserialize($serialized);
 - Test: Add `DomainTypeSafetyContractTest` — reflection-based type safety verification (strict types, return types, final/readonly, interface contracts, serde methods, #[Override] attributes)
 - Docs: Add `setEventDispatcher` and `setPersistenceCallback` usage examples to One-Liner Quick Start section
 
+## v1.54.0 (2026-08-15)
+
+- Docs: Add Version Compatibility table (1.x, 2.x, 3.x roadmap with PHP/Laravel version matrix)
+- Docs: Enhance Production Ready Checklist — add `#[\Override]` attributes, `#[\Deprecated]` attributes, cross-package integration criteria, detailed readonly class listing, `static` return type annotations, `@template` generic annotations
+
 ## v1.53.0 (2026-08-12)
 
 - Quality: Full production readiness audit — all 40 source files verified (strict types, return types, docblocks, typed properties, PHP 8.5 syntax)
@@ -2711,17 +2716,28 @@ If you discover a security vulnerability, please email `hello@zeroboiler.dev`. A
 
 ZeroBoiler Domain is proprietary software. See the [LICENSE](LICENSE) file for details.
 
+## Version Compatibility
+
+| Version | PHP | Laravel | Status |
+|---|---|---|---|
+| `1.x` (current) | ≥ 8.5 | ≥ 13 | ✅ Active development |
+| `2.x` | ≥ 8.5 | ≥ 13 | ⚠️ Planned (deprecated API cleanup) |
+| `3.x` | ≥ 9.0 | TBD | 🔮 Future (remove `Identifier` base class, `Transformable` interface) |
+
 ## Production Ready Checklist
 
 | Criteria | Status | Notes |
 |---|---|---|
 | PHP 8.5 strict types | ✅ | `declare(strict_types=1)` on all source files |
-| Return type declarations | ✅ | All public/protected methods |
-| Typed properties | ✅ | All properties with PHP types |
-| Readonly immutability | ✅ | `readonly` classes & promoted properties |
-| Domain invariants | ✅ | Constructor validation on all identifiers & entities |
-| Docblocks | ✅ | `@param`, `@return`, `@throws`, `@since`, `@example` on all public API |
+| Return type declarations | ✅ | All public/protected methods with `static` return types on factory methods |
+| Typed properties | ✅ | All properties with PHP types, including generic `@template` annotations |
+| Readonly immutability | ✅ | `readonly` classes (`AggregateRootId`, `DomainEventCollection`, `Snapshot`, `SnapshotPolicy`, `SnapshottingRepository`) & promoted properties on all identifiers |
+| `#[\Override]` attributes | ✅ | All interface contract implementations (Entity, AggregateRoot, Identifier, UnitOfWork, HasDomainEvents) |
+| `#[\Deprecated]` attributes | ✅ | `getVersion()` (use `version()`), `Identifier` base class (use `UuidIdentifier`), `InMemorySnapshotStore::clear()` (use `purge()`) |
+| Domain invariants | ✅ | Constructor validation on all identifiers & entities, `ValueError` for empty strings, UUID/ULID format validation |
+| Docblocks | ✅ | `@param`, `@return`, `@throws`, `@since`, `@example` on all public API with `@template` for generics |
 | Serialization contract | ✅ | `toArray()`, `fromArray()`, `toJson()`, `fromJson()`, `jsonSerialize()`, `__serialize()`, `__unserialize()` |
 | PHPStan level 9 | ✅ | Zero type errors |
 | Test coverage | ✅ | 130+ test cases covering all contracts, edge cases, and round-trip serialization |
+| Cross-package integration | ✅ | `DomainResponseFactory` duck-typed bridge, `ExtractsDomainId` trait for response package |
 
