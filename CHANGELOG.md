@@ -4,6 +4,21 @@ All notable changes to the `zeroboiler/domain` package will be documented in thi
 
 ## [Unreleased]
 
+## [1.66.0] - 2026-08-15
+
+### Added
+- `AggregateRoot::reconstituteFromSnapshot()` — reconstitute from snapshot + post-snapshot event replay with reflection-based readonly property restoration
+- `AggregateRoot::toJson()` — convenience method for explicit JSON serialization with configurable encoding options
+- `AggregateRootId::toJson()` — convenience method for explicit JSON serialization, encodes full toArray() for round-trip with fromJson()
+- `InMemoryUnitOfWork::toArray()` — snapshot of current transactional state (nesting depth, event counts, active status)
+- `InMemoryUnitOfWork::toJson()` — JSON-encoded transactional state representation
+
+### Changed
+- Bump package version to 1.66.0
+
+### Quality
+- Manual production readiness audit — all 40 source files verified: strict_types, return type declarations, typed properties, docblocks, PHP 8.5 syntax, immutability, domain invariants, JSON serialization consistency
+
 ## [1.64.1] - 2026-08-14
 
 ### Added
