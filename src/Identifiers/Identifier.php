@@ -204,9 +204,11 @@ abstract class Identifier implements IdentifierContract, JsonSerializable
      *
      * @example
      * ```php
-     * $id = self::generate();
+     * // Identifier is abstract — use a concrete subclass:
+     * class OrderId extends \ZeroBoiler\Domain\Identifiers\Identifier {}
+     * $id = new OrderId(); // generates random UUID v4
      * $json = json_encode($id->toArray());
-     * $restored = self::fromJson($json);
+     * $restored = OrderId::fromJson($json);
      * $id->equals($restored); // true
      * ```
      */
