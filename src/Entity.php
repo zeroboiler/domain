@@ -134,6 +134,7 @@ abstract class Entity implements EntityContract, \JsonSerializable
      * }
      * ```
      */
+    #[\Override]
     public function toArray(): array
     {
         return [
@@ -183,6 +184,7 @@ abstract class Entity implements EntityContract, \JsonSerializable
      * // ['id' => '42', 'type' => 'OrderItem', 'product_id' => 'prod-123', 'quantity' => 3]
      * ```
      */
+    #[\Override]
     public static function fromArray(array $data): static
     {
         $reflection = new \ReflectionClass(static::class);

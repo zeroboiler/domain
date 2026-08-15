@@ -80,6 +80,7 @@ final readonly class StringIdentifier implements IdentifierContract, JsonSeriali
      *
      * @throws ValueError If the value is an empty string.
      */
+    #[\Override]
     public static function fromString(string $value): static
     {
         return self::from($value);
@@ -95,6 +96,7 @@ final readonly class StringIdentifier implements IdentifierContract, JsonSeriali
      * @param  IdentifierContract  $other  The identifier to compare against.
      * @return bool True if both are the same concrete class with identical values.
      */
+    #[\Override]
     public function equals(IdentifierContract $other): bool
     {
         return $other instanceof StringIdentifier && $other::class === static::class && $this->value === $other->value;
@@ -105,6 +107,7 @@ final readonly class StringIdentifier implements IdentifierContract, JsonSeriali
      *
      * @return string The identifier string.
      */
+    #[\Override]
     public function toString(): string
     {
         return $this->value;
@@ -136,6 +139,7 @@ final readonly class StringIdentifier implements IdentifierContract, JsonSeriali
      * $slug->toArray();       // ['string' => 'my-blog-post']
      * ```
      */
+    #[\Override]
     public function toArray(): array
     {
         return ['string' => $this->value];
@@ -161,6 +165,7 @@ final readonly class StringIdentifier implements IdentifierContract, JsonSeriali
      * $slug->equals($restored); // true
      * ```
      */
+    #[\Override]
     public static function fromArray(array $array): static
     {
         $value = $array['string'] ?? $array['id'] ?? null;
@@ -194,6 +199,7 @@ final readonly class StringIdentifier implements IdentifierContract, JsonSeriali
      * $slug->equals($restored); // true
      * ```
      */
+    #[\Override]
     public static function fromJson(string $json): static
     {
         $data = json_decode($json, true, flags: JSON_THROW_ON_ERROR);

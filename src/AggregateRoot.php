@@ -183,6 +183,7 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
      * $pulled = $order->pullDomainEvents(); // Same events, now consumed
      * ```
      */
+    #[\Override]
     public function peekDomainEvents(): DomainEventCollection
     {
         return new DomainEventCollection(array_values($this->domainEvents));
@@ -256,6 +257,7 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
      * }
      * ```
      */
+    #[\Override]
     public function toArray(): array
     {
         return [
