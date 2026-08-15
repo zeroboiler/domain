@@ -28,11 +28,13 @@ namespace ZeroBoiler\Domain\Exceptions;
  */
 final class ConflictDomainException extends DomainException
 {
+    /** @return string Machine-readable error code for conflict violations. */
     protected function defaultErrorCode(): string
     {
         return 'CONFLICT';
     }
 
+    /** @return int HTTP status code for conflict violations (409 Conflict). */
     protected function defaultHttpStatus(): int
     {
         return 409;

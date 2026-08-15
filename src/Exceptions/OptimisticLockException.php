@@ -33,11 +33,13 @@ namespace ZeroBoiler\Domain\Exceptions;
  */
 final class OptimisticLockException extends DomainException
 {
+    /** @return string Machine-readable error code for optimistic lock conflicts. */
     protected function defaultErrorCode(): string
     {
         return 'OPTIMISTIC_LOCK';
     }
 
+    /** @return int HTTP status code for optimistic lock conflicts (409 Conflict). */
     protected function defaultHttpStatus(): int
     {
         return 409;

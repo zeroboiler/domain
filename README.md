@@ -2853,6 +2853,11 @@ try {
 
 - Internal: Version bump for toJson() contract additions
 
+## v1.68.0 (2026-08-15)
+
+- Docs: Add `@return` docblock annotations to `defaultErrorCode()` and `defaultHttpStatus()` on all 8 exception subclasses (InvalidStateDomainException, NotFoundDomainException, OptimisticLockException, ConflictDomainException, AggregateNotFoundException, InvalidArgumentDomainException, InvalidAggregateRootException, InvalidStateException)
+- Quality: Manual code review — all 44 source files verified production-ready
+
 ## v1.62.0 (2026-08-14)
 
 - Docs: Add **Serialization Contract** table — comprehensive serialization support matrix for all domain classes (toArray/fromArray/fromJson/jsonSerialize/__serialize/__unserialize)

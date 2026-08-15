@@ -27,11 +27,13 @@ namespace ZeroBoiler\Domain\Exceptions;
  */
 final class NotFoundDomainException extends DomainException
 {
+    /** @return string Machine-readable error code for not-found violations. */
     protected function defaultErrorCode(): string
     {
         return 'NOT_FOUND';
     }
 
+    /** @return int HTTP status code for not-found violations (404 Not Found). */
     protected function defaultHttpStatus(): int
     {
         return 404;

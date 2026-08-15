@@ -31,11 +31,13 @@ namespace ZeroBoiler\Domain\Exceptions;
  */
 final class InvalidArgumentDomainException extends DomainException
 {
+    /** @return string Machine-readable error code for argument validation failures. */
     protected function defaultErrorCode(): string
     {
         return 'INVALID_ARGUMENT';
     }
 
+    /** @return int HTTP status code for argument validation failures (422 Unprocessable Entity). */
     protected function defaultHttpStatus(): int
     {
         return 422;
