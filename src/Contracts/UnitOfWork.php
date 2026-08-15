@@ -74,6 +74,8 @@ interface UnitOfWork
 
     /**
      * Check whether a unit of work is currently active.
+     *
+     * @return bool True when at least one begin() has been called without a matching commit/rollback.
      */
     public function isActive(): bool;
 

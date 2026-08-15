@@ -275,7 +275,7 @@ abstract class DomainException extends Exception implements \JsonSerializable
      * Uses the RFC 9457-compatible error array format, suitable for
      * direct JSON serialization in API error responses.
      *
-     * @return array{title: string, detail: string, code: string}
+     * @return array{title: string, detail: string, code: string, status: int}
      */
     #[\Override]
     public function jsonSerialize(): array
