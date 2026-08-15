@@ -2830,6 +2830,11 @@ try {
 | Exception hierarchy | ✅ | `DomainException` → 7 concrete subclasses with `errorCode()` and RFC 9457 `toErrorArray()` |
 | PHPUnit/Pest test coverage | ✅ | 100+ test files covering every source class, edge cases, and cross-package integration |
 
+## v1.68.0 (2026-08-15)
+
+- Test: Add `DomainAdvancedEdgeCaseTest` — 35+ edge-case tests covering UoW nested run/rollback state restoration, aggregate identity immutability, identifier cross-type inequality, value object structural equality, DomainEventCollection functional operations (reduce, groupBy, some/none/find/countBy/types/hasType/each/merge), RFC 9457 exception mapping, and UoW serialization (toArray/toJson/clear)
+- Quality: Full manual code review — all 40 source files verified production-ready (strict types, return types, docblocks, typed properties, PHP 8.5 syntax, readonly/final, #[Override]/#[Deprecated] attributes, serialization contract)
+
 ## v1.67.0 (2026-08-15)
 
 - Docs: Add `DomainEventCollection` functional predicates (`some`, `none`, `find`, `countBy`, `types`, `hasType`), `reduce()`, and `each()` to Domain Event Collection Quick Start section
