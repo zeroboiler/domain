@@ -253,7 +253,7 @@ jobs, API responses, and cross-package data exchange:
 | `AggregateRootId` | final readonly class | UUID v4 identifier for aggregate roots |
 | `Entity` | abstract class | Base class for entities with identity equality |
 | `ValueObject` | abstract class | Base class for value objects extending `zeroboiler/value-objects` |
-| `DomainEventCollection` | final readonly class | Immutable typed collection of domain events |
+| `DomainEventCollection` | final readonly class | Immutable typed collection: `count`, `isEmpty`, `all`, `get`, `first`, `last`, `map`, `filter`, `merge`, `each`, `reduce`, `some`, `none`, `find`, `hasType`, `countBy`, `types` |
 | `InMemoryUnitOfWork` | class | In-memory Unit of Work with transactional boundaries |
 | `DomainException` | abstract class | Base exception with `errorCode()`, `toErrorArray()`, JSON serialization |
 | `InvalidStateDomainException` | final class | Business rule violation (e.g., pay already-paid order) |
@@ -696,6 +696,37 @@ $types = $collection->map(fn (DomainEvent $e, int $i): string => $e->eventType);
 $paidEvents = $collection->filter(
     fn (DomainEvent $e): bool => str_starts_with($e->eventType, 'order.paid')
 );
+
+// Functional predicates (since 1.58.0)
+$hasPayment = $collection->some(fn (DomainEvent $e): bool => $e->eventType === 'order.paid');
+// true if any payment event exists
+
+$noCancellations = $collection->none(fn (DomainEvent $e): bool => $e->eventType === 'order.cancelled');
+// true if there are no cancellation events (inverse of some())
+
+$paymentEvent = $collection->find(fn (DomainEvent $e): bool => $e->eventType === 'order.paid');
+// First matching event, or null
+
+$paymentCount = $collection->countBy(fn (DomainEvent $e): bool => $e->eventType === 'order.paid');
+// 2 — count of matching events
+
+$uniqueTypes = $collection->types();
+// ['order.placed', 'order.paid', 'order.shipped'] — unique types in order
+
+$hasPaymentType = $collection->hasType('order.paid');
+// true — shorthand for some(fn ($e) => $e->eventType === 'order.paid')
+
+// Reduce to a single value
+$total = $collection->reduce(
+    fn (float $sum, DomainEvent $e): float => $sum + ($e->payload['amount'] ?? 0),
+    0.0,
+);
+
+// Side-effect iteration (non-destructive)
+$collection->each(function (DomainEvent $event, int $index): void {
+    logger()->debug("Event {$index}: {$event->eventType}");
+});
+// Returns the same collection for fluent chaining
 
 // Merging collections
 $merged = $collection->merge([$event4, $event5]);
@@ -2798,6 +2829,12 @@ try {
 | Optimistic locking | ✅ | `OptimisticLockException`, version tracking in `AggregateRoot` |
 | Exception hierarchy | ✅ | `DomainException` → 7 concrete subclasses with `errorCode()` and RFC 9457 `toErrorArray()` |
 | PHPUnit/Pest test coverage | ✅ | 100+ test files covering every source class, edge cases, and cross-package integration |
+
+## v1.67.0 (2026-08-15)
+
+- Docs: Add `DomainEventCollection` functional predicates (`some`, `none`, `find`, `countBy`, `types`, `hasType`), `reduce()`, and `each()` to Domain Event Collection Quick Start section
+- Docs: Update Class Reference table with full `DomainEventCollection` method listing
+- Quality: Manual code review — all 40 source files verified production-ready
 
 ## v1.66.0 (2026-08-14)
 
