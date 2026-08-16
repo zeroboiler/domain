@@ -2810,25 +2810,6 @@ try {
 }
 ```
 
-## Production Readiness Checklist
-
-| Criteria | Status | Notes |
-|---|---|---|
-| PHP 8.5+ syntax | ✅ | `readonly` classes, promoted constructor params, named args, `#[Override]`, `#[Deprecated]` |
-| `declare(strict_types=1)` | ✅ | All source files |
-| Return type declarations | ✅ | 100% coverage across all public/protected/private methods |
-| Typed properties | ✅ | All class properties have explicit types |
-| Docblocks with `@param`/`@return`/`@throws` | ✅ | All public APIs documented with PHPDoc + `@example` blocks |
-| Immutability | ✅ | `AggregateRootId` (final readonly), `DomainEventCollection` (final readonly), Entity ID (readonly) |
-| Domain invariants | ✅ | `AggregateRoot::apply()` enforces versioning, `Entity::equals()` checks type + identity |
-| JSON serialization (`JsonSerializable`) | ✅ | `AggregateRootId`, `Entity`, `DomainEventCollection`, `DomainException`, `AggregateRoot` |
-| Round-trip `fromArray()`/`toArray()` | ✅ | `AggregateRootId`, `DomainEventCollection`, `Entity`, `Snapshot`, `DomainException` |
-| Interface contracts | ✅ | `Entity`, `AggregateRoot`, `Identifier`, `Repository`, `UnitOfWork` — all implemented |
-| Event sourcing | ✅ | `EventSourced` trait with `fromHistory()`, handler resolution via dot convention |
-| Snapshot support | ✅ | `HasSnapshots`, `SnapshottingRepository`, `InMemorySnapshotStore`, `SnapshotPolicy` attribute |
-| Optimistic locking | ✅ | `OptimisticLockException`, version tracking in `AggregateRoot` |
-| Exception hierarchy | ✅ | `DomainException` → 7 concrete subclasses with `errorCode()` and RFC 9457 `toErrorArray()` |
-| PHPUnit/Pest test coverage | ✅ | 100+ test files covering every source class, edge cases, and cross-package integration |
 
 ## v1.68.0 (2026-08-15)
 
@@ -2847,16 +2828,8 @@ try {
 - Feat: Add `toJson()` to `AggregateRootId`, `Contracts\AggregateRoot`, `Contracts\Entity`, `Contracts\Identifier`, `Identifiers\Identifier`, `Snapshots\Snapshot`, `InMemoryUnitOfWork`
 - Feat: Add `getPendingEvents()` and `clear()` to `InMemoryUnitOfWork` with `@since 1.66.0` annotations
 - Docs: Update Serialization Contract table with `toJson()` column for all classes
+- Docs: Add `@return` docblock annotations to `defaultErrorCode()` and `defaultHttpStatus()` on all 8 exception subclasses
 - Quality: Manual code review — all 40 source files verified production-ready
-
-## v1.65.0 (2026-08-14)
-
-- Internal: Version bump for toJson() contract additions
-
-## v1.68.0 (2026-08-15)
-
-- Docs: Add `@return` docblock annotations to `defaultErrorCode()` and `defaultHttpStatus()` on all 8 exception subclasses (InvalidStateDomainException, NotFoundDomainException, OptimisticLockException, ConflictDomainException, AggregateNotFoundException, InvalidArgumentDomainException, InvalidAggregateRootException, InvalidStateException)
-- Quality: Manual code review — all 44 source files verified production-ready
 
 ## v1.62.0 (2026-08-14)
 
@@ -2868,17 +2841,6 @@ try {
 - Docs: Add **Class Reference Table** — complete listing of all 32 classes/interfaces/traits with descriptions
 - Docs: Add **Exception Hierarchy** diagram — visual tree of all 8 domain exceptions with common API summary
 - Docs: Enrich README with structured reference sections for discoverability
-
-## v1.70.0 (2026-08-16)
-
-- Quality: Full production readiness audit — all 40 source files manually reviewed (PHP 8.5 syntax, strict types, return types, docblocks, typed properties, readonly immutability, domain invariants)
-- Verify: All contracts (Entity, AggregateRoot, Identifier, UnitOfWork, Repository, SnapshotStore) fully implemented with `#[\Override]` attributes
-- Verify: Round-trip serialization (toArray/fromArray/toJson/fromJson/jsonSerialize) consistent across all 40 source files
-- Verify: Domain exception hierarchy RFC 9457 compliant — 7 exception types with error codes, HTTP status mapping, and JSON serialization
-- Verify: Event sourcing lifecycle (EventSourced trait, HasSnapshots trait, SnapshottingRepository, InMemorySnapshotStore) production-ready
-- Verify: Cross-package bridge (DomainResponseFactory duck-typing, ExtractsDomainId trait) decoupled from response package
-- Verify: Artisan code generation commands (aggregate, repository, value-object, snapshot inspection) fully documented with usage examples
-- Docs: Production Ready Checklist confirmed — all 12 criteria passing
 
 ## v1.60.0 (2026-08-14)
 
