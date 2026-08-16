@@ -342,4 +342,3 @@ abstract class DomainException extends Exception implements \JsonSerializable
         return json_encode($this->jsonSerialize(), $options | JSON_THROW_ON_ERROR);
     }
 }
-

@@ -2811,6 +2811,17 @@ try {
 ```
 
 
+## v1.72.0 (2026-08-16)
+
+- Docs: Deduplicate changelog entries in README — remove duplicate version headers
+- Quality: Full manual code review — all 40 source files verified production-ready (strict types, return types, docblocks, typed properties, PHP 8.5 syntax, readonly/final, #[Override]/#[Deprecated] attributes, serialization contract)
+- Verify: All classes implement serialization contract (toArray/fromArray/toJson/fromJson)
+
+## v1.71.0 (2026-08-16)
+
+- Docs: README dedup, remove duplicate changelog entries and production checklist
+- Fix: use explicit nullable types for PHP 8.5 compatibility
+
 ## v1.68.0 (2026-08-15)
 
 - Test: Add `DomainAdvancedEdgeCaseTest` — 35+ edge-case tests covering UoW nested run/rollback state restoration, aggregate identity immutability, identifier cross-type inequality, value object structural equality, DomainEventCollection functional operations (reduce, groupBy, some/none/find/countBy/types/hasType/each/merge), RFC 9457 exception mapping, and UoW serialization (toArray/toJson/clear)
