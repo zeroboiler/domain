@@ -65,6 +65,9 @@ use ZeroBoiler\Events\Domain\DomainEvent;
  * @covers \ZeroBoiler\Domain\Snapshots\SnapshotPolicy
  *
  * @since 1.71.0
+ *
+ * @see \ZeroBoiler\Domain\Entity
+ * @see \ZeroBoiler\Domain\AggregateRoot
  */
 final class DomainEntitiesProductionReadinessTest extends TestCase
 {
