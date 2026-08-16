@@ -62,7 +62,7 @@ final class DomainContractValidationTest extends TestCase
     // Helper: Test Aggregate Root
     // ═══════════════════════════════════════════════════════════════
 
-    private function createTestOrder(AggregateRootId $id = null): TestOrder
+    private function createTestOrder(?AggregateRootId $id = null): TestOrder
     {
         return TestOrder::create($id ?? AggregateRootId::generate());
     }
@@ -1035,7 +1035,7 @@ class TestOrder extends AggregateRoot
 
     public string $status = 'pending';
 
-    public static function create(AggregateRootId $id = null): self
+    public static function create(?AggregateRootId $id = null): self
     {
         $id = $id ?? AggregateRootId::generate();
         $order = new self($id);
