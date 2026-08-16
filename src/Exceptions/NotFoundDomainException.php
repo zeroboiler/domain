@@ -8,6 +8,8 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Domain\Exceptions;
 
+use function sprintf;
+
 /**
  * Thrown when a requested aggregate or entity cannot be found.
  *

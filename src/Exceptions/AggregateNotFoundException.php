@@ -8,6 +8,8 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Domain\Exceptions;
 
+use function sprintf;
+
 /**
  * Thrown when an aggregate root cannot be found in the repository.
  *

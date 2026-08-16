@@ -8,6 +8,8 @@ declare(strict_types=1);
 
 namespace ZeroBoiler\Domain\Exceptions;
 
+use function sprintf;
+
 /**
  * Thrown when optimistic locking detects a stale aggregate version.
  *
