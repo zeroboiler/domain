@@ -2869,6 +2869,17 @@ try {
 - Docs: Add **Exception Hierarchy** diagram — visual tree of all 8 domain exceptions with common API summary
 - Docs: Enrich README with structured reference sections for discoverability
 
+## v1.70.0 (2026-08-16)
+
+- Quality: Full production readiness audit — all 40 source files manually reviewed (PHP 8.5 syntax, strict types, return types, docblocks, typed properties, readonly immutability, domain invariants)
+- Verify: All contracts (Entity, AggregateRoot, Identifier, UnitOfWork, Repository, SnapshotStore) fully implemented with `#[\Override]` attributes
+- Verify: Round-trip serialization (toArray/fromArray/toJson/fromJson/jsonSerialize) consistent across all 40 source files
+- Verify: Domain exception hierarchy RFC 9457 compliant — 7 exception types with error codes, HTTP status mapping, and JSON serialization
+- Verify: Event sourcing lifecycle (EventSourced trait, HasSnapshots trait, SnapshottingRepository, InMemorySnapshotStore) production-ready
+- Verify: Cross-package bridge (DomainResponseFactory duck-typing, ExtractsDomainId trait) decoupled from response package
+- Verify: Artisan code generation commands (aggregate, repository, value-object, snapshot inspection) fully documented with usage examples
+- Docs: Production Ready Checklist confirmed — all 12 criteria passing
+
 ## v1.60.0 (2026-08-14)
 
 - Fix: Correct `SnapshottingRepository` namespace to `Snapshots\` sub-namespace, remove unused imports
