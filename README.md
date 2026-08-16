@@ -2198,8 +2198,10 @@ The ZeroBoiler Domain package is designed for production-grade DDD implementatio
 | Feature | Version | Usage |
 |---------|---------|-------|
 | `readonly` classes/properties | PHP 8.2+ | AggregateRootId, Identifiers |
-| `#[Override]` attribute | PHP 8.3+ | Service providers, interface implementations |
-| `#[Deprecated]` attribute | PHP 8.4+ | Legacy methods, deprecated classes |
+|| `#[Override]` attribute | PHP 8.3+ | Service providers, interface implementations |
+|| `#[Deprecated]` attribute | PHP 8.4+ | `getVersion()`, `Identifier` base class, `clear()` |
+|| `static` return types | PHP 8.0+ | `fromArray()`, `fromJson()`, `generate()` factory methods |
+|| `@template` generics | PHPDoc | Generic type annotations on `Entity`, `DomainEventCollection` |
 | Constructor promotion | PHP 8.0+ | All classes |
 | Named arguments | PHP 8.0+ | Factory methods, `sprintf` calls |
 | `array_is_list()` | PHP 8.3+ | DomainEventCollection |
@@ -2930,6 +2932,6 @@ ZeroBoiler Domain is proprietary software. See the [LICENSE](LICENSE) file for d
 | Docblocks | ✅ | `@param`, `@return`, `@throws`, `@since`, `@example` on all public API with `@template` for generics |
 | Serialization contract | ✅ | `toArray()`, `fromArray()`, `toJson()`, `fromJson()`, `jsonSerialize()`, `__serialize()`, `__unserialize()` |
 | PHPStan level 9 | ✅ | Zero type errors |
-| Test coverage | ✅ | 130+ test cases covering all contracts, edge cases, and round-trip serialization |
+| Test coverage | ✅ | 150+ test cases covering all contracts, edge cases, and round-trip serialization |
 | Cross-package integration | ✅ | `DomainResponseFactory` duck-typed bridge, `ExtractsDomainId` trait for response package |
 
