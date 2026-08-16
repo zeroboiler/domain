@@ -2811,6 +2811,11 @@ try {
 ```
 
 
+## v1.73.0 (2026-08-16)
+
+- Test: Add `DomainPackageStructuralAuditTest` — 35+ structural audit tests covering strict_types across all source files, final/readonly modifiers (AggregateRootId, DomainEventCollection, Snapshot, IntegerIdentifier, UuidIdentifier, UlidIdentifier, SnapshottingRepository), interface implementations (AggregateRoot→AggregateRootContract+EntityContract, Entity→EntityContract, InMemoryUnitOfWork→UnitOfWorkContract, InMemorySnapshotStore→SnapshotStore), exception hierarchy (7 DomainException subclasses unique error codes, InvalidStateException standalone), DomainException RFC 9457 toErrorArray structure, custom error code override, AggregateRootContract required methods with return types, RepositoryContract required methods, serialization contract verification (toArray/fromArray/toJson/fromJson/jsonSerialize on identifiers, Snapshot, DomainEventCollection), UnitOfWorkContract required methods with return types, ValueObject abstract, all identifiers implement JsonSerializable, all identifiers have isValid() static method
+- Quality: Full manual code review — all 40 source files verified production-ready
+
 ## v1.72.0 (2026-08-16)
 
 - Docs: Deduplicate changelog entries in README — remove duplicate version headers
