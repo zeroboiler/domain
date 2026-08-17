@@ -191,6 +191,7 @@ try {
 - **Identifier Types** — `UuidIdentifier`, `UlidIdentifier`, `StringIdentifier`, `IntegerIdentifier`
 - **DomainException** hierarchy — typed exceptions for domain violations
 - **CLI Generators** — `domain:aggregate`, `domain:repository`, `domain:value-object`, `domain:list`, `domain:snapshot`
+- **Guard Clauses** — `Guards` trait with reusable domain invariant assertions (assertNotEmptyString, assertPositiveInteger, assertStateIs, etc.)
 
 ## PHP 8.5 Features
 
@@ -277,6 +278,7 @@ jobs, API responses, and cross-package data exchange:
 | `Concerns\HasDomainEvents` | trait | Domain event recording and clearing |
 | `Concerns\EventSourced` | trait | Event sourcing reconstitution from history |
 | `Concerns\HasSnapshots` | trait | Snapshot creation and restoration |
+| `Concerns\Guards` | trait | Domain invariant guard clauses (assertNotEmptyString, assertPositiveInteger, assertStateIs, etc.) |
 | `Snapshots\Snapshot` | final readonly class | Immutable snapshot of aggregate state |
 | `Snapshots\SnapshotStore` | interface | Snapshot persistence contract |
 | `Snapshots\SnapshotPolicy` | attribute | Configurable snapshot policy (version threshold) |
@@ -483,6 +485,44 @@ $e->toErrorArray();                                           // → ['title' =>
 json_encode($e);                                             // → RFC 9457
 ```
 
+### Guards (Domain Invariant Clauses)
+
+```php
+use ZeroBoiler\Domain\Concerns\Guards;
+
+class Order extends AggregateRoot
+{
+    use Guards;
+
+    public function __construct(
+        public readonly string $status,
+        public readonly int $total,
+    ) {
+        parent::__construct(AggregateRootId::generate());
+        $this->assertNotEmptyString($status, 'status');
+        $this->assertPositiveInteger($total, 'total');
+    }
+
+    public function pay(): void
+    {
+        $this->assertStateIs('pending', $this->status, 'pay');
+        // ... payment logic
+    }
+
+    public function cancel(): void
+    {
+        $this->assertStateIn(['pending', 'confirmed'], $this->status, 'cancel');
+        // ... cancellation logic
+    }
+
+    public function ship(): void
+    {
+        $this->assertStateIsNot('cancelled', $this->status, 'ship');
+        // ... shipping logic
+    }
+}
+```
+
 ## Architecture
 
 ```
@@ -490,7 +530,8 @@ AggregateRoot (extends Entity)
 ├── AggregateRootId (UUID v4)
 ├── HasDomainEvents trait (event recording)
 ├── EventSourced trait (optional, reconstitution from history)
-└── HasSnapshots trait (optional, snapshot/restore support)
+├── HasSnapshots trait (optional, snapshot/restore support)
+└── Guards trait (optional, domain invariant guard clauses)
 
 Entity (abstract)
 ├── HasDomainEvents trait
@@ -1674,6 +1715,7 @@ The domain package includes a comprehensive test suite covering:
 | `EventSourced` | `AggregateRoot` | `fromHistory()`, `applyEvent()` — replay/reconstitute from events |
 | `HasDomainEvents` | `Entity` | `recordThat()`, `releaseEvents()`, `hasUncommittedEvents()`, `peekEvents()` |
 | `HasSnapshots` | `AggregateRoot` | `shouldSnapshot()`, `createSnapshot()`, `restoreFromSnapshot()`, `toSnapshotState()` |
+| `Guards` | `Entity`, `ValueObject` | `assertNotEmptyString()`, `assertPositiveInteger()`, `assertNotNull()`, `assertFound()`, `assertStateIs()`, `assertStateIn()`, `assertStateIsNot()`, `assertRange()`, `assertIn()`, `assertMaxLength()` |
 
 ### Exceptions
 
@@ -2614,6 +2656,7 @@ class OrderController
 | `HasDomainEvents` | `recordThat()`, `releaseEvents()`, `clearEvents()`, `hasUncommittedEvents()`, `peekEvents()` | Event recording buffer |
 | `EventSourced` | `fromHistory()`, `applyEvent()` | Aggregate reconstitution from event stream |
 | `HasSnapshots` | `toSnapshotState()`, `restoreFromSnapshotState()`, `shouldSnapshot()`, `createSnapshot()`, `restoreFromSnapshot()`, `getSnapshotPolicy()` | Snapshot serialization |
+| `Guards` | `assertNotEmptyString()`, `assertPositiveInteger()`, `assertNonNegativeInteger()`, `assertNotNull()`, `assertFound()`, `assertStateIs()`, `assertStateIn()`, `assertStateIsNot()`, `assertRange()`, `assertIn()`, `assertMaxLength()` | Domain invariant guard clauses |
 
 ## Serialization Contract
 
@@ -2813,7 +2856,16 @@ try {
 ```
 
 
-## v1.74.0 (2026-08-17)
+## v1.76.0 (2026-08-17)
+
+- Docs: Add `Guards` trait to Class Reference table and Traits table with full method listing
+- Docs: Add Guards usage examples section with assertNotEmptyString, assertStateIs, assertStateIn, assertStateIsNot patterns
+- Docs: Add Guards to Architecture diagram and Features list
+- Docs: Add Guards one-liner quick start examples to Quick Start section
+- Quality: Full manual code review — all 41 source files verified production-ready (strict types, return types, docblocks, typed properties, PHP 8.5 syntax, readonly/final, #[Override]/#[Deprecated] attributes, serialization contract)
+- Test: Add `DomainGuardsTraitContractTest` — comprehensive Guards trait contract verification
+
+## v1.75.0 (2026-08-17)
 
 - Test: Add `DomainPackageProductionFinalAuditV174Test` — 30+ comprehensive production audit tests covering strict_types across all source files, final/readonly modifiers, interface implementations (AggregateRoot→AggregateRootContract+EntityContract+JsonSerializable, Entity→EntityContract+JsonSerializable, DomainEventCollection→Countable+IteratorAggregate+JsonSerializable, InMemoryUnitOfWork→UnitOfWorkContract, all identifiers→IdentifierContract+JsonSerializable), serialization contract (toArray/fromArray/toJson/fromJson round-trip on all identifiers, Snapshot, DomainEventCollection), domain exception hierarchy (8 exceptions unique error codes, RFC 9457 toErrorArray format, exception round-trip serialization), aggregate root contract methods with return types, entity contract methods, unit of work contract methods, repository contract methods, identifier cross-type inequality, aggregate root identity immutability, value object structural equality, domain event collection functional operations (some/none/find/countBy/types/hasType/reduce/merge), unit of work lifecycle (begin/track/commit/rollback/run), SnapshotPolicy attribute verification, InMemorySnapshotStore→SnapshotStore, SnapshottingRepository→Repository
 - Quality: Full manual code review — all 40+ source files verified production-ready (strict types, return types, docblocks, typed properties, PHP 8.5 syntax, readonly/final, #[Override]/#[Deprecated] attributes, serialization contract)
