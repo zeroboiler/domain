@@ -83,4 +83,17 @@ interface Identifier extends Stringable, \JsonSerializable
      * @throws \InvalidArgumentException If the JSON does not decode to an array.
      */
     public static function fromJson(string $json): static;
+
+    /**
+     * Convert the identifier to a JSON string.
+     *
+     * Convenience method for explicit JSON serialization without passing
+     * to `json_encode()`. Uses `JSON_THROW_ON_ERROR` for safety.
+     *
+     * @param  int  $options  JSON encoding options bitmask (default: JSON_UNESCAPED_UNICODE).
+     * @return string The JSON-encoded identifier representation.
+     *
+     * @since 1.77.0
+     */
+    public function toJson(int $options = JSON_UNESCAPED_UNICODE): string;
 }
