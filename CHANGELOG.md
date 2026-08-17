@@ -4,6 +4,14 @@ All notable changes to the `zeroboiler/domain` package will be documented in thi
 
 ## [Unreleased]
 
+## [1.77.0] - 2026-08-17
+
+### Added
+- `Contracts\Identifier::toJson()` — convenience method for explicit JSON serialization, completing the serialization interface contract consistency across all Identifier implementations
+
+### Fixed
+- `Contracts\Identifier` interface was missing `toJson()` method — all implementations (UuidIdentifier, UlidIdentifier, StringIdentifier, IntegerIdentifier, AggregateRootId) already provided it, but the contract did not enforce it
+
 ## [1.66.0] - 2026-08-15
 
 ### Added
