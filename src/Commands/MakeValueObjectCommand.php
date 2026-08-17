@@ -39,7 +39,7 @@ final class MakeValueObjectCommand extends GeneratorCommand
     }
 
     #[\Override]
-    protected function getDefaultNamespace($rootNamespace): string
+    protected function getDefaultNamespace(string $rootNamespace): string
     {
         return $rootNamespace . '\\Domain\\ValueObjects';
     }

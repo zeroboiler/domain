@@ -40,7 +40,7 @@ final class DomainRepositoryCommand extends GeneratorCommand
     }
 
     #[\Override]
-    protected function getDefaultNamespace($rootNamespace): string
+    protected function getDefaultNamespace(string $rootNamespace): string
     {
         return $rootNamespace . '\\Domain\\Repositories';
     }
