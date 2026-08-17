@@ -633,8 +633,8 @@ describe('Domain Package Final Production Audit v1.75.0', function () {
             expect(file_exists($stub))->toBeTrue();
             $content = file_get_contents($stub);
             expect($content)->toContain('declare(strict_types=1)');
-            expect($content)->toContain('#[\\Attribute');
-            expect($content)->toContain('ZeroBoiler\\Observability\\Trace');
+            expect($content)->toContain('ZeroBoiler\Observability\Trace');
+            expect($content)->toContain('TARGET_METHOD');
         });
     });
 });
