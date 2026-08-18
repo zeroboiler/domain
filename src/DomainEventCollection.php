@@ -78,6 +78,11 @@ final readonly class DomainEventCollection implements Countable, IteratorAggrega
         return new ArrayIterator($this->events);
     }
 
+    /**
+     * Get the number of events in the collection.
+     *
+     * @return int The event count.
+     */
     #[\Override]
     public function count(): int
     {
