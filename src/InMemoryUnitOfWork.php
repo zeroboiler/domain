@@ -38,6 +38,7 @@ use ZeroBoiler\Events\Domain\DomainEvent;
  * stored before consumers react to events.
  *
  * @implements UnitOfWorkContract
+ * @implements \JsonSerializable
  *
  * @since 1.0.0
  *
@@ -66,7 +67,7 @@ use ZeroBoiler\Events\Domain\DomainEvent;
  * });
  * ```
  */
-final class InMemoryUnitOfWork implements UnitOfWorkContract
+final class InMemoryUnitOfWork implements UnitOfWorkContract, \JsonSerializable
 {
     /** @var array<int, array{active?: bool, tracked: array<string, AggregateRoot>, deleted: array<string, AggregateRoot>}> */
     private array $savepoints = [];
@@ -805,5 +806,21 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract
     public function toJson(int $options = JSON_UNESCAPED_UNICODE): string
     {
         return json_encode($this->toArray(), $options | JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * Serialize the unit of work state for `json_encode()` support.
+     *
+     * Provides a consistent `JsonSerializable` interface matching all other
+     * domain objects (Entity, AggregateRoot, ValueObject, identifiers, etc.).
+     *
+     * @return array{nesting_depth: int, pending_event_count: int, committed_count: int, deleted_count: int, is_active: bool}
+     *
+     * @since 2.16.0
+     */
+    #[\Override]
+    public function jsonSerialize(): array
+    {
+        return $this->toArray();
     }
 }
