@@ -17,8 +17,8 @@ use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
  * Ideal for auto-increment database IDs, sequence numbers, and
  * numeric natural keys.
  *
- * @implements IdentifierContract
- * @implements JsonSerializable
+ * @see IdentifierContract Cross-package identifier contract.
+ * @see \JsonSerializable Provides `json_encode()` serialization.
  *
  * @since 1.0.0
  *

@@ -19,8 +19,8 @@ use Ramsey\Uuid\UuidInterface;
  * at creation time. The ID is stored as a Ramsey UuidInterface for
  * interoperability with the broader UUID ecosystem.
  *
- * @implements \Stringable
- * @implements \JsonSerializable
+ * @see \Stringable Used for automatic string coercion (`echo $id`).
+ * @see \JsonSerializable Used for `json_encode()` serialization.
  *
  * @since 1.0.0
  *

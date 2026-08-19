@@ -22,8 +22,8 @@ use ZeroBoiler\Events\Domain\DomainEvent;
  * for DomainEvent objects. Supports full round-trip serialization
  * via toArray()/fromArray() for caching, queue jobs, and event replay.
  *
- * @implements IteratorAggregate<int, DomainEvent>
- * @implements JsonSerializable
+ * @see \IteratorAggregate<int, DomainEvent> Provides `foreach` iteration over events.
+ * @see \JsonSerializable Provides `json_encode()` serialization.
  *
  * @since 1.0.0
  *

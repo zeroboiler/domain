@@ -18,8 +18,8 @@ use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
  * Enforces non-empty strings at construction time, ensuring identifiers
  * are always meaningful. Ideal for slugs, codes, and natural keys.
  *
- * @implements IdentifierContract
- * @implements JsonSerializable
+ * @see IdentifierContract Cross-package identifier contract.
+ * @see \JsonSerializable Provides `json_encode()` serialization.
  *
  * @since 1.0.0
  *

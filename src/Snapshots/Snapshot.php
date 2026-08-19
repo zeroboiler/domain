@@ -13,7 +13,7 @@ namespace ZeroBoiler\Domain\Snapshots;
  *
  * @see https://martinfowler.com/eaaDev/EventSourcing.html
  *
- * @implements \JsonSerializable
+ * @see \JsonSerializable Provides `json_encode()` serialization.
  *
  * @since 1.0.0
  *

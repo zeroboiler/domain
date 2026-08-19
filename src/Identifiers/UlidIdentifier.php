@@ -19,8 +19,8 @@ use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
  * can be used as both a unique identifier and a timestamp. Ideal for
  * high-throughput systems where insertion order matters.
  *
- * @implements IdentifierContract
- * @implements JsonSerializable
+ * @see IdentifierContract Cross-package identifier contract.
+ * @see \JsonSerializable Provides `json_encode()` serialization.
  *
  * @since 1.0.0
  *

@@ -22,8 +22,8 @@ use ZeroBoiler\Domain\Contracts\Identifier as IdentifierContract;
  * Validation is performed in the constructor — invalid UUIDs throw
  * an exception at construction time, ensuring identifiers are always valid.
  *
- * @implements IdentifierContract
- * @implements JsonSerializable
+ * @see IdentifierContract Cross-package identifier contract.
+ * @see \JsonSerializable Provides `json_encode()` serialization.
  *
  * @since 1.0.0
  *
