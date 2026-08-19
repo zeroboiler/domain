@@ -266,7 +266,7 @@ trait Guards
                 sprintf(
                     'Cannot %s — must be in one of [%s] state, got "%s".',
                     $action,
-                    implode(', ', array_map(static fn (string $s): string => sprintf('"%s"', $s), $allowed)),
+                    implode(', ', array_map(static fn (string $s): string => '"' . $s . '"', $allowed)),
                     $actual,
                 ),
             );
@@ -352,7 +352,7 @@ trait Guards
                 sprintf(
                     '"%s" must be one of [%s], got "%s".',
                     $name,
-                    implode(', ', array_map(static fn (string $s): string => sprintf('"%s"', $s), $allowed)),
+                    implode(', ', array_map(static fn (string $s): string => '"' . $s . '"', $allowed)),
                     $actual,
                 ),
                 code: 'INVALID_OPTION',
