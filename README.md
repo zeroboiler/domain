@@ -8,6 +8,43 @@
 
 **DDD Building Blocks** — Rich domain models with aggregate roots, entities, value objects, identifiers, event sourcing, snapshots, and domain events.
 
+## Table of Contents
+
+- [Installation](#installation)
+- [Requirements](#requirements)
+- [Cross-Package Dependencies](#cross-package-dependencies)
+- [Quick Start](#quick-start)
+  - [Creating an Aggregate Root](#creating-an-aggregate-root)
+  - [Creating Identifiers](#creating-identifiers)
+  - [Domain Exceptions](#domain-exceptions)
+  - [Unit of Work](#unit-of-work)
+- [Features](#features)
+- [PHP 8.5 Features](#php-85-features)
+  - [Readonly Class Unserialization Pattern](#readonly-class-unserialization-pattern)
+  - [Serialization Contract](#serialization-contract)
+- [Class Reference](#class-reference)
+- [Exception Hierarchy](#exception-hierarchy)
+  - [RFC 9457 Problem Details Mapping](#rfc-9457-problem-details-mapping)
+- [One-Liner Quick Start](#one-liner-quick-start)
+  - [Core](#core)
+  - [Identifiers](#identifiers)
+  - [Snapshots](#snapshots)
+  - [Exceptions](#exceptions)
+  - [Guards (Domain Invariant Clauses)](#guards-domain-invariant-clauses)
+- [Architecture](#architecture)
+- [Usage](#usage)
+  - [Aggregate Root](#aggregate-root)
+  - [Entity](#entity)
+  - [Value Objects](#value-objects)
+- [Advanced Patterns](#advanced-patterns)
+- [Round-Trip Guarantees](#round-trip-guarantees)
+- [Version Compatibility](#version-compatibility)
+- [Production Ready Checklist](#production-ready-checklist)
+- [Changelog](#changelog)
+- [Security](#security)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## Installation
 
 ```bash
@@ -2980,6 +3017,18 @@ return Response::transform($order)
 ## Security
 
 If you discover a security vulnerability, please email `hello@zeroboiler.dev`. All security vulnerabilities will be promptly addressed.
+
+## Contributing
+
+This is a proprietary package. Contributions are accepted via pull request to the `zeroboiler` GitHub organization. Please follow these guidelines:
+
+1. **PHPStan Level 9** — All code must pass `vendor/bin/phpstan analyse` with zero errors
+2. **Pest Tests** — New features require test coverage via `vendor/bin/pest`
+3. **Pint** — Code style is enforced via `vendor/bin/pint`
+4. **Docblocks** — All public/protected methods must have `@param`, `@return`, `@throws`, and `@since` annotations
+5. **`#[\Override]`** — Required on all interface/parent contract implementations
+6. **Serialization** — New serializable classes must implement `toArray()`/`fromArray()`/`toJson()`/`fromJson()` for ecosystem consistency
+7. **Immutability** — Value types should use `readonly` classes and promoted properties
 
 ## License
 
