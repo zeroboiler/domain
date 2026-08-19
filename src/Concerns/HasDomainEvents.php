@@ -114,7 +114,7 @@ trait HasDomainEvents
     /**
      * Peek at recorded domain events without removing them.
      *
-     * Returns a copy of the internal event buffer for inspection,
+     * Returns a **copy** of the internal event buffer for inspection,
      * logging, or debugging without affecting the event state.
      * The events remain available for subsequent `releaseEvents()` calls.
      *
@@ -136,6 +136,6 @@ trait HasDomainEvents
      */
     public function peekEvents(): array
     {
-        return $this->domainEvents;
+        return array_values($this->domainEvents);
     }
 }

@@ -67,9 +67,17 @@ final readonly class Snapshot implements \JsonSerializable
     }
 
     /**
-     * Serialize to array for persistence.
+     * Serialize the snapshot to an array for persistence.
      *
-     * @return array<string, mixed>
+     * @return array{aggregate_type: string, aggregate_id: string, version: int, state: array<string, mixed>, created_at: string}
+     *
+     * @example
+     * ```php
+     * $snapshot = Snapshot::create(Order::class, $id, 50, ['status' => 'paid']);
+     * $snapshot->toArray();
+     * // ['aggregate_type' => 'Order', 'aggregate_id' => '...'
+     * //  'version' => 50, 'state' => ['status' => 'paid'], 'created_at' => '...']
+     * ```
      */
     public function toArray(): array
     {
@@ -85,10 +93,16 @@ final readonly class Snapshot implements \JsonSerializable
     /**
      * Deserialize from persisted array.
      *
-     * @param  array<string, mixed>  $data
+     * @param  array<string, mixed>  $data  The serialized snapshot data from {@see toArray()}.
      * @return self
      *
      * @throws \InvalidArgumentException If the data contains invalid types.
+     *
+     * @example
+     * ```php
+     * $restored = Snapshot::fromArray($snapshot->toArray());
+     * $snapshot->equals($restored); // true
+     * ```
      */
     public static function fromArray(array $data): self
     {
@@ -98,10 +112,16 @@ final readonly class Snapshot implements \JsonSerializable
         $state = $data['state'] ?? null;
         $createdAt = $data['created_at'] ?? null;
 
-        if (! is_string($aggregateType) || ! is_string($aggregateId) || ! is_int($version)
-            || ! is_array($state) || ! is_string($createdAt)) {
+        if (! is_string($aggregateType) || $aggregateType === ''
+            || ! is_string($aggregateId) || $aggregateId === ''
+            || ! is_int($version) || $version < 0
+            || ! is_array($state)
+            || ! is_string($createdAt)
+        ) {
             throw new \InvalidArgumentException(sprintf(
-                'Invalid snapshot data: expected string, string, int, array, string; got %s, %s, %s, %s, %s.',
+                'Invalid snapshot data: expected non-empty string (aggregate_type), non-empty string (aggregate_id), '
+                .'non-negative int (version), array (state), ATOM datetime string (created_at); '
+                .'got %s, %s, %s, %s, %s.',
                 get_debug_type($aggregateType),
                 get_debug_type($aggregateId),
                 get_debug_type($version),
