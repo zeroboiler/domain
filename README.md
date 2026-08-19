@@ -2812,47 +2812,64 @@ $result = $uow->run(function () use ($uow, $order, $productId) {
 ### Domain → Response Mapping (Cross-Package)
 
 ```php
-// In your controller or handler:
-use ZeroBoiler\Response\Response;
 use ZeroBoiler\Response\Transformers\DomainResponseFactory;
-use ZeroBoiler\Response\Transformers\DomainTransformer;
+use ZeroBoiler\Response\Facades\Response;
+use ZeroBoiler\Response\Pagination\OffsetPagination;
 
-class OrderTransformer extends DomainTransformer
+// 1. Define a DomainTransformer (in the response layer)
+class OrderTransformer extends \ZeroBoiler\Response\Transformers\DomainTransformer
 {
-    public function transform(object $order): array
+    protected function mapDomainFields(object $entity, array $context = []): array
     {
         return [
-            'id' => (string) $order->id(),
-            'status' => $order->status()->value,
-            'total' => $order->getTotal()->amount(),
-            'currency' => $order->getTotal()->currency()->code(),
+            'id'     => static::extractId($entity),
+            'status' => $entity->status,
+            'total'  => $entity->total,
         ];
+    }
+
+    protected function mapMeta(object $entity, array $context = []): array
+    {
+        return ['version' => $this->extractVersion($entity)];
     }
 }
 
-// Usage in controller:
-$api = DomainResponseFactory::entity($order, new OrderTransformer);
-return $api->send();
+// 2. Single entity response via DomainResponseFactory (pass transformed fields, not a transformer)
+$fields = (new OrderTransformer)->transform($order);
+return DomainResponseFactory::entity($order, $fields)->send();
+// → {"data":{"id":"...","status":"pending","total":0,"_id":"...","_version":1},"links":{"self":"..."}}
 
-// Collection:
-$api = DomainResponseFactory::collection($orders, new OrderTransformer);
-return $api->send();
+// 3. Collection response
+$items = array_map(fn ($o) => (new OrderTransformer)->transform($o), $orders->all());
+return DomainResponseFactory::collection($items, ['total' => 150, 'per_page' => 20])->send();
+// → {"data":{"items":[...]},"meta":{"total":150,"per_page":20}}
 
-// Paginated:
-$api = DomainResponseFactory::paginatedCollection(
-    $orders,
-    new OrderTransformer,
-    OffsetPagination::fromPaginator($paginator)->toArray(),
-);
-return $api->send();
+// 4. Paginated collection
+return DomainResponseFactory::paginatedCollection(
+    items: $items,
+    pagination: ['current_page' => 2, 'per_page' => 20, 'total' => 150],
+    links: ['first' => '/api/orders?page=1', 'next' => '/api/orders?page=3'],
+)->send();
 
-// Exception → RFC 9457 auto-bridge:
+// 5. Created (201) / Updated (200) / Deleted (204)
+return DomainResponseFactory::created($order, (new OrderTransformer)->transform($order))->send();
+return DomainResponseFactory::updated($order, (new OrderTransformer)->transform($order))->send();
+return DomainResponseFactory::deleted()->send();
+
+// 6. Exception → RFC 9457 auto-bridge (auto-detects HTTP status from exception type)
 try {
     $order->markAsCompleted();
-} catch (DomainException $e) {
+} catch (\ZeroBoiler\Domain\Exceptions\DomainException $e) {
     return DomainResponseFactory::fromException($e)->send();
-    // Returns: {"title":"Invalid State","detail":"...","code":"INVALID_STATE"}
+    // → {"errors":[{"title":"InvalidStateDomainException","detail":"...","code":"INVALID_STATE","status":422}]}
 }
+
+// 7. Via Response facade + Transformer pipeline
+return Response::transform($order)
+    ->through(OrderTransformer::class)
+    ->include('items')
+    ->api()
+    ->send();
 ```
 
 
