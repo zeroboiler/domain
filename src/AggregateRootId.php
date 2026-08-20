@@ -264,3 +264,4 @@ final readonly class AggregateRootId implements \Stringable, JsonSerializable
         return self::fromArray($data);
     }
 }
+
