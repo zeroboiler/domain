@@ -248,8 +248,8 @@ final readonly class StringIdentifier implements IdentifierContract, JsonSeriali
      * Reconstruct from PHP's native unserialize().
      *
      * Uses reflection to set the readonly property after construction.
-      * Unsets the property first if already initialized (PHP 8.5 pattern)
-      * to handle edge cases during re-serialization.
+     * Unsets the property first if already initialized (PHP 8.5 pattern)
+     * to handle edge cases during re-serialization.
      *
      * @param  array{string?: string, id?: string}  $data
      * @return void
