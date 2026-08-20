@@ -23,9 +23,18 @@ use ZeroBoiler\Domain\Exceptions\NotFoundDomainException;
  * Each guard method throws a specific domain exception type:
  * - `assertNotEmptyString()` → InvalidArgumentDomainException
  * - `assertPositiveInteger()` → InvalidArgumentDomainException
+ * - `assertNonNegativeInteger()` → InvalidArgumentDomainException
  * - `assertNotNull()` → InvalidArgumentDomainException
- * - `assertStateIs()` → InvalidStateDomainException
  * - `assertFound()` → NotFoundDomainException
+ * - `assertRange()` → InvalidArgumentDomainException
+ * - `assertIn()` → InvalidArgumentDomainException
+ * - `assertInstanceOf()` → InvalidArgumentDomainException
+ * - `assertMatchesRegex()` → InvalidArgumentDomainException
+ * - `assertGreaterThan()` → InvalidArgumentDomainException
+ * - `assertLessThan()` → InvalidArgumentDomainException
+ * - `assertStateIs()` → InvalidStateDomainException
+ * - `assertStateIn()` → InvalidStateDomainException
+ * - `assertStateIsNot()` → InvalidStateDomainException
  *
  * @see InvalidArgumentDomainException For input validation failures.
  * @see InvalidStateDomainException For state-based business rule violations.
@@ -356,6 +365,125 @@ trait Guards
                     $actual,
                 ),
                 code: 'INVALID_OPTION',
+            );
+        }
+
+    /**
+     * Assert that a value is an instance of a specific class or interface.
+     *
+     * @param  mixed  $value  The value to check.
+     * @param  string  $expected  The expected class or interface FQCN.
+     * @param  string  $name  The parameter/field name (for error message).
+     * @return void
+     *
+     * @throws InvalidArgumentDomainException When the value is not an instance of expected.
+     *
+     * @example
+     * ```php
+     * $this->assertInstanceOf($entity, Order::class, 'order');
+     * ```
+     */
+    protected function assertInstanceOf(mixed $value, string $expected, string $name): void
+    {
+        if (! $value instanceof $expected) {
+            throw InvalidArgumentDomainException::because(
+                sprintf(
+                    '"%s" must be an instance of %s, got %s.',
+                    $name,
+                    $expected,
+                    get_debug_type($value),
+                ),
+                code: 'INVALID_TYPE',
+            );
+        }
+    }
+
+    /**
+     * Assert that a string matches a regular expression pattern.
+     *
+     * @param  string  $value  The value to check.
+     * @param  string  $pattern  The regular expression pattern.
+     * @param  string  $name  The parameter/field name (for error message).
+     * @return void
+     *
+     * @throws InvalidArgumentDomainException When the string does not match the pattern.
+     *
+     * @example
+     * ```php
+     * $this->assertMatchesRegex($code, '/^[A-Z]{2}[0-9]{6}$/', 'code');
+     * ```
+     */
+    protected function assertMatchesRegex(string $value, string $pattern, string $name): void
+    {
+        if (preg_match($pattern, $value) !== 1) {
+            throw InvalidArgumentDomainException::because(
+                sprintf(
+                    '"%s" must match pattern %s, got "%s".',
+                    $name,
+                    $pattern,
+                    $value,
+                ),
+                code: 'REGEX_MISMATCH',
+            );
+        }
+    }
+
+    /**
+     * Assert that a value is greater than a minimum threshold.
+     *
+     * @param  int|float  $value  The value to check.
+     * @param  int|float  $min  The minimum allowed value (exclusive).
+     * @param  string  $name  The parameter/field name (for error message).
+     * @return void
+     *
+     * @throws InvalidArgumentDomainException When the value is not greater than min.
+     *
+     * @example
+     * ```php
+     * $this->assertGreaterThan($total, 0, 'total');
+     * ```
+     */
+    protected function assertGreaterThan(int|float $value, int|float $min, string $name): void
+    {
+        if ($value <= $min) {
+            throw InvalidArgumentDomainException::because(
+                sprintf(
+                    '"%s" must be greater than %s, got %s.',
+                    $name,
+                    $min,
+                    $value,
+                ),
+                code: 'VALUE_TOO_SMALL',
+            );
+        }
+    }
+
+    /**
+     * Assert that a value is less than a maximum threshold.
+     *
+     * @param  int|float  $value  The value to check.
+     * @param  int|float  $max  The maximum allowed value (exclusive).
+     * @param  string  $name  The parameter/field name (for error message).
+     * @return void
+     *
+     * @throws InvalidArgumentDomainException When the value is not less than max.
+     *
+     * @example
+     * ```php
+     * $this->assertLessThan($discount, 100, 'discount');
+     * ```
+     */
+    protected function assertLessThan(int|float $value, int|float $max, string $name): void
+    {
+        if ($value >= $max) {
+            throw InvalidArgumentDomainException::because(
+                sprintf(
+                    '"%s" must be less than %s, got %s.',
+                    $name,
+                    $max,
+                    $value,
+                ),
+                code: 'VALUE_TOO_LARGE',
             );
         }
     }
