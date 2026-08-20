@@ -816,7 +816,7 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract, \JsonSerializable
      *
      * @return array{nesting_depth: int, pending_event_count: int, committed_count: int, deleted_count: int, is_active: bool}
      *
-     * @since 2.16.0
+     * @since 1.66.0
      */
     #[\Override]
     public function jsonSerialize(): array

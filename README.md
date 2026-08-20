@@ -333,8 +333,12 @@ DomainException (abstract, Exception, JsonSerializable)
 ├── AggregateNotFoundException         — Aggregate-specific not-found
 ├── OptimisticLockException            — Version mismatch on save
 ├── InvalidAggregateRootException     — Not a valid aggregate root
-└── InvalidStateException              — Infrastructure state failure
+└── InvalidStateException              — Infrastructure-level state failure
 ```
+
+> **Note**: `InvalidStateException` was historically standalone but now extends
+> `DomainException` for uniform `errorCode()`, `toErrorArray()`, and `JsonSerializable`
+> support across the entire exception hierarchy.
 
 All exceptions provide:
 - `errorCode()` — machine-readable code (e.g., `'INVALID_STATE'`, `'OPTIMISTIC_LOCK'`)
@@ -1254,9 +1258,7 @@ Exception
     │   └── for(type, id)                 — typed not-found helper
     └── InvalidAggregateRootException     — object is not an AggregateRoot (code: INVALID_AGGREGATE_ROOT)
         └── notAnAggregate(object)         — validation helper
-
-Exception (standalone, outside domain)
-└── InvalidStateException                — system-level invalid state (not domain)
+    └── InvalidStateException              — infrastructure-level state failure (code: INVALID_STATE_SYSTEM)
 ```
 
 ```php
@@ -1964,6 +1966,11 @@ When using `zeroboiler/response` with this domain package:
 | < 8.4 | ❌ Not supported | Requires union types, readonly classes, named arguments |
 
 ## Changelog
+
+### v1.78.0 (2026-08-20)
+
+- Docs: Fix exception hierarchy — `InvalidStateException` now correctly documented as extending `DomainException` (was incorrectly listed as standalone)
+- Fix: Correct `@since` tag on `InMemoryUnitOfWork::jsonSerialize()` from `2.16.0` to `1.66.0` (package has never had a 2.x release)
 
 ### v1.59.0 (2026-08-14)
 
