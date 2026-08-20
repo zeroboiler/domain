@@ -2992,6 +2992,11 @@ return Response::transform($order)
 - Docs: Enhance Production Ready Checklist — add `#[\Override]` attributes, `#[\Deprecated]` attributes, cross-package integration criteria, detailed readonly class listing, `static` return type annotations, `@template` generic annotations
 - Docs: Add Advanced Patterns section with guard clauses, composite aggregates, and domain event patterns
 
+## v1.54.0 (2026-08-20)
+
+- Refactor: Add `#[\Override]` to all `DomainException` subclass `defaultErrorCode()` and `defaultHttpStatus()` overrides for PHPStan-level contract compliance
+- Test: Add comprehensive production contract test suite covering all identifier serde, entity equality, snapshot round-trips, and UoW lifecycle
+
 ## v1.53.0 (2026-08-12)
 
 - Quality: Full production readiness audit — all 40 source files verified (strict types, return types, docblocks, typed properties, PHP 8.5 syntax)
