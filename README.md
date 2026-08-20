@@ -1967,6 +1967,11 @@ When using `zeroboiler/response` with this domain package:
 
 ## Changelog
 
+### v1.79.0 (2026-08-20)
+
+- Fix: Consistent readonly property unset in `__unserialize()` across all 4 identifier classes (UuidIdentifier, UlidIdentifier, StringIdentifier, IntegerIdentifier) — match AggregateRootId pattern for PHP 8.5 compatibility
+- Quality: Manual code review — all 41 source files verified production-ready
+
 ### v1.78.0 (2026-08-20)
 
 - Docs: Fix exception hierarchy — `InvalidStateException` now correctly documented as extending `DomainException` (was incorrectly listed as standalone)

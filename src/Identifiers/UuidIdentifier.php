@@ -265,6 +265,8 @@ abstract readonly class UuidIdentifier implements IdentifierContract, JsonSerial
      * Reconstruct from PHP's native unserialize().
      *
      * Uses reflection to set the readonly property after construction.
+      * Unsets the property first if already initialized (PHP 8.5 pattern)
+      * to handle edge cases during re-serialization.
      *
      * @param  array{uuid?: string, id?: string}  $data
      * @return void
@@ -281,7 +283,12 @@ abstract readonly class UuidIdentifier implements IdentifierContract, JsonSerial
             );
         }
 
-        (new \ReflectionClass(static::class))->getProperty('value')
-            ->setValue($this, $uuid);
+        $property = (new \ReflectionClass(static::class))->getProperty('value');
+
+        if ($property->isInitialized($this)) {
+            unset($this->value);
+        }
+
+        $property->setValue($this, $uuid);
     }
 }
