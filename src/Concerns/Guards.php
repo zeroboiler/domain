@@ -367,6 +367,7 @@ trait Guards
                 code: 'INVALID_OPTION',
             );
         }
+    }
 
     /**
      * Assert that a value is an instance of a specific class or interface.
