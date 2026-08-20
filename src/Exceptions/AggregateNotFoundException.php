@@ -31,13 +31,13 @@ use function sprintf;
  */
 final class AggregateNotFoundException extends DomainException
 {
-    /** @return string Machine-readable error code for missing aggregates. */
+    #[\Override]
     protected function defaultErrorCode(): string
     {
         return 'AGGREGATE_NOT_FOUND';
     }
 
-    /** @return int HTTP status code for missing aggregates (404 Not Found). */
+    #[\Override]
     protected function defaultHttpStatus(): int
     {
         return 404;

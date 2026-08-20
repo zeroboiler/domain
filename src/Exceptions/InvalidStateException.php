@@ -36,13 +36,13 @@ namespace ZeroBoiler\Domain\Exceptions;
  */
 final class InvalidStateException extends DomainException
 {
-    /** @return string Machine-readable error code for system-level invalid state. */
+    #[\Override]
     protected function defaultErrorCode(): string
     {
         return 'INVALID_STATE_SYSTEM';
     }
 
-    /** @return int HTTP status code for system-level invalid state (500 Internal Server Error). */
+    #[\Override]
     protected function defaultHttpStatus(): int
     {
         return 500;

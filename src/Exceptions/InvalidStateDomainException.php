@@ -31,13 +31,13 @@ namespace ZeroBoiler\Domain\Exceptions;
  */
 final class InvalidStateDomainException extends DomainException
 {
-    /** @return string Machine-readable error code for invalid state violations. */
+    #[\Override]
     protected function defaultErrorCode(): string
     {
         return 'INVALID_STATE';
     }
 
-    /** @return int HTTP status code for invalid state violations (422 Unprocessable Entity). */
+    #[\Override]
     protected function defaultHttpStatus(): int
     {
         return 422;

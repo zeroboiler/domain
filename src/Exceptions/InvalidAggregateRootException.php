@@ -32,13 +32,13 @@ use function sprintf;
  */
 final class InvalidAggregateRootException extends DomainException
 {
-    /** @return string Machine-readable error code for invalid aggregate root types. */
+    #[\Override]
     protected function defaultErrorCode(): string
     {
         return 'INVALID_AGGREGATE_ROOT';
     }
 
-    /** @return int HTTP status code for invalid aggregate root types (500 Internal Server Error). */
+    #[\Override]
     protected function defaultHttpStatus(): int
     {
         return 500;

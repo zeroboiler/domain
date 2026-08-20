@@ -35,13 +35,13 @@ use function sprintf;
  */
 final class OptimisticLockException extends DomainException
 {
-    /** @return string Machine-readable error code for optimistic lock conflicts. */
+    #[\Override]
     protected function defaultErrorCode(): string
     {
         return 'OPTIMISTIC_LOCK';
     }
 
-    /** @return int HTTP status code for optimistic lock conflicts (409 Conflict). */
+    #[\Override]
     protected function defaultHttpStatus(): int
     {
         return 409;
