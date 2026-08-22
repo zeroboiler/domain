@@ -372,7 +372,7 @@ final class DomainResponseFinalBridgeTest extends TestCase
 
                 throw new \RuntimeException('Force rollback');
             });
-        } catch (\RuntimeException) {
+        } catch (\RuntimeException $e) {
             // Expected
         }
 

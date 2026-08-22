@@ -619,7 +619,7 @@ final class TestEntity extends Entity
 {
     public function __construct(
         int|string|\Stringable $id,
-        public readonly string $name = '',
+        public string $name = '',
     ) {
         parent::__construct($id);
     }
@@ -654,7 +654,7 @@ final class TestEntityWithGuards extends Entity
 
     public function __construct(
         int|string|\Stringable $id,
-        public readonly string $status = 'active',
+        public string $status = 'active',
     ) {
         parent::__construct($id);
         $this->assertNotEmptyString($status, 'status');

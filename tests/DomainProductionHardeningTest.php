@@ -403,7 +403,7 @@ final class DomainProductionHardeningTest extends TestCase
             $uow->run(function (): void {
                 throw new \RuntimeException('fail');
             });
-        } catch (\RuntimeException) {
+        } catch (\RuntimeException $e) {
             // Expected
         }
 
@@ -441,7 +441,7 @@ final class DomainProductionHardeningTest extends TestCase
                 $uow->run(function (): void {
                     throw new \RuntimeException('inner fail');
                 });
-            } catch (\RuntimeException) {
+            } catch (\RuntimeException $e) {
                 $result = 'caught';
             }
         });

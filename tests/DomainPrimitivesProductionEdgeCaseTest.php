@@ -37,7 +37,7 @@ final class EdgeTestOrder extends Entity
 {
     public function __construct(
         int|string|\Stringable $id,
-        public readonly string $status = 'pending',
+        public string $status = 'pending',
     ) {
         parent::__construct($id);
     }

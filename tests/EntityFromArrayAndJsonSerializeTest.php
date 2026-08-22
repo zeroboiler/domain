@@ -288,7 +288,7 @@ final class TestSimpleEntity extends Entity
 {
     public function __construct(
         int|string|\Stringable $id,
-        public readonly string $name = 'default-name',
+        public string $name = 'default-name',
     ) {
         parent::__construct($id);
     }

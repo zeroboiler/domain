@@ -183,7 +183,7 @@ describe('Domain Package Production Integration', function (): void {
 
                     throw new \RuntimeException('Intentional failure');
                 });
-            } catch (\RuntimeException) {
+            } catch (\RuntimeException $e) {
                 // Expected
             }
 

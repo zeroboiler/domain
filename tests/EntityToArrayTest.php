@@ -43,7 +43,7 @@ it('subclass toArray includes parent keys', function (): void {
     {
         public function __construct(
             int|string|\Stringable $id,
-            public readonly string $name = 'test',
+            public string $name = 'test',
         ) {
             parent::__construct($id);
         }

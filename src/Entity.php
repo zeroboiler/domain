@@ -90,7 +90,7 @@ abstract class Entity implements EntityContract, \JsonSerializable
         // to anything — even another ID-less entity of the same type.
         try {
             return $this->id() === $other->id();
-        } catch (\LogicException) {
+        } catch (\LogicException $e) {
             return false;
         }
     }

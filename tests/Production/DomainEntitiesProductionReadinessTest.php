@@ -586,7 +586,7 @@ final class DomainEntitiesProductionReadinessTest extends TestCase
                 $aggregate->recordThat(DomainEvent::occur('order.placed', []));
                 throw new \RuntimeException('fail');
             });
-        } catch (\RuntimeException) {
+        } catch (\RuntimeException $e) {
             // Expected
         }
 

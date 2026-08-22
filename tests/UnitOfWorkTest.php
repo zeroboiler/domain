@@ -370,7 +370,7 @@ it('inner rollback does not discard outer events', function (): void {
 
                 throw new RuntimeException('inner fail');
             });
-        } catch (RuntimeException) {
+        } catch (RuntimeException $e) {
             // swallow inner failure
         }
 
@@ -397,7 +397,7 @@ it('outer rollback discards all events', function (): void {
 
             throw new RuntimeException('outer fail');
         });
-    } catch (RuntimeException) {
+    } catch (RuntimeException $e) {
         // expected
     }
 
@@ -487,7 +487,7 @@ it('multi-aggregate rollback discards all events', function (): void {
 
             throw new RuntimeException('simulated failure');
         });
-    } catch (RuntimeException) {
+    } catch (RuntimeException $e) {
         // expected
     }
 

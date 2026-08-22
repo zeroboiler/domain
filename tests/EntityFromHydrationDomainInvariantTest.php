@@ -633,7 +633,7 @@ describe('Unit of Work Lifecycle', function (): void {
             $uow->run(function (): void {
                 throw new \RuntimeException('test failure');
             });
-        } catch (\RuntimeException) {
+        } catch (\RuntimeException $e) {
             // Expected
         }
 

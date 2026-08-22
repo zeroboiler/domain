@@ -866,7 +866,7 @@ final class DomainContractValidationTest extends TestCase
             $uow2->run(function (): void {
                 throw new \RuntimeException('fail');
             });
-        } catch (\RuntimeException) {
+        } catch (\RuntimeException $e) {
             // Expected
         }
         $this->assertFalse($uow2->isActive());

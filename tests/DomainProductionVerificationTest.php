@@ -524,7 +524,7 @@ final class DomainProductionVerificationTest extends TestCase
             $uow->run(function (): never {
                 throw new \RuntimeException('Fail');
             });
-        } catch (\RuntimeException) {
+        } catch (\RuntimeException $e) {
             // Expected
         }
 

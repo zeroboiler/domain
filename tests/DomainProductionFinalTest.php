@@ -463,12 +463,12 @@ describe('InMemoryUnitOfWork production hardening', function (): void {
                     $uow->run(function (): void {
                         throw new \RuntimeException('inner fail');
                     });
-                } catch (\RuntimeException) {
+                } catch (\RuntimeException $e) {
                     // Inner scope rolled back, outer continues
                     $counter++;
                 }
             });
-        } catch (\RuntimeException) {
+        } catch (\RuntimeException $e) {
             $counter++;
         }
 

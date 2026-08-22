@@ -146,7 +146,7 @@ describe('Domain Advanced Edge Cases', function (): void {
                         $order->pay(100.0);
                         throw new \RuntimeException('Inner failure');
                     });
-                } catch (\RuntimeException) {
+                } catch (\RuntimeException $e) {
                     // Expected
                 }
 

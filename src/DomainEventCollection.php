@@ -50,7 +50,7 @@ final readonly class DomainEventCollection implements Countable, IteratorAggrega
      * @throws \InvalidArgumentException If $events is not a sequential list or contains non-DomainEvent items.
      */
     public function __construct(
-        private readonly array $events = [],
+        private array $events = [],
     ) {
         if (! array_is_list($events)) {
             throw new \InvalidArgumentException(

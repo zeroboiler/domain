@@ -150,7 +150,7 @@ final class AuditMoney extends ValueObject
 {
     public function __construct(
         public readonly int $cents,
-        public readonly string $currency = 'USD',
+        public string $currency = 'USD',
     ) {}
 
     public static function fromArray(array $data): static

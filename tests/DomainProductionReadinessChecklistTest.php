@@ -714,7 +714,7 @@ final class DomainProductionReadinessChecklistTest extends TestCase
 
         try {
             $uow->run(fn () => throw new \RuntimeException('fail'));
-        } catch (\RuntimeException) {
+        } catch (\RuntimeException $e) {
             // Expected
         }
 

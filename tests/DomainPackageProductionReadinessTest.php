@@ -586,7 +586,7 @@ final class DomainPackageProductionReadinessTest extends TestCase
                 $root->rename('WillRollback');
                 throw new \RuntimeException('Force rollback');
             });
-        } catch (\RuntimeException) {
+        } catch (\RuntimeException $e) {
             // Expected
         }
 

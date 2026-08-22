@@ -390,8 +390,8 @@ final class TestEntity extends Entity
 {
     public function __construct(
         int|string|\Stringable $id,
-        public readonly string $name = '',
-        public readonly int $quantity = 0,
+        public string $name = '',
+        public int $quantity = 0,
     ) {
         parent::__construct($id);
     }
@@ -409,8 +409,8 @@ final class TestEntity extends Entity
 final class TestValueObject extends ValueObject
 {
     public function __construct(
-        public readonly string $street = '',
-        public readonly string $city = '',
+        public string $street = '',
+        public string $city = '',
     ) {}
 
     public static function fromArray(array $data): static

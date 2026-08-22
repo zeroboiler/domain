@@ -524,7 +524,7 @@ final class DomainEndToEndProductionTest extends TestCase
                 $uow->queueEvent(DomainEvent::occur('event.should_be_discarded', []));
                 throw new \RuntimeException('intentional failure');
             });
-        } catch (\RuntimeException) {
+        } catch (\RuntimeException $e) {
             // Expected
         }
 

@@ -558,7 +558,7 @@ final class DomainProductionContractFinalTest extends TestCase
                 $uow->queueEvent(DomainEvent::occur('test.event', []));
                 throw new \RuntimeException('fail');
             });
-        } catch (\RuntimeException) {
+        } catch (\RuntimeException $e) {
             // Expected
         }
 

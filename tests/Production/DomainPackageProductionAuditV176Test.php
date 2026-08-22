@@ -388,7 +388,7 @@ describe('Domain Package Production Audit v1.76.0', function () {
 
                     throw new \RuntimeException('Intentional failure');
                 });
-            } catch (\RuntimeException) {
+            } catch (\RuntimeException $e) {
                 $thrown = true;
             }
 

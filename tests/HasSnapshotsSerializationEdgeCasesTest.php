@@ -34,7 +34,7 @@ describe('HasSnapshots serialization edge cases', function (): void {
 
         // Scalar types
         public string $name = '';
-        public int $count = 0;
+        public $count = 0;
         public float $rate = 0.0;
         public bool $active = false;
 

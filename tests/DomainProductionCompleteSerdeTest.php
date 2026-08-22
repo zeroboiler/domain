@@ -669,8 +669,8 @@ final readonly class ProductId extends UlidIdentifier {}
 final class TestValueObject extends \ZeroBoiler\Domain\ValueObject
 {
     public function __construct(
-        public readonly string $name = '',
-        public readonly int $age = 0,
+        public string $name = '',
+        public int $age = 0,
     ) {}
 
     public static function fromArray(array $data): self

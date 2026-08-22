@@ -491,7 +491,7 @@ final class TestEntity extends Entity
 {
     public function __construct(
         int|string|\Stringable $id,
-        public readonly string $name = 'test',
+        public string $name = 'test',
     ) {
         parent::__construct($id);
     }

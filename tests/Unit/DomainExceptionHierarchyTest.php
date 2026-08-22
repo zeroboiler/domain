@@ -10,7 +10,6 @@ use ZeroBoiler\Domain\Exceptions\DomainException;
 use ZeroBoiler\Domain\Exceptions\InvalidAggregateRootException;
 use ZeroBoiler\Domain\Exceptions\InvalidArgumentDomainException;
 use ZeroBoiler\Domain\Exceptions\InvalidStateDomainException;
-use ZeroBoiler\Domain\Exceptions\InvalidStateDomainException;
 use ZeroBoiler\Domain\Exceptions\InvalidStateException;
 use ZeroBoiler\Domain\Exceptions\NotFoundDomainException;
 use ZeroBoiler\Domain\Exceptions\OptimisticLockException;

@@ -410,7 +410,7 @@ final class DomainCrossPackageIntegrationTest extends TestCase
                 $uow->queueEvent(DomainEvent::occur('test.event', []));
                 throw new \RuntimeException('fail');
             });
-        } catch (\RuntimeException) {
+        } catch (\RuntimeException $e) {
             // Events should NOT be dispatched on rollback
         }
 

@@ -30,7 +30,7 @@ if (! class_exists(\TestConcreteEntity::class)) {
 
         public function __construct(
             int|string|\Stringable $id,
-            public readonly string $name = '',
+            public string $name = '',
         ) {
             parent::__construct($id);
         }
