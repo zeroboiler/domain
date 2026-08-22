@@ -102,7 +102,7 @@ final class DomainEventCollectionFunctionalEdgeCaseTest extends \PHPUnit\Framewo
     public function test_empty_collection_each_returns_self(): void
     {
         $collection = new DomainEventCollection;
-        $result = $collection->each(fn (DomainEvent $e, int $i): void => $this->fail('Should not be called'));
+        $result = $collection->each(fn (DomainEvent $e, int $i) => $this->fail('Should not be called'));
         $this->assertSame($collection, $result);
     }
 
