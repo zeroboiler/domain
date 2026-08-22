@@ -236,7 +236,7 @@ abstract readonly class UlidIdentifier implements IdentifierContract, JsonSerial
      *
      * @since 1.64.0
      */
-    public function toJson(int $options = JSON_UNESCAPED_UNICODE): string
+    public function toJson($options = JSON_UNESCAPED_UNICODE): string
     {
         return json_encode($this->toArray(), $options | JSON_THROW_ON_ERROR);
     }

@@ -106,7 +106,7 @@ abstract class ValueObject extends BaseValueObject
      * echo $json; // {"street":"123 Main","city":"NYC","country":"US"}
      * ```
      */
-    public function toJson(int $options = JSON_UNESCAPED_UNICODE): string
+    public function toJson($options = JSON_UNESCAPED_UNICODE): string
     {
         return json_encode($this->toArray(), $options | JSON_THROW_ON_ERROR);
     }

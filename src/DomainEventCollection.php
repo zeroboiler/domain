@@ -562,7 +562,7 @@ final readonly class DomainEventCollection implements Countable, IteratorAggrega
      * $restored->count(); // 2
      * ```
      */
-    public function toJson(int $options = JSON_UNESCAPED_UNICODE): string
+    public function toJson($options = JSON_UNESCAPED_UNICODE): string
     {
         return json_encode($this->toArray(), $options | JSON_THROW_ON_ERROR);
     }
