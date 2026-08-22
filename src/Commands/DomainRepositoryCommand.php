@@ -10,13 +10,17 @@ namespace ZeroBoiler\Domain\Commands;
 
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\GeneratorCommand;
-use Illuminate\Support\Str;
 
 /**
- * Generate a new Domain Repository interface and Eloquent implementation.
+ * Generate a new Domain Repository interface and an in-memory implementation.
  *
- * Creates both the repository interface in Domain/Repositories and
- * a concrete Eloquent implementation in Domain/Repositories/Eloquent.
+ * Creates the repository interface in Domain/Repositories plus a
+ * persistence-agnostic in-memory implementation in Domain/Repositories/InMemory.
+ * The domain package stays free of Eloquent; swap the in-memory implementation
+ * with a real adapter in your persistence layer (zeroboiler/persistence).
+ *
+ * The generated code is built from a nowdoc template with strtr placeholders —
+ * no heredoc interpolation, so emitted PHP never suffers escaping corruption.
  *
  * Usage:
  *   ```bash
@@ -24,9 +28,9 @@ use Illuminate\Support\Str;
  *   php artisan zeroboiler:domain:repository Invoice --force
  *   ```
  *
- * @since 1.0.0
+ * @since 1.13.0
  */
-#[Description('Generate a new Domain Repository interface and Eloquent implementation')]
+#[Description('Generate a new Domain Repository interface and in-memory implementation')]
 final class DomainRepositoryCommand extends GeneratorCommand
 {
     protected $name = 'zeroboiler:domain:repository';
@@ -54,6 +58,27 @@ final class DomainRepositoryCommand extends GeneratorCommand
         return $name;
     }
 
+    /**
+     * Replace stub placeholders, including the aggregate {{ name }} token.
+     *
+     * The base GeneratorCommand only replaces namespace/rootNamespace/class;
+     * the repository stub additionally references the aggregate short name
+     * (class minus the Repository suffix), which is resolved here.
+     *
+     * @param  string  $name  The fully-qualified class name being built.
+     * @return string The populated stub contents.
+     */
+    protected function buildClass($name): string
+    {
+        $basename = substr($name, (int) strrpos($name, '\\') + 1);
+
+        return str_replace(
+            '{{ name }}',
+            str_replace('Repository', '', $basename),
+            parent::buildClass($name),
+        );
+    }
+
     public function handle(): int
     {
         $result = parent::handle();
@@ -68,7 +93,7 @@ final class DomainRepositoryCommand extends GeneratorCommand
     }
 
     /**
-     * Generate an Eloquent implementation of the repository interface.
+     * Generate a persistence-agnostic in-memory implementation of the repository interface.
      *
      * @return void
      */
@@ -77,18 +102,12 @@ final class DomainRepositoryCommand extends GeneratorCommand
         $name = $this->getNameInput();
         $rootNamespace = $this->laravel->getNamespace();
 
-        $implementationName = Str::replace('Repository', 'EloquentRepository', $name);
-        $implementationClass = $implementationName;
-        $implementationNamespace = $rootNamespace . 'Domain\\Repositories\\Eloquent';
-        $interfaceFqcn = $rootNamespace . 'Domain\\Repositories\\' . $name;
-
-        $aggregateName = Str::replaceLast('Repository', '', $name);
-        $aggregateFqcn = $rootNamespace . 'Domain\\Aggregates\\' . $aggregateName;
-
-        $path = $this->laravel['path'] . '/Domain/Repositories/Eloquent/' . $implementationClass . '.php';
+        $aggregateName = str_replace('Repository', '', $name);
+        $implementationClass = $aggregateName . 'InMemoryRepository';
+        $path = $this->laravel['path'] . '/Domain/Repositories/InMemory/' . $implementationClass . '.php';
 
         if (! $this->option('force') && file_exists($path)) {
-            $this->components->info(sprintf('Eloquent implementation %s already exists.', $implementationClass));
+            $this->components->info(sprintf('In-memory implementation %s already exists.', $implementationClass));
 
             return;
         }
@@ -97,21 +116,22 @@ final class DomainRepositoryCommand extends GeneratorCommand
             @mkdir(dirname($path), 0755, true);
         }
 
-        $stub = $this->buildImplementationStub(
-            $implementationNamespace,
+        file_put_contents($path, $this->buildImplementationStub(
+            $rootNamespace . 'Domain\\Repositories\\InMemory',
             $implementationClass,
-            $interfaceFqcn,
-            $aggregateFqcn,
+            $rootNamespace . 'Domain\\Repositories\\' . $name,
+            $rootNamespace . 'Domain\\Aggregates\\' . $aggregateName,
             $aggregateName,
-        );
+        ));
 
-        file_put_contents($path, $stub);
-
-        $this->components->info(sprintf('Eloquent implementation %s created successfully.', $implementationClass));
+        $this->components->info(sprintf('In-memory implementation %s created successfully.', $implementationClass));
     }
 
     /**
-     * Build the Eloquent repository implementation from a stub.
+     * Build the in-memory repository implementation from a nowdoc template.
+     *
+     * Placeholders use the %%NAME%% form so no PHP interpolation can ever
+     * touch the emitted source.
      *
      * @param  string  $namespace  The implementation namespace (FQCN).
      * @param  string  $className  The implementation class name.
@@ -127,66 +147,71 @@ final class DomainRepositoryCommand extends GeneratorCommand
         string $aggregateFqcn,
         string $aggregateName,
     ): string {
-        $aggregateVar = lcfirst($aggregateName);
-
-        return <<<PHP
+        $template = <<<'PHP'
 <?php
 
 declare(strict_types=1);
 
-namespace {$namespace};
+namespace %%NAMESPACE%%;
 
-use {$interfaceFqcn};
-use {$aggregateFqcn};
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Collection;
+use %%AGG_FQCN%%;
+use %%INTERFACE_FQCN%%;
+use ZeroBoiler\Domain\AggregateRoot;
+use ZeroBoiler\Domain\Exceptions\OptimisticLockException;
 
 /**
- * Eloquent implementation of {$aggregateName}Repository.
+ * In-memory implementation of %%AGG%%Repository.
  *
- * Handles persistence and reconstitution of {$aggregateName} aggregates.
- * Add custom query methods as needed.
+ * Persistence-agnostic store keyed by aggregate identity — use in tests and
+ * as a reference for real persistence adapters (see zeroboiler/persistence).
+ * save() enforces optimistic locking via aggregate version comparison.
  */
-final class {$className} implements {$aggregateName}Repository
+final class %%CLASS%% implements %%AGG%%Repository
 {
-    public function __construct(
-        private readonly Model \${$aggregateVar}Model,
-    ) {}
+    /** @var array<string, AggregateRoot> */
+    private array $stored = [];
 
-    public function findById(string \$id): ?{$aggregateName}
+    public function find(string|int $id): ?AggregateRoot
     {
-        \$model = \$this->{$aggregateVar}Model->newQuery()->find(\$id);
+        return $this->stored[(string) $id] ?? null;
+    }
 
-        if (\$model === null) {
-            return null;
+    public function findById(string $id): ?%%AGG%%
+    {
+        $aggregate = $this->find($id);
+
+        return $aggregate instanceof %%AGG%% ? $aggregate : null;
+    }
+
+    public function save(AggregateRoot $aggregate): void
+    {
+        $persisted = $this->stored[$aggregate->id()] ?? null;
+
+        if ($persisted !== null && $persisted->version() !== $aggregate->version()) {
+            throw OptimisticLockException::for(
+                $aggregate->id(),
+                expectedVersion: $aggregate->version(),
+                actualVersion: $persisted->version(),
+            );
         }
 
-        // Map model to domain aggregate — adjust mapping as needed
-        return {$aggregateName}::fromArray(\$model->toArray());
+        $this->stored[$aggregate->id()] = $aggregate;
+        $aggregate->incrementVersion();
     }
 
-    public function save({$aggregateName} \${$aggregateVar}): void
+    public function delete(string|int $id): void
     {
-        \$this->{$aggregateVar}Model->newQuery()->updateOrCreate(
-            ['id' => \${$aggregateVar}->id()],
-            \${$aggregateVar}->toArray(),
-        );
-    }
-
-    public function delete(string \$id): void
-    {
-        \$this->{$aggregateVar}Model->newQuery()->where('id', \$id)->delete();
-    }
-
-    /**
-     * @return Collection<int, {$aggregateName}>
-     */
-    public function all(): Collection
-    {
-        return \$this->{$aggregateVar}Model->newQuery()->get()
-            ->map(fn (Model \$model) => {$aggregateName}::fromArray(\$model->toArray()));
+        unset($this->stored[(string) $id]);
     }
 }
 PHP;
+
+        return strtr($template, [
+            '%%NAMESPACE%%' => $namespace,
+            '%%CLASS%%' => $className,
+            '%%INTERFACE_FQCN%%' => $interfaceFqcn,
+            '%%AGG_FQCN%%' => $aggregateFqcn,
+            '%%AGG%%' => $aggregateName,
+        ]);
     }
 }

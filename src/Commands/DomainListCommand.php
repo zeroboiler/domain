@@ -13,10 +13,11 @@ use Illuminate\Console\Command;
 use Symfony\Component\Finder\Finder;
 
 /**
- * List all domain classes (Aggregates, Events, Repositories, ValueObjects).
+ * List all domain classes (Aggregates, Events, Repositories, ValueObjects, Contexts).
  *
  * Scans the `app/Domain` directory and groups classes by subdirectory.
- * Useful for auditing the domain model structure in a project.
+ * Bounded contexts following the `app/Contexts/{Name}` convention are listed
+ * first so both layouts are visible in one audit view.
  *
  * Usage:
  *   ```bash
@@ -25,17 +26,21 @@ use Symfony\Component\Finder\Finder;
  *
  * @since 1.0.0
  */
-#[Description('List all Domain classes (Aggregates, Events, Repositories, ValueObjects)')]
+#[Description('List all Domain classes (Aggregates, Events, Repositories, ValueObjects, Contexts)')]
 final class DomainListCommand extends Command
 {
     protected $name = 'zeroboiler:domain:list';
 
     public function handle(): int
     {
+        $this->listContexts(app_path('Contexts'));
+
         $domainPath = app_path('Domain');
 
         if (! is_dir($domainPath)) {
-            $this->info('No domain classes found. Domain directory does not exist.');
+            if (! is_dir(app_path('Contexts'))) {
+                $this->info('No domain classes found. Neither Domain nor Contexts directory exists.');
+            }
 
             return self::SUCCESS;
         }
@@ -49,6 +54,64 @@ final class DomainListCommand extends Command
         $this->listDirectory($domainPath . '/ValueObjects', 'ValueObjects');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * List bounded contexts using the app/Contexts/{Name} convention.
+     *
+     * Each immediate subdirectory is treated as a context; its class files
+     * are listed under the context name.
+     *
+     * @param  string  $contextsPath  The absolute app/Contexts path.
+     * @return void
+     */
+    private function listContexts(string $contextsPath): void
+    {
+        if (! is_dir($contextsPath)) {
+            return;
+        }
+
+        $contexts = glob($contextsPath . '/*', GLOB_ONLYDIR);
+
+        if ($contexts === false || $contexts === []) {
+            return;
+        }
+
+        $this->info('Bounded Contexts:');
+        $this->newLine();
+
+        sort($contexts);
+
+        foreach ($contexts as $contextDir) {
+            $this->comment('  ' . basename($contextDir) . ':');
+            $this->listDirectoryRecursive($contextDir);
+            $this->newLine();
+        }
+    }
+
+    /**
+     * Recursively list PHP class files under a context directory.
+     *
+     * @param  string  $path  The absolute context directory path.
+     * @return void
+     */
+    private function listDirectoryRecursive(string $path): void
+    {
+        $finder = (new Finder)
+            ->files()
+            ->in($path)
+            ->name('*.php')
+            ->notName('*.stub')
+            ->sortByName();
+
+        foreach ($finder as $file) {
+            $class = str_replace(
+                [app_path(), '/', '.php'],
+                ['', '\\', ''],
+                $file->getRealPath()
+            );
+            $this->line('    - ' . $class);
+        }
     }
 
     /**

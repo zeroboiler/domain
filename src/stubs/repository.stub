@@ -11,10 +11,12 @@ use ZeroBoiler\Domain\Contracts\Repository;
  * {{ class }} — aggregate root repository.
  *
  * Extend this interface to add domain-specific query methods.
- * Implementations should include optimistic locking checks
- * via version comparison on save().
+ * The domain defines only the contract; implementations live in the
+ * persistence layer (zeroboiler/persistence) or as in-memory fakes for tests.
+ * Implementations must enforce optimistic locking via version comparison
+ * on save().
  *
- * @since 1.0.0
+ * @since 1.13.0
  *
  * @example
  * ```php
@@ -24,31 +26,41 @@ use ZeroBoiler\Domain\Contracts\Repository;
  *     public function findById(string $id): ?Order;
  * }
  *
- * // Eloquent implementation
- * final class EloquentOrderRepository implements OrderRepository
+ * // Persistence adapter (zeroboiler/persistence or your own)
+ * final class DbalOrderRepository implements OrderRepository
  * {
- *     public function find(string|int $id): ?Order
+ *     public function find(string|int $id): ?AggregateRoot
  *     {
- *         return Order::where('id', $id)->first();
+ *         $row = $this->connection->fetchOne(
+ *             'SELECT state FROM orders WHERE id = ?',
+ *             [$id],
+ *         );
+ *
+ *         return $row === false ? null : Order::fromArray(json_decode($row, true));
  *     }
  *
  *     public function save(AggregateRoot $aggregate): void
  *     {
  *         $persisted = $this->find($aggregate->id());
- *         if ($persisted && $persisted->version() !== $aggregate->version()) {
+ *
+ *         if ($persisted !== null && $persisted->version() !== $aggregate->version()) {
  *             throw OptimisticLockException::for(
  *                 $aggregate->id(),
  *                 expectedVersion: $aggregate->version(),
  *                 actualVersion: $persisted->version(),
  *             );
  *         }
- *         DB::table('orders')->upsert([...], 'id');
+ *
+ *         $this->connection->executeStatement(
+ *             'UPSERT INTO orders (id, version, state) VALUES (?, ?, ?)',
+ *             [$aggregate->id(), $aggregate->version() + 1, json_encode($aggregate->toArray())],
+ *         );
  *         $aggregate->incrementVersion();
  *     }
  *
  *     public function delete(string|int $id): void
  *     {
- *         DB::table('orders')->delete($id);
+ *         $this->connection->executeStatement('DELETE FROM orders WHERE id = ?', [$id]);
  *     }
  * }
  * ```

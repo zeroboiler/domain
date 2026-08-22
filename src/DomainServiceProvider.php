@@ -9,10 +9,13 @@ declare(strict_types=1);
 namespace ZeroBoiler\Domain;
 
 use Illuminate\Support\ServiceProvider;
+use ZeroBoiler\Domain\Application\CommandBus;
+use ZeroBoiler\Domain\Application\QueryBus;
 use ZeroBoiler\Domain\Commands\DomainAggregateCommand;
 use ZeroBoiler\Domain\Commands\DomainListCommand;
 use ZeroBoiler\Domain\Commands\DomainRepositoryCommand;
 use ZeroBoiler\Domain\Commands\MakeValueObjectCommand;
+use ZeroBoiler\Domain\Context\ContextRegistry;
 use ZeroBoiler\Events\Domain\DomainEvent;
 use ZeroBoiler\Domain\Console\Commands\SnapshotCommand;
 use ZeroBoiler\Domain\Contracts\UnitOfWork as UnitOfWorkContract;
@@ -45,6 +48,49 @@ final class DomainServiceProvider extends ServiceProvider
     {
         $this->registerUnitOfWork();
         $this->registerSnapshotStore();
+        $this->registerContextRegistry();
+        $this->registerBuses();
+    }
+
+    /**
+     * Register the bounded context registry.
+     *
+     * Applications register their contexts from context service providers;
+     * the singleton keeps one registry across the request.
+     * @return void
+     */
+    private function registerContextRegistry(): void
+    {
+        $this->app->singleton(ContextRegistry::class);
+    }
+
+    /**
+     * Register the command and query buses with container-backed resolvers.
+     *
+     * Handlers conventionally live at App\Contexts\{Context}\Application\Handlers\
+     * {Message}Handler; the resolver tries that binding first so most apps
+     * need no manual registration.
+     * @return void
+     */
+    private function registerBuses(): void
+    {
+        $this->app->singleton(CommandBus::class, function (\Illuminate\Contracts\Foundation\Application $app): CommandBus {
+            return new CommandBus(
+                fn (string $commandClass): ?\ZeroBoiler\Domain\Application\CommandHandler
+                    => $app->bound($commandClass . 'Handler')
+                        ? $app->make($commandClass . 'Handler')
+                        : null,
+            );
+        });
+
+        $this->app->singleton(QueryBus::class, function (\Illuminate\Contracts\Foundation\Application $app): QueryBus {
+            return new QueryBus(
+                fn (string $queryClass): ?\ZeroBoiler\Domain\Application\QueryHandler
+                    => $app->bound($queryClass . 'Handler')
+                        ? $app->make($queryClass . 'Handler')
+                        : null,
+            );
+        });
     }
 
     /**
