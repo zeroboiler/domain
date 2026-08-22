@@ -96,6 +96,5 @@
     "suggest": {
         "zeroboiler/observability": "Enables #[Trace] auto-instrumentation for aggregate root operations",
         "zeroboiler/response": "DomainTransformer integration for mapping domain entities to API responses"
-    },
-    "version": "1.79.0"
+    }
 }
