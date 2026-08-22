@@ -38,7 +38,7 @@ final class DomainRepositoryCommand extends GeneratorCommand
         return __DIR__ . '/../stubs/repository.stub';
     }
 
-    protected function getDefaultNamespace(string $rootNamespace): string
+    protected function getDefaultNamespace($rootNamespace): string
     {
         return $rootNamespace . '\\Domain\\Repositories';
     }

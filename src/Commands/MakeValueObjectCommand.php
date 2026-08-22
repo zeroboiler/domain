@@ -37,7 +37,7 @@ final class MakeValueObjectCommand extends GeneratorCommand
         return __DIR__ . '/../stubs/value-object.stub';
     }
 
-    protected function getDefaultNamespace(string $rootNamespace): string
+    protected function getDefaultNamespace($rootNamespace): string
     {
         return $rootNamespace . '\\Domain\\ValueObjects';
     }

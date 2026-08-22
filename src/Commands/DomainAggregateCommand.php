@@ -37,7 +37,7 @@ final class DomainAggregateCommand extends GeneratorCommand
         return __DIR__ . '/../stubs/aggregate.stub';
     }
 
-    protected function getDefaultNamespace(string $rootNamespace): string
+    protected function getDefaultNamespace($rootNamespace): string
     {
         return $rootNamespace . '\\Domain\\Aggregates';
     }
