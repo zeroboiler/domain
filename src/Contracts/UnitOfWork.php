@@ -10,6 +10,7 @@ namespace ZeroBoiler\Domain\Contracts;
 
 use Closure;
 use ZeroBoiler\Domain\AggregateRoot;
+use ZeroBoiler\Domain\DomainEventCollection;
 
 /**
  * Contract for the unit of work pattern.
