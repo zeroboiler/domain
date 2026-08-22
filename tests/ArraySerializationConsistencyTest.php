@@ -184,7 +184,7 @@ final class TestInvoice extends AggregateRoot
 
 final class TestOrderWithOverride extends AggregateRoot
 {
-    public readonly string $status = 'pending';
+    public string $status = 'pending';
 
     public function toArray(): array
     {

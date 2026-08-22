@@ -330,12 +330,10 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
         /** @var static $instance */
         $instance = $reflection->newInstanceWithoutConstructor();
 
-        // Restore the readonly AggregateRootId via reflection
         $aggregateId = AggregateRootId::fromString($snapshot->aggregateId);
         self::setReadOnlyProperty($instance, 'aggregateId', $aggregateId);
         self::setReadOnlyProperty($instance, 'id', $aggregateId);
 
-        // Restore from snapshot state if the aggregate uses HasSnapshots
         if (method_exists($instance, 'restoreFromSnapshot')) {
             $instance->restoreFromSnapshot($snapshot);
         } else {
@@ -345,14 +343,12 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
             ));
         }
 
-        // Replay post-snapshot events
         foreach ($postSnapshotEvents as $event) {
             if (method_exists($instance, 'applyEvent')) {
                 $instance->applyEvent($event, isReplay: true);
             }
         }
 
-        // Clear any events accumulated during reconstitution
         if (method_exists($instance, 'clearDomainEvents')) {
             $instance->clearDomainEvents();
         }

@@ -62,7 +62,6 @@ final class DomainRepositoryCommand extends GeneratorCommand
             return self::FAILURE;
         }
 
-        // Generate the Eloquent implementation alongside the interface
         $this->generateImplementation();
 
         return self::SUCCESS;
@@ -83,20 +82,17 @@ final class DomainRepositoryCommand extends GeneratorCommand
         $implementationNamespace = $rootNamespace . 'Domain\\Repositories\\Eloquent';
         $interfaceFqcn = $rootNamespace . 'Domain\\Repositories\\' . $name;
 
-        // Derive the aggregate name from the repository name
         $aggregateName = Str::replaceLast('Repository', '', $name);
         $aggregateFqcn = $rootNamespace . 'Domain\\Aggregates\\' . $aggregateName;
 
         $path = $this->laravel['path'] . '/Domain/Repositories/Eloquent/' . $implementationClass . '.php';
 
-        // Don't overwrite if the file already exists
         if (! $this->option('force') && file_exists($path)) {
             $this->components->info(sprintf('Eloquent implementation %s already exists.', $implementationClass));
 
             return;
         }
 
-        // Ensure directory exists
         if (! is_dir(dirname($path))) {
             @mkdir(dirname($path), 0755, true);
         }

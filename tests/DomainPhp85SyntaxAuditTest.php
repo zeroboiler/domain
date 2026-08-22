@@ -349,7 +349,7 @@ final class DomainPhp85SyntaxAuditTest extends \PHPUnit\Framework\TestCase
         foreach ($exceptionClasses as $className) {
             $this->assertInstanceOf(
                 \JsonSerializable::class,
-                new (new ReflectionClass($className))->newInstanceWithoutConstructor(),
+                (new ReflectionClass($className))->newInstanceWithoutConstructor(),
                 sprintf('%s should implement JsonSerializable', (new ReflectionClass($className))->getShortName()),
             );
         }

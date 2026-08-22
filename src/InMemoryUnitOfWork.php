@@ -210,14 +210,12 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract, \JsonSerializable
             $this->collectNewEventsFromAggregate($aggregate);
         }
 
-        // Merge tracked + deleted aggregates into their respective sets
         $this->committed = array_merge($this->committed, $scope['tracked']);
         foreach ($scope['deleted'] as $id => $aggregate) {
             $this->deleted[$id] = $aggregate;
             unset($this->committed[$id]);
         }
 
-        // Mark scope as inactive
         $this->savepoints[$this->currentScope]['active'] = false;
 
         $this->exitScope();
@@ -267,7 +265,6 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract, \JsonSerializable
             }
         }
 
-        // Discard tracked aggregates from this scope
         $this->savepoints[$this->currentScope]['tracked'] = [];
         $this->savepoints[$this->currentScope]['deleted'] = [];
         $this->savepoints[$this->currentScope]['active'] = false;

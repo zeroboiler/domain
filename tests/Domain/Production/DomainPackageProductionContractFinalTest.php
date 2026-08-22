@@ -124,7 +124,8 @@ describe('Domain Package Production Contract Validation', function (): void {
         });
 
         it('validates UUIDs in constructor', function (): void {
-            expect(fn () => TestUuidIdentifier::fromString('invalid'))->toThrow(\                \Ramsey\Uuid\Exception\InvalidUuidStringException::class,
+            expect(fn () => TestUuidIdentifier::fromString('invalid'))->toThrow(
+                \Ramsey\Uuid\Exception\InvalidUuidStringException::class,
             );
         });
     });

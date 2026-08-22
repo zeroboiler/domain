@@ -166,7 +166,7 @@ final class DomainResponseBridgeE2ETest extends TestCase
     public function test_entity_equality_same_id_same_class(): void
     {
         $entity1 = new class('same-id') extends Entity {};
-        $entity2 = new class('same-id') extends $entity1::class {};
+        $entity2 = new class('same-id') extends Entity {};
 
         $this->assertTrue($entity1->equals($entity2));
     }

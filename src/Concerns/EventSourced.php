@@ -65,7 +65,6 @@ trait EventSourced
 
         $aggregate = new \ReflectionClass(static::class)->newInstanceWithoutConstructor();
 
-        // Set inherited readonly properties via reflection
         self::setInheritedProperty($aggregate, 'aggregateId', $aggregateId);
         self::setInheritedProperty($aggregate, 'id', $aggregateId);
 
@@ -74,7 +73,6 @@ trait EventSourced
             $aggregate->applyEvent($event, true);
         }
 
-        // Clear any events recorded during reconstitution
         $aggregate->clearDomainEvents();
 
         return $aggregate;

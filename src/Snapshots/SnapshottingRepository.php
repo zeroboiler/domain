@@ -84,7 +84,6 @@ final readonly class SnapshottingRepository implements Repository
     #[Trace(operation: 'domain.aggregate.find')]
     public function find(string|int $id): ?AggregateRoot
     {
-        // Try loading from snapshot
         $snapshot = $this->snapshotStore->load($this->aggregateType, (string) $id);
 
         if ($snapshot instanceof Snapshot) {
@@ -126,10 +125,8 @@ final readonly class SnapshottingRepository implements Repository
     #[Trace(operation: 'domain.aggregate.save')]
     public function save(AggregateRoot $aggregate): void
     {
-        // Save via inner repository
         $this->inner->save($aggregate);
 
-        // Check if snapshot should be created
         if ($this->usesSnapshots($aggregate)) {
             if ($aggregate->shouldSnapshot()) {
                 $aggregate->createSnapshot($this->snapshotStore);
@@ -224,17 +221,14 @@ final readonly class SnapshottingRepository implements Repository
             return null;
         }
 
-        // Check if the class uses HasSnapshots
         if (! in_array(HasSnapshots::class, class_uses_recursive($class), true)) {
             return null;
         }
 
-        // Use reflection to create instance without constructor
         $reflection = new \ReflectionClass($class);
 
         $instance = $reflection->newInstanceWithoutConstructor();
 
-        // Restore from snapshot state
         $instance->restoreFromSnapshot($snapshot);
 
         return $instance;

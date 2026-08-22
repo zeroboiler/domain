@@ -212,7 +212,7 @@ final class DomainProductionContractTest extends \PHPUnit\Framework\TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('sequential list');
 
-        new DomainEventCollection([DomainEvent::occur('test', [])], 'key' => 'val');
+        new DomainEventCollection([DomainEvent::occur('test', []), 'key' => 'val']);
     }
 
     public function test_domain_event_collection_functional_operations(): void
