@@ -479,7 +479,7 @@ describe('Domain Advanced Edge Cases', function (): void {
                 DomainEvent::occur('order.placed', []),
             ]);
 
-            $result = $events->each(fn (DomainEvent $e): void => {});
+            $result = $events->each(function (DomainEvent $e): void {});
             expect($result)->toBe($events);
         });
 

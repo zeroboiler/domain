@@ -463,7 +463,7 @@ final class DomainProductionContractFinalTest extends TestCase
     {
         $col = new DomainEventCollection([DomainEvent::occur('a', [])]);
 
-        $result = $col->each(fn (DomainEvent $e): void => {});
+        $result = $col->each(function (DomainEvent $e): void {});
         $this->assertSame($col, $result);
     }
 

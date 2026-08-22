@@ -705,7 +705,7 @@ describe('Domain Package Production Audit v1.76.0', function () {
                 DomainEvent::occur('a', []),
             ]);
 
-            $result = $collection->each(fn () => {});
+            $result = $collection->each(function (): void {});
             expect($result)->toBe($collection);
         });
 
