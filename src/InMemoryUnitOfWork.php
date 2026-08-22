@@ -166,7 +166,6 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract, \JsonSerializable
      * Safe to call multiple times — nesting depth is tracked internally.
      * @return void
      */
-    #[\Override]
     public function begin(): void
     {
         if ($this->nestingDepth === 0) {
@@ -202,7 +201,6 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract, \JsonSerializable
      * @throws RuntimeException When no unit of work is active.
      * @return void
      */
-    #[\Override]
     public function commit(): void
     {
         $scope = $this->requireActiveScope();
@@ -247,7 +245,6 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract, \JsonSerializable
      * @throws RuntimeException When no unit of work is active.
      * @return void
      */
-    #[\Override]
     public function rollback(): void
     {
         $scope = $this->requireActiveScope();
@@ -300,7 +297,6 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract, \JsonSerializable
      *
      * @throws Throwable Re-throws any exception from the callback.
      */
-    #[\Override]
     public function run(Closure $callback): mixed
     {
         $this->begin();
@@ -327,7 +323,6 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract, \JsonSerializable
      *
      * @return bool True when at least one begin() has been called without a matching commit/rollback.
      */
-    #[\Override]
     public function isActive(): bool
     {
         return $this->nestingDepth > 0;
@@ -348,7 +343,6 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract, \JsonSerializable
      * @throws RuntimeException When no unit of work is active.
      * @return void
      */
-    #[\Override]
     public function track(AggregateRoot $aggregate): void
     {
         if (! $this->isActive()) {
@@ -385,7 +379,6 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract, \JsonSerializable
      * @param  AggregateRoot  $aggregate  The aggregate to check.
      * @return bool True if the aggregate is tracked in any scope.
      */
-    #[\Override]
     public function isTracking(AggregateRoot $aggregate): bool
     {
         $id = $this->resolveId($aggregate);
@@ -405,7 +398,6 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract, \JsonSerializable
      * @throws RuntimeException When no unit of work is active.
      * @return void
      */
-    #[\Override]
     public function markForDeletion(AggregateRoot $aggregate): void
     {
         if (! $this->isActive()) {
@@ -491,7 +483,6 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract, \JsonSerializable
      *
      * @return bool True when at least one event is queued across all active scopes.
      */
-    #[\Override]
     public function hasPendingEvents(): bool
     {
         return $this->pendingEvents !== [];
@@ -502,7 +493,6 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract, \JsonSerializable
      *
      * @return int The count of events queued for dispatch.
      */
-    #[\Override]
     public function getPendingEventCount(): int
     {
         return count($this->pendingEvents);
@@ -532,7 +522,6 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract, \JsonSerializable
      * $uow->commit(); // Events are dispatched normally
      * ```
      */
-    #[\Override]
     public function getPendingEvents(): DomainEventCollection
     {
         return new DomainEventCollection($this->pendingEvents);
@@ -578,7 +567,6 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract, \JsonSerializable
      *
      * @return array<string, AggregateRoot> Committed aggregates keyed by identity.
      */
-    #[\Override]
     public function getCommitted(): array
     {
         return $this->committed;
@@ -589,7 +577,6 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract, \JsonSerializable
      *
      * @return array<string, AggregateRoot> Deleted aggregates keyed by identity.
      */
-    #[\Override]
     public function getDeleted(): array
     {
         return $this->deleted;
@@ -751,7 +738,6 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract, \JsonSerializable
      * Useful for testing and between test cases.
      * @return void
      */
-    #[\Override]
     public function clear(): void
     {
         $this->savepoints = [];
@@ -818,7 +804,6 @@ final class InMemoryUnitOfWork implements UnitOfWorkContract, \JsonSerializable
      *
      * @since 1.66.0
      */
-    #[\Override]
     public function jsonSerialize(): array
     {
         return $this->toArray();

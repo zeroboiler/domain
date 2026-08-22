@@ -79,7 +79,6 @@ abstract class ValueObject extends BaseValueObject
      * @param  ValueObjectContract|null  $other  The value object to compare against.
      * @return bool True if both are the same type with identical array representation.
      */
-    #[\Override]
     public function equals(?ValueObjectContract $other): bool
     {
         if (! $other instanceof ValueObjectContract || $other::class !== static::class) {

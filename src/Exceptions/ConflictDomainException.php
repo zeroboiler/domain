@@ -28,13 +28,11 @@ namespace ZeroBoiler\Domain\Exceptions;
  */
 final class ConflictDomainException extends DomainException
 {
-    #[\Override]
     protected function defaultErrorCode(): string
     {
         return 'CONFLICT';
     }
 
-    #[\Override]
     protected function defaultHttpStatus(): int
     {
         return 409;

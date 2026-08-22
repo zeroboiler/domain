@@ -31,13 +31,11 @@ use function sprintf;
  */
 final class AggregateNotFoundException extends DomainException
 {
-    #[\Override]
     protected function defaultErrorCode(): string
     {
         return 'AGGREGATE_NOT_FOUND';
     }
 
-    #[\Override]
     protected function defaultHttpStatus(): int
     {
         return 404;

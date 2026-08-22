@@ -83,7 +83,6 @@ abstract readonly class UuidIdentifier implements IdentifierContract, JsonSerial
      *
      * @throws \Ramsey\Uuid\Exception\InvalidUuidStringException If the string is not a valid UUID.
      */
-    #[\Override]
     public static function fromString(string $value): static
     {
         return new static($value);
@@ -94,7 +93,6 @@ abstract readonly class UuidIdentifier implements IdentifierContract, JsonSerial
      *
      * @return string The UUID as a canonical string.
      */
-    #[\Override]
     public function toString(): string
     {
         return $this->value;
@@ -111,7 +109,6 @@ abstract readonly class UuidIdentifier implements IdentifierContract, JsonSerial
      * @param  IdentifierContract  $other  The identifier to compare against.
      * @return bool True if both are the same concrete class with identical UUID values.
      */
-    #[\Override]
     public function equals(IdentifierContract $other): bool
     {
         return $other instanceof UuidIdentifier && $other::class === static::class && $this->value === $other->value;
@@ -134,7 +131,6 @@ abstract readonly class UuidIdentifier implements IdentifierContract, JsonSerial
      *
      * @return string The UUID string.
      */
-    #[\Override]
     public function jsonSerialize(): string
     {
         return $this->value;
@@ -155,7 +151,6 @@ abstract readonly class UuidIdentifier implements IdentifierContract, JsonSerial
      * $id->toArray();       // ['uuid' => '550e8400-...']
      * ```
      */
-    #[\Override]
     public function toArray(): array
     {
         return ['uuid' => $this->value];
@@ -180,7 +175,6 @@ abstract readonly class UuidIdentifier implements IdentifierContract, JsonSerial
      * $id->equals($restored); // true
      * ```
      */
-    #[\Override]
     public static function fromArray(array $array): static
     {
         $uuid = $array['uuid'] ?? $array['id'] ?? null;
@@ -214,7 +208,6 @@ abstract readonly class UuidIdentifier implements IdentifierContract, JsonSerial
      * $id->equals($restored); // true
      * ```
      */
-    #[\Override]
     public static function fromJson(string $json): static
     {
         $data = json_decode($json, true, flags: JSON_THROW_ON_ERROR);

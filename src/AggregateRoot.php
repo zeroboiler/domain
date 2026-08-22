@@ -88,7 +88,6 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
      *
      * @return int The current aggregate version (0 = newly created).
      */
-    #[\Override]
     public function version(): int
     {
         return $this->version;
@@ -124,7 +123,6 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
      * Increment the version (called after a successful save).
      * @return void
      */
-    #[\Override]
     public function incrementVersion(): void
     {
         $this->version++;
@@ -139,7 +137,6 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
      *
      * @return DomainEventCollection The collected events (ownership transferred to caller).
      */
-    #[\Override]
     public function pullDomainEvents(): DomainEventCollection
     {
         $events = $this->domainEvents;
@@ -156,7 +153,6 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
      *
      * @return void
      */
-    #[\Override]
     public function clearDomainEvents(): void
     {
         $this->domainEvents = [];
@@ -183,7 +179,6 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
      * $pulled = $order->pullDomainEvents(); // Same events, now consumed
      * ```
      */
-    #[\Override]
     public function peekDomainEvents(): DomainEventCollection
     {
         return new DomainEventCollection(array_values($this->domainEvents));
@@ -197,7 +192,6 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
      *
      * @return string The aggregate's UUID identity as a canonical string.
      */
-    #[\Override]
     public function id(): string
     {
         return $this->aggregateId->toString();
@@ -222,7 +216,6 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
      * Uses string comparison consistently across the hierarchy, matching
      * AggregateRootId's toString() output for reliable identity checks.
      */
-    #[\Override]
     public function equals(EntityContract $other): bool
     {
         return static::class === $other::class
@@ -257,7 +250,6 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
      * }
      * ```
      */
-    #[\Override]
     public function toArray(): array
     {
         return [
@@ -284,7 +276,6 @@ abstract class AggregateRoot extends Entity implements AggregateRootContract
      * echo $json; // {"id":"550e8400-...","version":3,"type":"Order","status":"pending"}
      * ```
      */
-    #[\Override]
     public function toJson(int $options = JSON_UNESCAPED_UNICODE): string
     {
         return json_encode($this->toArray(), $options | JSON_THROW_ON_ERROR);

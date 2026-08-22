@@ -105,7 +105,6 @@ trait HasDomainEvents
      *
      * @see \ZeroBoiler\Domain\Contracts\Entity::hasUncommittedEvents()
      */
-    #[\Override]
     public function hasUncommittedEvents(): bool
     {
         return $this->domainEvents !== [];

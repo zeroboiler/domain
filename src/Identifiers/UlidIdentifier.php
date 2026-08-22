@@ -85,7 +85,6 @@ abstract readonly class UlidIdentifier implements IdentifierContract, JsonSerial
      *
      * @throws \InvalidArgumentException If the string is not a valid ULID.
      */
-    #[\Override]
     public static function fromString(string $value): static
     {
         return new static($value);
@@ -96,7 +95,6 @@ abstract readonly class UlidIdentifier implements IdentifierContract, JsonSerial
      *
      * @return string The ULID as a base32-encoded string.
      */
-    #[\Override]
     public function toString(): string
     {
         return $this->value;
@@ -112,7 +110,6 @@ abstract readonly class UlidIdentifier implements IdentifierContract, JsonSerial
      * @param  IdentifierContract  $other  The identifier to compare against.
      * @return bool True if both are the same concrete class with identical ULID values.
      */
-    #[\Override]
     public function equals(IdentifierContract $other): bool
     {
         return $other instanceof UlidIdentifier && $other::class === static::class && $this->value === $other->value;
@@ -135,7 +132,6 @@ abstract readonly class UlidIdentifier implements IdentifierContract, JsonSerial
      *
      * @return string The ULID string.
      */
-    #[\Override]
     public function jsonSerialize(): string
     {
         return $this->value;
@@ -156,7 +152,6 @@ abstract readonly class UlidIdentifier implements IdentifierContract, JsonSerial
      * $id->toArray();       // ['ulid' => '01H...']
      * ```
      */
-    #[\Override]
     public function toArray(): array
     {
         return ['ulid' => $this->value];
@@ -181,7 +176,6 @@ abstract readonly class UlidIdentifier implements IdentifierContract, JsonSerial
      * $id->equals($restored); // true
      * ```
      */
-    #[\Override]
     public static function fromArray(array $array): static
     {
         $ulid = $array['ulid'] ?? $array['id'] ?? null;
@@ -215,7 +209,6 @@ abstract readonly class UlidIdentifier implements IdentifierContract, JsonSerial
      * $id->equals($restored); // true
      * ```
      */
-    #[\Override]
     public static function fromJson(string $json): static
     {
         $data = json_decode($json, true, flags: JSON_THROW_ON_ERROR);

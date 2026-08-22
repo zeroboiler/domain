@@ -41,7 +41,6 @@ final class DomainServiceProvider extends ServiceProvider
      */
     private const string DISPATCHER_CLASS = 'ZeroBoiler\\Events\\Domain\\DomainEventDispatcher';
 
-    #[\Override]
     public function register(): void
     {
         $this->registerUnitOfWork();
@@ -107,7 +106,6 @@ final class DomainServiceProvider extends ServiceProvider
      * DomainEventDispatcher, which may be auto-wired in EventsServiceProvider.
      * @return void
      */
-    #[\Override]
     public function boot(): void
     {
         $this->registerOctaneReset();

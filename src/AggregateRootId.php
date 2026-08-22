@@ -101,7 +101,6 @@ final readonly class AggregateRootId implements \Stringable, JsonSerializable
      *
      * @return string The UUID as a canonical string.
      */
-    #[\Override]
     public function jsonSerialize(): string
     {
         return $this->toString();

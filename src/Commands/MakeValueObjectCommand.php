@@ -32,19 +32,16 @@ final class MakeValueObjectCommand extends GeneratorCommand
 
     protected $type = 'ValueObject';
 
-    #[\Override]
     protected function getStub(): string
     {
         return __DIR__ . '/../stubs/value-object.stub';
     }
 
-    #[\Override]
     protected function getDefaultNamespace(string $rootNamespace): string
     {
         return $rootNamespace . '\\Domain\\ValueObjects';
     }
 
-    #[\Override]
     protected function getNameInput(): string
     {
         $name = parent::getNameInput();

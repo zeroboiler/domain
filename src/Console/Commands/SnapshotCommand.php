@@ -38,7 +38,6 @@ final class SnapshotCommand extends Command
 
     protected $description = 'Inspect domain aggregate snapshot store';
 
-    #[\Override]
     public function handle(): int
     {
         /** @var string|null $class */

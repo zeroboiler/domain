@@ -30,7 +30,6 @@ final class DomainListCommand extends Command
 {
     protected $name = 'zeroboiler:domain:list';
 
-    #[\Override]
     public function handle(): int
     {
         $domainPath = app_path('Domain');

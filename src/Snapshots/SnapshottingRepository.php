@@ -81,7 +81,6 @@ final readonly class SnapshottingRepository implements Repository
         private string $aggregateType,
     ) {}
 
-    #[\Override]
     #[Trace(operation: 'domain.aggregate.find')]
     public function find(string|int $id): ?AggregateRoot
     {
@@ -124,7 +123,6 @@ final readonly class SnapshottingRepository implements Repository
         return $this->inner->find($id);
     }
 
-    #[\Override]
     #[Trace(operation: 'domain.aggregate.save')]
     public function save(AggregateRoot $aggregate): void
     {
@@ -139,7 +137,6 @@ final readonly class SnapshottingRepository implements Repository
         }
     }
 
-    #[\Override]
     #[Trace(operation: 'domain.aggregate.delete')]
     public function delete(string|int $id): void
     {

@@ -29,13 +29,11 @@ use function sprintf;
  */
 final class NotFoundDomainException extends DomainException
 {
-    #[\Override]
     protected function defaultErrorCode(): string
     {
         return 'NOT_FOUND';
     }
 
-    #[\Override]
     protected function defaultHttpStatus(): int
     {
         return 404;

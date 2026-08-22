@@ -32,19 +32,16 @@ final class DomainAggregateCommand extends GeneratorCommand
 
     protected $type = 'Aggregate';
 
-    #[\Override]
     protected function getStub(): string
     {
         return __DIR__ . '/../stubs/aggregate.stub';
     }
 
-    #[\Override]
     protected function getDefaultNamespace(string $rootNamespace): string
     {
         return $rootNamespace . '\\Domain\\Aggregates';
     }
 
-    #[\Override]
     protected function getNameInput(): string
     {
         $name = parent::getNameInput();

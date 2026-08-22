@@ -40,31 +40,26 @@ final class InMemorySnapshotStore implements SnapshotStore
     /** @var array<string, Snapshot> Key: "{type}:{id}" */
     private array $snapshots = [];
 
-    #[\Override]
     public function load(string $aggregateType, string $aggregateId): ?Snapshot
     {
         return $this->snapshots[$this->key($aggregateType, $aggregateId)] ?? null;
     }
 
-    #[\Override]
     public function save(Snapshot $snapshot): void
     {
         $this->snapshots[$this->key($snapshot->aggregateType, $snapshot->aggregateId)] = $snapshot;
     }
 
-    #[\Override]
     public function has(string $aggregateType, string $aggregateId): bool
     {
         return isset($this->snapshots[$this->key($aggregateType, $aggregateId)]);
     }
 
-    #[\Override]
     public function delete(string $aggregateType, string $aggregateId): void
     {
         unset($this->snapshots[$this->key($aggregateType, $aggregateId)]);
     }
 
-    #[\Override]
     public function deleteOlderThan(string $aggregateType, string $aggregateId, int $version): void
     {
         $key = $this->key($aggregateType, $aggregateId);
@@ -88,7 +83,6 @@ final class InMemorySnapshotStore implements SnapshotStore
         $this->snapshots = [];
     }
 
-    #[\Override]
     public function count(?string $aggregateType = null): int
     {
         if ($aggregateType === null) {
@@ -107,7 +101,6 @@ final class InMemorySnapshotStore implements SnapshotStore
         return $count;
     }
 
-    #[\Override]
     public function stats(): array
     {
         $byType = [];
@@ -123,7 +116,6 @@ final class InMemorySnapshotStore implements SnapshotStore
         ];
     }
 
-    #[\Override]
     public function purge(?string $aggregateType = null): int
     {
         if ($aggregateType === null) {

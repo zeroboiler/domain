@@ -72,7 +72,6 @@ final readonly class DomainEventCollection implements Countable, IteratorAggrega
     /**
      * @return ArrayIterator<int, DomainEvent>
      */
-    #[\Override]
     public function getIterator(): Traversable
     {
         return new ArrayIterator($this->events);
@@ -83,7 +82,6 @@ final readonly class DomainEventCollection implements Countable, IteratorAggrega
      *
      * @return int The event count.
      */
-    #[\Override]
     public function count(): int
     {
         return count($this->events);
@@ -117,7 +115,6 @@ final readonly class DomainEventCollection implements Countable, IteratorAggrega
      *
      * @return list<array<string, mixed>>
      */
-    #[\Override]
     public function jsonSerialize(): array
     {
         return array_map(

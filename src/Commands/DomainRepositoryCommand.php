@@ -33,19 +33,16 @@ final class DomainRepositoryCommand extends GeneratorCommand
 
     protected $type = 'Repository';
 
-    #[\Override]
     protected function getStub(): string
     {
         return __DIR__ . '/../stubs/repository.stub';
     }
 
-    #[\Override]
     protected function getDefaultNamespace(string $rootNamespace): string
     {
         return $rootNamespace . '\\Domain\\Repositories';
     }
 
-    #[\Override]
     protected function getNameInput(): string
     {
         $name = parent::getNameInput();
@@ -57,7 +54,6 @@ final class DomainRepositoryCommand extends GeneratorCommand
         return $name;
     }
 
-    #[\Override]
     public function handle(): int
     {
         $result = parent::handle();

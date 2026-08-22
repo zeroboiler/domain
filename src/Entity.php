@@ -56,7 +56,6 @@ abstract class Entity implements EntityContract, \JsonSerializable
      *
      * @throws \LogicException When the entity's ID is of an unsupported type.
      */
-    #[\Override]
     public function id(): string
     {
         return match (true) {
@@ -80,7 +79,6 @@ abstract class Entity implements EntityContract, \JsonSerializable
      * @param  EntityContract  $other  The entity to compare against.
      * @return bool True if both are the same concrete class with identical identity.
      */
-    #[\Override]
     public function equals(EntityContract $other): bool
     {
         if (static::class !== $other::class) {
@@ -134,7 +132,6 @@ abstract class Entity implements EntityContract, \JsonSerializable
      * }
      * ```
      */
-    #[\Override]
     public function toArray(): array
     {
         return [
@@ -184,7 +181,6 @@ abstract class Entity implements EntityContract, \JsonSerializable
      * // ['id' => '42', 'type' => 'OrderItem', 'product_id' => 'prod-123', 'quantity' => 3]
      * ```
      */
-    #[\Override]
     public static function fromArray(array $data): static
     {
         $reflection = new \ReflectionClass(static::class);
@@ -228,7 +224,6 @@ abstract class Entity implements EntityContract, \JsonSerializable
      * // {"id":"550e8400-...","type":"Order","status":"pending","total":1999}
      * ```
      */
-    #[\Override]
     public function jsonSerialize(): array
     {
         return $this->toArray();
@@ -255,7 +250,6 @@ abstract class Entity implements EntityContract, \JsonSerializable
      * $restored->toArray(); // Same as original
      * ```
      */
-    #[\Override]
     public static function fromJson(string $json): static
     {
         $data = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
@@ -284,7 +278,6 @@ abstract class Entity implements EntityContract, \JsonSerializable
      * echo $json; // {"id":"42","type":"OrderItem","product_id":"prod-1","quantity":3}
      * ```
      */
-    #[\Override]
     public function toJson(int $options = JSON_UNESCAPED_UNICODE): string
     {
         return json_encode($this->toArray(), $options | JSON_THROW_ON_ERROR);

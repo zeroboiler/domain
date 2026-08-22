@@ -277,7 +277,6 @@ abstract class DomainException extends Exception implements \JsonSerializable
      *
      * @return array{title: string, detail: string, code: string, status: int}
      */
-    #[\Override]
     public function jsonSerialize(): array
     {
         return $this->toErrorArray();

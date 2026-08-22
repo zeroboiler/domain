@@ -31,13 +31,11 @@ namespace ZeroBoiler\Domain\Exceptions;
  */
 final class InvalidArgumentDomainException extends DomainException
 {
-    #[\Override]
     protected function defaultErrorCode(): string
     {
         return 'INVALID_ARGUMENT';
     }
 
-    #[\Override]
     protected function defaultHttpStatus(): int
     {
         return 422;
